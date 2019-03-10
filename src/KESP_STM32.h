@@ -12,6 +12,7 @@
 
 #include "Arduino.h"
 #include "KESP_STM32_API.h"
+#include "KESP_LOG.h"
 #include "esp_task_wdt.h"
 #include <WiFi.h>
 

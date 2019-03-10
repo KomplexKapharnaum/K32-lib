@@ -111,9 +111,15 @@ void KESP_STM32::task( void * parameter ) {
     xSemaphoreTake(that->lock, portMAX_DELAY);
 
     // check Button
-    event = that->get(KESP_STM32_API::GET_BUTTON_EVENT);
-    if (event == KESP_STM32_API::BUTTON_DOUBLE_CLICK_EVENT) that->_btn_click = true;
-    else if (event == KESP_STM32_API::BUTTON_CLICK_EVENT) that->_btn_dblclick = true;
+    // event = that->get(KESP_STM32_API::GET_BUTTON_EVENT);
+    // if (event == KESP_STM32_API::BUTTON_DOUBLE_CLICK_EVENT) {
+    //   that->_btn_click = true;
+    //   LOG("BTN clicked");
+    // }
+    // else if (event == KESP_STM32_API::BUTTON_CLICK_EVENT) {
+    //   that->_btn_dblclick = true;
+    //   LOG("BTN dblclicked");
+    // }
 
     // check Battery
     tickerBattery -= 1;
@@ -121,6 +127,7 @@ void KESP_STM32::task( void * parameter ) {
       int batt = that->get(KESP_STM32_API::GET_BATTERY_PERCENTAGE);
       that->_battery = batt;
       tickerBattery = STM32_CHECK_BATT/STM32_CHECK;
+      LOGINL("Battery "); LOG(batt);
     }
 
     // Unlock STM32
