@@ -1,21 +1,21 @@
 {
-    "name": "KESP32",
+    "name": "K32",
     "description": "ESP32 framework libraries for KXKM board",
     "keywords": "",
     "authors": [
         {
             "name": "Thomas BOHL, Tom MAGNIER, Richard FONTAINE",
             "email": "t_bohl@kxkm.net",
-            "url": "https://github.com/KomplexKapharnaum/KXKM32",
+            "url": "https://github.com/KomplexKapharnaum/K32",
             "maintainer": true
         }
     ],
     "repository": {
         "type": "git",
-         "url": "https://github.com/KomplexKapharnaum/KXKM32"
+         "url": "https://github.com/KomplexKapharnaum/K32"
     },
     "version": "0.1",
-    "homepage": "https://github.com/KomplexKapharnaum/KXKM32",
+    "homepage": "https://github.com/KomplexKapharnaum/K32",
     "frameworks": "Arduino",
     "examples": [
         "examples/*/*.ino"

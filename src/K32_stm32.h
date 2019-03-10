@@ -1,23 +1,23 @@
 /*
-  kesp_stm32.h
+  K32_stm32.h
   Created by Thomas BOHL, february 2019.
   Released under GPL v3.0
 */
-#ifndef KESP_STM32_h
-#define KESP_STM32_h
+#ifndef K32_stm32_h
+#define K32_stm32_h
 
 #define STM32_CORE 0
 #define STM32_CHECK 100           // task loop in ms
 #define STM32_CHECK_BATT 5000     // check battery in ms
 
 #include "Arduino.h"
-#include "KESP_STM32_API.h"
+#include "K32_stm32_api.h"
 #include "esp_task_wdt.h"
 #include <WiFi.h>
 
-class KESP_STM32 {
+class K32_stm32 {
   public:
-    KESP_STM32();
+    K32_stm32();
 
     void leds(uint8_t *values);      // Set Leds
 
@@ -38,9 +38,9 @@ class KESP_STM32 {
     bool _btn_dblclick = false;
 
     static void task( void * parameter );
-    void send(KESP_STM32_API::CommandType cmd, int arg);
-    void send(KESP_STM32_API::CommandType cmd);
-    long get(KESP_STM32_API::CommandType cmd);
+    void send(K32_stm32_api::CommandType cmd, int arg);
+    void send(K32_stm32_api::CommandType cmd);
+    long get(K32_stm32_api::CommandType cmd);
     long read();
     void flush();
 

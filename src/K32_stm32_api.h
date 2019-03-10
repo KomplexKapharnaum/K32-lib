@@ -10,10 +10,10 @@ The basic transaction is as follows :
 Tom Magnier - 04/2018
 */
 
-#ifndef KESP_STM32_API_H
-#define KESP_STM32_API_H
+#ifndef K32_stm32_api_H
+#define K32_stm32_api_H
 
-class KESP_STM32_API {
+class K32_stm32_api {
 public:
   static constexpr char* PREAMBLE = "### ";
 
