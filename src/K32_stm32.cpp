@@ -1,17 +1,17 @@
 /*
-  kesp_stm32.cpp
+  K32_stm32.cpp
   Created by Thomas BOHL, february 2019.
   Released under GPL v3.0
 */
 
 #include "Arduino.h"
-#include "KESP_STM32.h"
+#include "K32_stm32.h"
 
 /*
  *   PUBLIC
  */
 
-KESP_STM32::KESP_STM32() {
+K32_stm32::K32_stm32() {
   this->lock = xSemaphoreCreateMutex();
   Serial.begin(115200, SERIAL_8N1);
   Serial.setTimeout(10);
@@ -27,20 +27,20 @@ KESP_STM32::KESP_STM32() {
 };
 
 
-void KESP_STM32::leds(uint8_t *values) {
+void K32_stm32::leds(uint8_t *values) {
   int arg = 0;
   for (int i = 0; i < 6; i++)
     arg += values[i] * pow(10, i);
-  this->send(KESP_STM32_API::SET_LEDS, arg);
+  this->send(K32_stm32_api::SET_LEDS, arg);
 };
 
 
-int KESP_STM32::battery() {
+int K32_stm32::battery() {
   return this->_battery;
 };
 
 
-bool KESP_STM32::clicked() {
+bool K32_stm32::clicked() {
   xSemaphoreTake(this->lock, portMAX_DELAY);
   bool click = this->_btn_click;
   this->_btn_click = false;
@@ -49,7 +49,7 @@ bool KESP_STM32::clicked() {
 };
 
 
-bool KESP_STM32::dblclicked() {
+bool K32_stm32::dblclicked() {
   xSemaphoreTake(this->lock, portMAX_DELAY);
   bool click = this->_btn_dblclick;
   this->_btn_dblclick = false;
@@ -58,16 +58,16 @@ bool KESP_STM32::dblclicked() {
 };
 
 
-void KESP_STM32::wait() {
+void K32_stm32::wait() {
   xSemaphoreTake(this->lock, portMAX_DELAY);
   xSemaphoreGive(this->lock);
 }
 
 
-void KESP_STM32::reset() {
+void K32_stm32::reset() {
   xSemaphoreTake(this->lock, portMAX_DELAY);
-  this->send(KESP_STM32_API::SET_LOAD_SWITCH, 0);
-  this->send(KESP_STM32_API::REQUEST_RESET);
+  this->send(K32_stm32_api::SET_LOAD_SWITCH, 0);
+  this->send(K32_stm32_api::REQUEST_RESET);
   delay(1000);
   Serial.println("STM did not reset, going with soft reset");
   WiFi.disconnect();
@@ -81,10 +81,10 @@ void KESP_STM32::reset() {
 }
 
 
-void KESP_STM32::shutdown() {
+void K32_stm32::shutdown() {
   xSemaphoreTake(this->lock, portMAX_DELAY);
-  this->send(KESP_STM32_API::SET_LOAD_SWITCH, 0);
-  this->send(KESP_STM32_API::SHUTDOWN);
+  this->send(K32_stm32_api::SET_LOAD_SWITCH, 0);
+  this->send(K32_stm32_api::SHUTDOWN);
   xSemaphoreGive(this->lock);
 }
 
@@ -93,14 +93,14 @@ void KESP_STM32::shutdown() {
  *   PRIVATE
  */
 
-void KESP_STM32::task( void * parameter ) {
-  KESP_STM32* that = (KESP_STM32*) parameter;
+void K32_stm32::task( void * parameter ) {
+  K32_stm32* that = (K32_stm32*) parameter;
 
   int tickerBattery = 0;
   int event;
 
   xSemaphoreTake(that->lock, portMAX_DELAY);
-  that->send(KESP_STM32_API::SET_LOAD_SWITCH, 1);
+  that->send(K32_stm32_api::SET_LOAD_SWITCH, 1);
   xSemaphoreGive(that->lock);
 
   // loop
@@ -111,20 +111,20 @@ void KESP_STM32::task( void * parameter ) {
     xSemaphoreTake(that->lock, portMAX_DELAY);
 
     // check Button
-    // event = that->get(KESP_STM32_API::GET_BUTTON_EVENT);
-    // if (event == KESP_STM32_API::BUTTON_DOUBLE_CLICK_EVENT) {
-    //   that->_btn_click = true;
-    //   LOG("BTN clicked");
-    // }
-    // else if (event == KESP_STM32_API::BUTTON_CLICK_EVENT) {
-    //   that->_btn_dblclick = true;
-    //   LOG("BTN dblclicked");
-    // }
+    event = that->get(K32_stm32_api::GET_BUTTON_EVENT);
+    if (event == K32_stm32_api::BUTTON_CLICK_EVENT) {
+       that->_btn_click = true;
+       LOG("BTN clicked");
+    }
+    else if (event == K32_stm32_api::BUTTON_DOUBLE_CLICK_EVENT) {
+       that->_btn_dblclick = true;
+       LOG("BTN dblclicked");
+    }
 
     // check Battery
     tickerBattery -= 1;
     if (tickerBattery <= 0) {
-      int batt = that->get(KESP_STM32_API::GET_BATTERY_PERCENTAGE);
+      int batt = that->get(K32_stm32_api::GET_BATTERY_PERCENTAGE);
       that->_battery = batt;
       tickerBattery = STM32_CHECK_BATT/STM32_CHECK;
       LOGINL("Battery "); LOG(batt);
@@ -140,26 +140,26 @@ void KESP_STM32::task( void * parameter ) {
 };
 
 
-void KESP_STM32::send(KESP_STM32_API::CommandType cmd, int arg) {
+void K32_stm32::send(K32_stm32_api::CommandType cmd, int arg) {
   this->flush();
-  Serial.write(KESP_STM32_API::PREAMBLE);
+  Serial.write(K32_stm32_api::PREAMBLE);
   Serial.write(cmd);
   Serial.write(' ');
   Serial.println(arg);
 }
 
 
-void KESP_STM32::send(KESP_STM32_API::CommandType cmd) {
+void K32_stm32::send(K32_stm32_api::CommandType cmd) {
   this->flush();
-  Serial.write(KESP_STM32_API::PREAMBLE);
+  Serial.write(K32_stm32_api::PREAMBLE);
   Serial.write(cmd);
   Serial.println("");
 }
 
 
-long KESP_STM32::get(KESP_STM32_API::CommandType cmd) {
+long K32_stm32::get(K32_stm32_api::CommandType cmd) {
   this->flush();
-  Serial.write(KESP_STM32_API::PREAMBLE);
+  Serial.write(K32_stm32_api::PREAMBLE);
   Serial.write(cmd);
   Serial.println("");
   long answer = this->read();
@@ -167,13 +167,13 @@ long KESP_STM32::get(KESP_STM32_API::CommandType cmd) {
 }
 
 
-void KESP_STM32::flush() {
+void K32_stm32::flush() {
   while (Serial.available()) Serial.read();
 }
 
 
-long KESP_STM32::read() {
-  if (Serial.find(KESP_STM32_API::PREAMBLE))
+long K32_stm32::read() {
+  if (Serial.find(K32_stm32_api::PREAMBLE))
   {
     long arg = Serial.parseInt();
     return arg;

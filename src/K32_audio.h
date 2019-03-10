@@ -1,10 +1,10 @@
 /*
-  KESP_AUDIO.h
+  K32_audio.h
   Created by Thomas BOHL, february 2019.
   Released under GPL v3.0
 */
-#ifndef KESP_AUDIO_h
-#define KESP_AUDIO_h
+#ifndef K32_audio_h
+#define K32_audio_h
 
 #include "Arduino.h"
 #include "KESP_LOG.h"
@@ -24,10 +24,10 @@
 #define MIDI_MAX_TITLE 10
 
 
-class KESP_AUDIO {
+class K32_audio {
   public:
-    KESP_AUDIO(bool pcmOK);
-
+    K32_audio(bool pcmOK);
+    
     bool isEngineOK();
     bool isSdOK();
 

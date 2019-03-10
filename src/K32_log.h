@@ -3,8 +3,8 @@
   Created by Thomas BOHL, february 2019.
   Released under GPL v3.0
 */
-#ifndef KESP_LOG_h
-#define KESP_LOG_h
+#ifndef K32_log_h
+#define K32_log_h
 
 #include "Arduino.h"
 

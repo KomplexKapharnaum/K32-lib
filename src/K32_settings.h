@@ -1,17 +1,17 @@
 /*
-  KESP_SETTINGS.h
+  K32_settings.h
   Created by Thomas BOHL, february 2019.
   Released under GPL v3.0
 */
-#ifndef KESP_SETTINGS_h
-#define KESP_SETTINGS_h
+#ifndef K32_settings_h
+#define K32_settings_h
 
 #include "Arduino.h"
 #include <EEPROM.h>
 
-class KESP_SETTINGS {
+class K32_settings {
   public:
-    KESP_SETTINGS(String keys[16]) {
+    K32_settings(String keys[16]) {
       this->lock = xSemaphoreCreateMutex();
 
       xSemaphoreTake(this->lock, portMAX_DELAY);

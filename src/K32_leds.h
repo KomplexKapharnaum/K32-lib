@@ -1,10 +1,10 @@
 /*
-  KESP_LEDS.h
+  K32_leds.h
   Created by Thomas BOHL, february 2019.
   Released under GPL v3.0
 */
-#ifndef KESP_LEDS_h
-#define KESP_LEDS_h
+#ifndef K32_leds_h
+#define K32_leds_h
 
 #define LEDS_TEST_LEVEL 100
 #define LEDS_NUM_STRIPS 2
@@ -15,9 +15,9 @@
 #include "librmt/esp32_digital_led_lib.h"
 
 
-class KESP_LEDS {
+class K32_leds {
   public:
-    KESP_LEDS();
+    K32_leds();
 
     void show();
 

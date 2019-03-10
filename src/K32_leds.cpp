@@ -1,13 +1,13 @@
 /*
-  KESP_LEDS.cpp
+  K32_leds.cpp
   Created by Thomas BOHL, february 2019.
   Released under GPL v3.0
 */
 
 #include "Arduino.h"
-#include "KESP_LEDS.h"
+#include "K32_leds.h"
 
-KESP_LEDS::KESP_LEDS() {
+K32_leds::K32_leds() {
 
   int pins[LEDS_NUM_STRIPS] = {21, 22};
 
@@ -34,29 +34,29 @@ KESP_LEDS::KESP_LEDS() {
 };
 
 
-void KESP_LEDS::show() {
+void K32_leds::show() {
   for (int s = 0; s < LEDS_NUM_STRIPS; s++)
     digitalLeds_updatePixels(this->strands[s]);
 }
 
 
-void KESP_LEDS::blackout() {
+void K32_leds::blackout() {
   this->setAll(0, 0, 0);
 }
 
 
-void KESP_LEDS::setAll(int red, int green, int blue) {
+void K32_leds::setAll(int red, int green, int blue) {
   this->setStrip(-1, red, green, blue);
 }
 
 
-void KESP_LEDS::setStrip(int strip, int red, int green, int blue) {
+void K32_leds::setStrip(int strip, int red, int green, int blue) {
   for (int i = 0 ; i < LEDS_NUM_PIXEL ; i++)
     this->setPixel(strip, i, red, green, blue);
 }
 
 
-void KESP_LEDS::setPixel(int strip, int pixel, int red, int green, int blue) {
+void K32_leds::setPixel(int strip, int pixel, int red, int green, int blue) {
   if (strip == -1) {
     for (int s = 0; s < LEDS_NUM_STRIPS; s++)
       this->setPixel(s, pixel, red, green, blue);

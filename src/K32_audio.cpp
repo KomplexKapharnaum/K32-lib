@@ -1,5 +1,5 @@
 /*
-  KESP_AUDIO.cpp
+  K32_audio.cpp
   Created by Thomas BOHL, february 2019.
   Released under GPL v3.0
 */
@@ -7,7 +7,7 @@
 #include "Arduino.h"
 #include "Wire.h"
 #include "SD.h"
-#include "KESP_AUDIO.h"
+#include "K32_audio.h"
 
 #include "AudioGeneratorWAV.h"
 #include "AudioGeneratorMP3.h"
@@ -15,9 +15,11 @@
 #include "AudioGeneratorAAC.h"
 
 
-KESP_AUDIO::KESP_AUDIO(bool pcmOK) {
+K32_audio::K32_audio(bool pcmOK) {
   LOG("AUDIO init");
 
+
+K32_audio::K32_audio() {
   this->lock = xSemaphoreCreateMutex();
 
   // Start SD
@@ -41,16 +43,16 @@ KESP_AUDIO::KESP_AUDIO(bool pcmOK) {
 };
 
 
-bool KESP_AUDIO::isEngineOK() {
+bool K32_audio::isEngineOK() {
   return this->engineOK;
 }
 
-bool KESP_AUDIO::isSdOK() {
+bool K32_audio::isSdOK() {
   return this->sdOK;
 }
 
 
-void KESP_AUDIO::setGainLimits(int min, int max) {
+void K32_audio::setGainLimits(int min, int max) {
   xSemaphoreTake(this->lock, portMAX_DELAY);
   this->gainMin = min;
   this->gainMax = max;
@@ -58,7 +60,7 @@ void KESP_AUDIO::setGainLimits(int min, int max) {
 }
 
 
-void KESP_AUDIO::volume(int vol)
+void K32_audio::volume(int vol)
 {
   if (!this->engineOK) return;
 
@@ -70,14 +72,14 @@ void KESP_AUDIO::volume(int vol)
 }
 
 
-void KESP_AUDIO::loop(bool doLoop) {
+void K32_audio::loop(bool doLoop) {
   xSemaphoreTake(this->lock, portMAX_DELAY);
   this->doLoop = doLoop;
   xSemaphoreGive(this->lock);
 }
 
 
-bool KESP_AUDIO::run() {
+bool K32_audio::run() {
   if (this->isPlaying()) {
     xSemaphoreTake(this->lock, portMAX_DELAY);
     if (this->gen->loop()) {
@@ -101,7 +103,7 @@ bool KESP_AUDIO::run() {
 }
 
 
-bool KESP_AUDIO::play(String filePath) {
+bool K32_audio::play(String filePath) {
   xSemaphoreTake(this->lock, portMAX_DELAY);
   this->errorPlayer = "";
   xSemaphoreGive(this->lock);
@@ -143,7 +145,7 @@ bool KESP_AUDIO::play(String filePath) {
 }
 
 
-void KESP_AUDIO::stop() {
+void K32_audio::stop() {
   if (!this->engineOK) return;
 
   if (this->isPlaying()) {
@@ -159,7 +161,7 @@ void KESP_AUDIO::stop() {
 }
 
 
-bool KESP_AUDIO::isPlaying() {
+bool K32_audio::isPlaying() {
   xSemaphoreTake(this->lock, portMAX_DELAY);
   bool r = false;
   if (this->gen != NULL) r = this->gen->isRunning();
@@ -168,7 +170,7 @@ bool KESP_AUDIO::isPlaying() {
 }
 
 
-String KESP_AUDIO::media() {
+String K32_audio::media() {
   xSemaphoreTake(this->lock, portMAX_DELAY);
   String c = this->currentFile;
   xSemaphoreGive(this->lock);
@@ -176,7 +178,7 @@ String KESP_AUDIO::media() {
 }
 
 
-String KESP_AUDIO::error() {
+String K32_audio::error() {
   xSemaphoreTake(this->lock, portMAX_DELAY);
   String c = this->errorPlayer;
   xSemaphoreGive(this->lock);
@@ -184,7 +186,7 @@ String KESP_AUDIO::error() {
 }
 
 
-void KESP_AUDIO::midiNoteScan() {
+void K32_audio::midiNoteScan() {
   xSemaphoreTake(this->lock, portMAX_DELAY);
 
   // Init Alias array
@@ -225,7 +227,7 @@ void KESP_AUDIO::midiNoteScan() {
 }
 
 
-String KESP_AUDIO::midiNotePath(int bank, int note) {
+String K32_audio::midiNotePath(int bank, int note) {
   String path = "/" + this->pad3(bank) + "/" + this->pad3(note);
   xSemaphoreTake(this->lock, portMAX_DELAY);
   if (this->notes[bank][note][0] > 1) path += String(this->notes[bank][note]);
@@ -237,7 +239,7 @@ String KESP_AUDIO::midiNotePath(int bank, int note) {
 }
 
 
-int KESP_AUDIO::midiNoteSize(byte bank, byte note) {
+int K32_audio::midiNoteSize(byte bank, byte note) {
   int sizeN = 0;
   String path = this->midiNotePath(bank, note);
   if (SD.exists(path)) sizeN = SD.open(path).size();
@@ -245,7 +247,7 @@ int KESP_AUDIO::midiNoteSize(byte bank, byte note) {
 }
 
 
-void KESP_AUDIO::midiNoteDelete(byte bank, byte note) {
+void K32_audio::midiNoteDelete(byte bank, byte note) {
   String path = this->midiNotePath(bank, note);
   if (SD.exists(path)) {
     SD.remove(path);
@@ -256,7 +258,7 @@ void KESP_AUDIO::midiNoteDelete(byte bank, byte note) {
   }
 }
 
-String KESP_AUDIO::pad3(int input) {
+String K32_audio::pad3(int input) {
   char bank[4];
   bank[3] = 0;
   bank[0] = '0' + input / 100;
