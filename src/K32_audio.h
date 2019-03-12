@@ -7,7 +7,7 @@
 #define K32_audio_h
 
 #include "Arduino.h"
-#include "KESP_LOG.h"
+#include "K32_log.h"
 
 //https://github.com/earlephilhower/ESP8266Audio
 //https://github.com/Gianbacchio/ESP8266_Spiram
@@ -26,8 +26,8 @@
 
 class K32_audio {
   public:
-    K32_audio(bool pcmOK);
-    
+    K32_audio();
+
     bool isEngineOK();
     bool isSdOK();
 
@@ -42,11 +42,6 @@ class K32_audio {
     bool isPlaying();
     String media();
     String error();
-
-    void midiNoteScan();
-    String midiNotePath(int bank, int note);
-    int midiNoteSize(byte bank, byte note);
-    void midiNoteDelete(byte bank, byte note);
 
 
   private:
@@ -66,9 +61,6 @@ class K32_audio {
     int gainMin = 140;
     int gainMax = 60;
 
-    char notes[MIDI_MAX_BANK][MIDI_MAX_NOTE][MIDI_MAX_TITLE];
-
-    String pad3(int input);
 };
 
 #endif

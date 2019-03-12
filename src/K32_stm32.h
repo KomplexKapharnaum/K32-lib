@@ -20,6 +20,8 @@ class K32_stm32 {
   public:
     K32_stm32();
 
+    void listen();      // Start monitoring thread
+
     void leds(uint8_t *values);      // Set Leds
 
     int battery();      // Get Battery %

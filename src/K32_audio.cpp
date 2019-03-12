@@ -15,11 +15,9 @@
 #include "AudioGeneratorAAC.h"
 
 
-K32_audio::K32_audio(bool pcmOK) {
+K32_audio::K32_audio() {
   LOG("AUDIO init");
 
-
-K32_audio::K32_audio() {
   this->lock = xSemaphoreCreateMutex();
 
   // Start SD
@@ -28,13 +26,40 @@ K32_audio::K32_audio() {
   if (this->sdOK) LOG("SD card OK");
   else LOG("SD card ERROR");
 
-  // Start PCM engine
-  this->engineOK = pcmOK;
-
   // Start I2S output
   this->out = new AudioOutputI2S(0,AudioOutputI2S::EXTERNAL_I2S, 8, AudioOutputI2S::APLL_DISABLE);
   this->out->SetPinout(25, 27, 26); //HW dependent ! BCK, LRCK, DATA
   this->out->SetGain( 1 );
+
+  // Start PCM51xx
+  bool pcmOK = true;
+  this->pcm = new PCM51xx(Wire);
+  Wire.begin(2, 4);
+  if (this->pcm->begin(PCM51xx::SAMPLE_RATE_44_1K, PCM51xx::BITS_PER_SAMPLE_16))
+      LOG("PCM51xx initialized successfully.");
+  else
+  {
+    LOG("Failed to initialize PCM51xx.");
+    uint8_t powerState = this->pcm->getPowerState();
+    if (powerState == PCM51xx::POWER_STATE_I2C_FAILURE)
+    {
+      LOGINL("No answer on I2C bus at address ");
+      LOG(this->pcm->getI2CAddr());
+    }
+    else
+    {
+      LOGINL("Power state : ");
+      LOG(this->pcm->getPowerState());
+      LOG("I2S stream must be started before calling begin()");
+      LOG("Check that the sample rate / bit depth combination is supported.");
+    }
+    pcmOK = false;
+  }
+  if (!pcmOK) LOG("ERROR: Audio engine failed to start..");
+  else LOG("SUCCESS: Audio engine started..");
+
+  // Start PCM engine
+  this->engineOK = pcmOK;
 
   // Set Volume
   this->volume(100);
@@ -183,86 +208,4 @@ String K32_audio::error() {
   String c = this->errorPlayer;
   xSemaphoreGive(this->lock);
   return c;
-}
-
-
-void K32_audio::midiNoteScan() {
-  xSemaphoreTake(this->lock, portMAX_DELAY);
-
-  // Init Alias array
-  for (byte bank = 0; bank < MIDI_MAX_BANK; bank++)
-    for (byte note = 0; note < MIDI_MAX_NOTE; note++)
-      for (byte k = 0; k < MIDI_MAX_TITLE; k++)
-        this->notes[bank][note][k] = 0;
-
-  // Check Bank dirs
-  LOG("\nScanning...");
-  for (byte i = 0; i < MIDI_MAX_BANK; i++) {
-    if (SD.exists("/" + this->pad3(i))) {
-      LOG("Scanning bank " + this->pad3(i));
-      File dir = SD.open("/" + this->pad3(i));
-
-      // Check Notes files
-      while (true) {
-        File entry =  dir.openNextFile();
-        if (!entry) break;
-        if (!entry.isDirectory()) {
-          int note = 0;
-          note = (entry.name()[5] - '0') * 100 + (entry.name()[6] - '0') * 10 + (entry.name()[7] - '0');
-          if (note < MIDI_MAX_NOTE) {
-            this->notes[i][note][0] = 1; // put a stamp even if alias is empty
-            byte k = 0;
-            while ( (k < MIDI_MAX_TITLE) && (entry.name()[8 + k] != 0) && (entry.name()[8 + k] != '.') ) {
-              this->notes[i][note][k] = entry.name()[8 + k];
-              k++;
-            }
-          }
-          //LOG("File found: "+String(entry.name())+" size="+String(entry.size()));
-        }
-      }
-    }
-  }
-  xSemaphoreGive(this->lock);
-  LOG("Scan done.");
-}
-
-
-String K32_audio::midiNotePath(int bank, int note) {
-  String path = "/" + this->pad3(bank) + "/" + this->pad3(note);
-  xSemaphoreTake(this->lock, portMAX_DELAY);
-  if (this->notes[bank][note][0] > 1) path += String(this->notes[bank][note]);
-  xSemaphoreGive(this->lock);
-  path += ".mp3";
-  //if (SD.exists(path)) return path;
-  //else return "";
-  return path;
-}
-
-
-int K32_audio::midiNoteSize(byte bank, byte note) {
-  int sizeN = 0;
-  String path = this->midiNotePath(bank, note);
-  if (SD.exists(path)) sizeN = SD.open(path).size();
-  return sizeN;
-}
-
-
-void K32_audio::midiNoteDelete(byte bank, byte note) {
-  String path = this->midiNotePath(bank, note);
-  if (SD.exists(path)) {
-    SD.remove(path);
-    xSemaphoreTake(this->lock, portMAX_DELAY);
-    this->notes[bank][note][0] = 0;
-    xSemaphoreGive(this->lock);
-    LOG("deleted " + path);
-  }
-}
-
-String K32_audio::pad3(int input) {
-  char bank[4];
-  bank[3] = 0;
-  bank[0] = '0' + input / 100;
-  bank[1] = '0' + (input / 10) % 10;
-  bank[2] = '0' + input % 10;
-  return String(bank);
 }

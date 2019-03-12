@@ -16,7 +16,9 @@ K32_stm32::K32_stm32() {
   Serial.begin(115200, SERIAL_8N1);
   Serial.setTimeout(10);
   this->running = true;
+};
 
+void K32_stm32::listen() {
   // Checking task
   xTaskCreatePinnedToCore( this->task, "stm32_task",
                 1000,
@@ -24,8 +26,7 @@ K32_stm32::K32_stm32() {
                 0,  // priority
                 NULL,
                 STM32_CORE);
-};
-
+}
 
 void K32_stm32::leds(uint8_t *values) {
   int arg = 0;
