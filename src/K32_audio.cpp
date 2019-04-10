@@ -149,6 +149,7 @@ bool K32_audio::play(String filePath) {
   else if (filePath.endsWith("flac") || filePath.endsWith("FLAC")) this->gen = new AudioGeneratorFLAC();
   else if (filePath.endsWith("aac") || filePath.endsWith("AAC")) this->gen = new AudioGeneratorAAC();
   this->file = new AudioFileSourceSD(filePath.c_str());
+  // this->buff = new AudioFileSourceBuffer(file, 4096);
   bool isStarted = this->gen->begin(file, out);
   xSemaphoreGive(this->lock);
 

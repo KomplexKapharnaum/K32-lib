@@ -37,7 +37,10 @@ void K32_stm32::leds(uint8_t *values) {
 
 
 int K32_stm32::battery() {
-  return this->_battery;
+  xSemaphoreTake(this->lock, portMAX_DELAY);
+  int battLevel = this->_battery;
+  xSemaphoreGive(this->lock);
+  return battLevel;
 };
 
 

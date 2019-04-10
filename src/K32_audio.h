@@ -14,6 +14,7 @@
 #include "AudioGenerator.h"
 #include "AudioFileSourceSD.h"
 #include "AudioOutputI2S.h"
+// #include "AudioFileSourceBuffer.h"
 
 //https://github.com/tommag/PCM51xx_Arduino
 #include "PCM51xx.h"
@@ -51,6 +52,7 @@ class K32_audio {
     AudioOutputI2S *out;
     AudioGenerator* gen;
     AudioFileSourceSD *file;
+    // AudioFileSourceBuffer *buff;
 
     String currentFile = "";
     bool doLoop = false;
