@@ -12,6 +12,7 @@
 #define LEDS_FPS 30
 
 #include "Arduino.h"
+#include "K32_log.h"
 #include "librmt/esp32_digital_led_lib.h"
 
 

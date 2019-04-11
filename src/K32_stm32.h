@@ -21,6 +21,7 @@ class K32_stm32 {
     K32_stm32();
 
     void listen();      // Start monitoring thread
+    void listen(bool btn, bool battery);      // Start monitoring thread (configurable)
 
     void leds(uint8_t *values);      // Set Leds
 
@@ -39,6 +40,9 @@ class K32_stm32 {
     int _battery = 0;
     bool _btn_click = false;
     bool _btn_dblclick = false;
+
+    bool _btn_listen = true;
+    bool _batt_listen = true;
 
     static void task( void * parameter );
     void send(K32_stm32_api::CommandType cmd, int arg);

@@ -31,6 +31,8 @@ K32_leds::K32_leds() {
 
   this->blackout();
   this->show();
+
+  if (!this->running) LOG("LEDS init ERROR");
 };
 
 

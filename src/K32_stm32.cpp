@@ -28,6 +28,12 @@ void K32_stm32::listen() {
                 STM32_CORE);
 }
 
+void K32_stm32::listen(bool btn, bool battery) {
+  this->_btn_listen = btn;
+  this->_batt_listen = battery;
+  this->listen();
+}
+
 void K32_stm32::leds(uint8_t *values) {
   int arg = 0;
   for (int i = 0; i < 6; i++)
@@ -73,7 +79,7 @@ void K32_stm32::reset() {
   this->send(K32_stm32_api::SET_LOAD_SWITCH, 0);
   this->send(K32_stm32_api::REQUEST_RESET);
   delay(1000);
-  Serial.println("STM did not reset, going with soft reset");
+  LOG("STM did not reset, going with soft reset");
   WiFi.disconnect();
   delay(500);
   // Hard restart
@@ -115,23 +121,27 @@ void K32_stm32::task( void * parameter ) {
     xSemaphoreTake(that->lock, portMAX_DELAY);
 
     // check Button
-    event = that->get(K32_stm32_api::GET_BUTTON_EVENT);
-    if (event == K32_stm32_api::BUTTON_CLICK_EVENT) {
-       that->_btn_click = true;
-       LOG("BTN clicked");
-    }
-    else if (event == K32_stm32_api::BUTTON_DOUBLE_CLICK_EVENT) {
-       that->_btn_dblclick = true;
-       LOG("BTN dblclicked");
+    if (that->_btn_listen) {
+      event = that->get(K32_stm32_api::GET_BUTTON_EVENT);
+      if (event == K32_stm32_api::BUTTON_CLICK_EVENT) {
+         that->_btn_click = true;
+         LOG("BTN clicked");
+      }
+      else if (event == K32_stm32_api::BUTTON_DOUBLE_CLICK_EVENT) {
+         that->_btn_dblclick = true;
+         LOG("BTN dblclicked");
+      }
     }
 
     // check Battery
-    tickerBattery -= 1;
-    if (tickerBattery <= 0) {
-      int batt = that->get(K32_stm32_api::GET_BATTERY_PERCENTAGE);
-      that->_battery = batt;
-      tickerBattery = STM32_CHECK_BATT/STM32_CHECK;
-      LOGINL("Battery "); LOG(batt);
+    if (that->_batt_listen) {
+      tickerBattery -= 1;
+      if (tickerBattery <= 0) {
+        int batt = that->get(K32_stm32_api::GET_BATTERY_PERCENTAGE);
+        that->_battery = batt;
+        tickerBattery = STM32_CHECK_BATT/STM32_CHECK;
+        LOGINL("Battery "); LOG(batt);
+      }
     }
 
     // Unlock STM32
