@@ -9,11 +9,11 @@
 #define LEDS_TEST_LEVEL 100
 #define LEDS_NUM_STRIPS 2
 #define LEDS_NUM_PIXEL 512
-#define LEDS_FPS 30
+#define LEDS_FPS 33
 
 #include "Arduino.h"
+#include "SmartLeds.h"  // https://github.com/RoboticsBrno/SmartLeds
 #include "K32_log.h"
-#include "librmt/esp32_digital_led_lib.h"
 
 
 class K32_leds {
@@ -22,6 +22,7 @@ class K32_leds {
 
     void show();
 
+    void test();
     void blackout();
     void setAll(int red, int green, int blue);
     void setStrip(int strip, int red, int green, int blue);
@@ -29,10 +30,16 @@ class K32_leds {
 
 
   private:
-    strand_t* strands[LEDS_NUM_STRIPS];
-    bool running;
-    int refresh;
+    SemaphoreHandle_t buffer_lock;
+    SemaphoreHandle_t strands_lock;
+    SemaphoreHandle_t dirty;
+    static void task( void * parameter );
+
+    Rgb buffer[LEDS_NUM_STRIPS][LEDS_NUM_PIXEL];
+    SmartLed* strands[LEDS_NUM_STRIPS];
+
 
 };
+
 
 #endif

@@ -6,7 +6,6 @@
 #ifndef K32_stm32_h
 #define K32_stm32_h
 
-#define STM32_CORE 0
 #define STM32_CHECK 100           // task loop in ms
 #define STM32_CHECK_BATT 5000     // check battery in ms
 

@@ -8,42 +8,81 @@
 #include "K32_leds.h"
 
 K32_leds::K32_leds() {
+  this->dirty = xSemaphoreCreateBinary();
+  this->buffer_lock = xSemaphoreCreateMutex();
+  this->strands_lock = xSemaphoreCreateBinary();
+  xSemaphoreGive(this->strands_lock);
 
   int pins[LEDS_NUM_STRIPS] = {21, 22};
 
-  strand_t STRANDS[LEDS_NUM_STRIPS];
-  for (int k = 0; k < LEDS_NUM_STRIPS; k++) {
-    this->strands[k] = &STRANDS[k];
-    STRANDS[k] = {  .rmtChannel = k, .gpioNum = pins[k], .ledType = LED_WS2812_V1, .brightLimit = 32,
-                    .numPixels = LEDS_NUM_PIXEL, .pixels = nullptr, ._stateVars = nullptr
-                 };
+  for (int s = 0; s < LEDS_NUM_STRIPS; s++)
+    this->strands[s] = new SmartLed( LED_WS2812, LEDS_NUM_PIXEL, pins[s], s );
 
-    // pinMode for ESP
-    gpio_num_t gpioNumNative = static_cast<gpio_num_t>(pins[k]);
-    gpio_mode_t gpioModeNative = static_cast<gpio_mode_t>(OUTPUT);
-    gpio_pad_select_gpio(gpioNumNative);
-    gpio_set_direction(gpioNumNative, gpioModeNative);
-    gpio_set_level(gpioNumNative, LOW);
-  }
+  // this->blackout();
 
-  this->running = !digitalLeds_initStrands(STRANDS, LEDS_NUM_STRIPS);
-  this->refresh = 1000/LEDS_FPS;
-
-  this->blackout();
-  this->show();
-
-  if (!this->running) LOG("LEDS init ERROR");
+  // LOOP task
+  xTaskCreate( this->task,        // function
+                "leds_show_task", // task name
+                1000,             // stack memory
+                (void*)this,      // args
+                3,                // priority
+                NULL);            // handler
 };
 
-
 void K32_leds::show() {
-  for (int s = 0; s < LEDS_NUM_STRIPS; s++)
-    digitalLeds_updatePixels(this->strands[s]);
+
+  // COPY
+  xSemaphoreTake(this->strands_lock, portMAX_DELAY);
+
+  xSemaphoreTake(this->buffer_lock, portMAX_DELAY);
+  for (int strip = 0; strip < LEDS_NUM_STRIPS; strip++)
+    for (int pixel = 0 ; pixel < LEDS_NUM_PIXEL ; pixel++)
+      this->strands[strip]->operator[](pixel) = this->buffer[strip][pixel];
+
+  LOGINL("buffer copy ");
+  LOGINL(this->buffer[0][0].getGrb(0)); LOGINL(" ");
+  LOGINL(this->buffer[0][0].getGrb(1)); LOGINL(" ");
+  LOGINL(this->buffer[0][0].getGrb(2)); LOGINL(" / ");
+
+  LOGINL(this->strands[0]->operator[](0).getGrb(0)); LOGINL(" ");
+  LOGINL(this->strands[0]->operator[](0).getGrb(1)); LOGINL(" ");
+  LOGINL(this->strands[0]->operator[](0).getGrb(2)); LOG("");
+  xSemaphoreGive(this->buffer_lock);
+
+  xSemaphoreGive(this->dirty);
+}
+
+
+void K32_leds::test() {
+  int wait = 400;
+
+  this->blackout();
+
+  this->setPixel(-1, 0, 100, 0, 0);
+  this->setPixel(-1, 1, 100, 0, 0);
+  this->setPixel(-1, 2, 100, 0, 0);
+  this->show();
+  delay(wait);
+
+  this->setPixel(-1, 0, 0, 100, 0);
+  this->setPixel(-1, 1, 0, 100, 0);
+  this->setPixel(-1, 2, 0, 100, 0);
+  this->show();
+  delay(wait);
+
+  this->setPixel(-1, 0, 0, 0, 100);
+  this->setPixel(-1, 1, 0, 0, 100);
+  this->setPixel(-1, 2, 0, 0, 100);
+  this->show();
+  delay(wait);
+
+  this->blackout();
 }
 
 
 void K32_leds::blackout() {
   this->setAll(0, 0, 0);
+  this->show();
 }
 
 
@@ -72,6 +111,47 @@ void K32_leds::setPixel(int strip, int pixel, int red, int green, int blue) {
     if (red > 255) red = 255;     if (red < 0) red = 0;
     if (green > 255) green = 255; if (green < 0) green = 0;
     if (blue > 255) blue = 255;   if (blue < 0) blue = 0;
-    strands[strip]->pixels[pixel] = pixelFromRGB(red, green, blue);
+    xSemaphoreTake(this->buffer_lock, portMAX_DELAY);
+    this->buffer[strip][pixel] = Rgb{ red, green, blue };
+    xSemaphoreGive(this->buffer_lock);
   }
 }
+
+
+/*
+ *   PRIVATE
+ */
+
+
+ void K32_leds::task( void * parameter ) {
+   K32_leds* that = (K32_leds*) parameter;
+   TickType_t xFrequency = pdMS_TO_TICKS(ceil(1000000/(LEDS_NUM_STRIPS*LEDS_NUM_PIXEL*3*8*1.25)));
+
+   while(true) {
+
+     // WAIT show() is called
+     xSemaphoreTake(that->dirty, portMAX_DELAY);
+
+     // PUSH LEDS TO RMT
+     for (int s = 0; s < LEDS_NUM_STRIPS; s++)
+       that->strands[s]->show();
+
+     LOGINL("strands show ");
+     LOGINL(that->strands[0]->operator[](0).getGrb(0)); LOGINL(" ");
+     LOGINL(that->strands[0]->operator[](0).getGrb(1)); LOGINL(" ");
+     LOGINL(that->strands[0]->operator[](0).getGrb(2)); LOG("");
+
+     // ENSURE TRANSMISSION END
+     for (int s = 0; s < LEDS_NUM_STRIPS; s++)
+      that->strands[s]->wait();
+
+     LOG("strands set ");
+
+     xSemaphoreGive(that->strands_lock);
+
+     vTaskDelay( xFrequency );
+
+   }
+
+   vTaskDelete(NULL);
+ }

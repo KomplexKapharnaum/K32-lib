@@ -25,43 +25,13 @@ K32_samplermidi::K32_samplermidi() {
 
 
 void K32_samplermidi::scan() {
-  xSemaphoreTake(this->lock, portMAX_DELAY);
-
-  // Init Alias array
-  for (byte bank = 0; bank < MIDI_MAX_BANK; bank++)
-    for (byte note = 0; note < MIDI_MAX_NOTE; note++)
-      for (byte k = 0; k < MIDI_MAX_TITLE; k++)
-        this->samples[bank][note][k] = 0;
-
-  // Check Bank dirs
-  LOG("\nScanning...");
-  for (byte i = 0; i < MIDI_MAX_BANK; i++) {
-    if (SD.exists("/" + this->pad3(i))) {
-      LOG("Scanning bank " + this->pad3(i));
-      File dir = SD.open("/" + this->pad3(i));
-
-      // Check Notes files
-      while (true) {
-        File entry =  dir.openNextFile();
-        if (!entry) break;
-        if (!entry.isDirectory()) {
-          int note = 0;
-          note = (entry.name()[5] - '0') * 100 + (entry.name()[6] - '0') * 10 + (entry.name()[7] - '0');
-          if (note < MIDI_MAX_NOTE) {
-            this->samples[i][note][0] = 1; // put a stamp even if alias is empty
-            byte k = 0;
-            while ( (k < MIDI_MAX_TITLE) && (entry.name()[8 + k] != 0) ) {
-              this->samples[i][note][k] = entry.name()[8 + k];
-              k++;
-            }
-          }
-          //LOG("File found: "+String(entry.name())+" size="+String(entry.size()));
-        }
-      }
-    }
-  }
-  xSemaphoreGive(this->lock);
-  LOG("Scan done.");
+  // Checking task
+  xTaskCreate( this->task,
+                "sampler_task",
+                100000,
+                (void*)this,
+                1,                // priority
+                NULL);
 }
 
 
@@ -70,7 +40,6 @@ String K32_samplermidi::path(int bank, int note) {
   xSemaphoreTake(this->lock, portMAX_DELAY);
   if (this->samples[bank][note][0] > 1) path += String(this->samples[bank][note]);
   xSemaphoreGive(this->lock);
-  // path += ".mp3";
   //if (SD.exists(path)) return path;
   //else return "";
   return path;
@@ -104,3 +73,55 @@ String K32_samplermidi::pad3(int input) {
   bank[2] = '0' + input % 10;
   return String(bank);
 }
+
+
+
+/*
+ *   PRIVATE
+ */
+
+void K32_samplermidi::task( void * parameter ) {
+  K32_samplermidi* that = (K32_samplermidi*) parameter;
+  TickType_t xFrequency = pdMS_TO_TICKS(2);
+
+  xSemaphoreTake(that->lock, portMAX_DELAY);
+
+  // Init Alias array
+  for (byte bank = 0; bank < MIDI_MAX_BANK; bank++)
+    for (byte note = 0; note < MIDI_MAX_NOTE; note++)
+      for (byte k = 0; k < MIDI_MAX_TITLE; k++)
+        that->samples[bank][note][k] = 0;
+
+  // // Check Bank dirs
+  LOG("\nScanning...");
+  for (byte i = 0; i < MIDI_MAX_BANK; i++) {
+    if (SD.exists("/" + that->pad3(i))) {
+      LOG("Scanning bank " + that->pad3(i));
+      File dir = SD.open("/" + that->pad3(i));
+
+      // Check Notes files
+      while (true) {
+        File entry =  dir.openNextFile();
+        if (!entry) break;
+        if (!entry.isDirectory()) {
+          int note = 0;
+          note = (entry.name()[5] - '0') * 100 + (entry.name()[6] - '0') * 10 + (entry.name()[7] - '0');
+          if (note < MIDI_MAX_NOTE) {
+            that->samples[i][note][0] = 1; // put a stamp even if alias is empty
+            byte k = 0;
+            while ( (k < MIDI_MAX_TITLE) && (entry.name()[8 + k] != 0) ) {
+              that->samples[i][note][k] = entry.name()[8 + k];
+              k++;
+            }
+          }
+          vTaskDelay( xFrequency );
+          //LOG("File found: "+String(entry.name())+" size="+String(entry.size()));
+        }
+      }
+    }
+  }
+  xSemaphoreGive(that->lock);
+  LOG("Scan done.");
+
+  vTaskDelete(NULL);
+};

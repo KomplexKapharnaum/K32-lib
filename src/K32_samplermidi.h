@@ -9,7 +9,6 @@
 #include "Arduino.h"
 #include "K32_log.h"
 
-
 #define MIDI_MAX_BANK 17      //17
 #define MIDI_MAX_NOTE 128     //128
 #define MIDI_MAX_TITLE 14     // Filename length
@@ -27,6 +26,7 @@ class K32_samplermidi {
 
   private:
     SemaphoreHandle_t lock;
+    static void task( void * parameter );
 
     char samples[MIDI_MAX_BANK][MIDI_MAX_NOTE][MIDI_MAX_TITLE];
 

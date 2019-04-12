@@ -20,12 +20,12 @@ K32_stm32::K32_stm32() {
 
 void K32_stm32::listen() {
   // Checking task
-  xTaskCreatePinnedToCore( this->task, "stm32_task",
+  xTaskCreate( this->task,
+                "stm32_task",
                 1000,
                 (void*)this,
-                0,  // priority
-                NULL,
-                STM32_CORE);
+                1,              // priority
+                NULL);
 }
 
 void K32_stm32::listen(bool btn, bool battery) {
@@ -105,7 +105,7 @@ void K32_stm32::shutdown() {
 
 void K32_stm32::task( void * parameter ) {
   K32_stm32* that = (K32_stm32*) parameter;
-
+  TickType_t xFrequency = pdMS_TO_TICKS(STM32_CHECK);
   int tickerBattery = 0;
   int event;
 
@@ -148,7 +148,7 @@ void K32_stm32::task( void * parameter ) {
     xSemaphoreGive(that->lock);
 
     // sleep
-    delay(STM32_CHECK);
+    vTaskDelay( xFrequency );
   }
   vTaskDelete(NULL);
 };
