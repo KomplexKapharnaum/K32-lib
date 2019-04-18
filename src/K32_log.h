@@ -8,9 +8,9 @@
 
 #include "Arduino.h"
 
-#define DEBUG
+#define KDEBUG
 
-#ifdef DEBUG
+#ifdef KDEBUG
  #define LOGSETUP()                    Serial.begin(115200)
  #define LOGINL(x)                     Serial.print (x)
  #define LOGDEC(x)                     Serial.print (x, DEC)

@@ -19,11 +19,6 @@
 //https://github.com/tommag/PCM51xx_Arduino
 #include "PCM51xx.h"
 
-// MIDI stuff
-#define MIDI_MAX_BANK 17      //17
-#define MIDI_MAX_NOTE 128    //128
-#define MIDI_MAX_TITLE 10
-
 
 class K32_audio {
   public:

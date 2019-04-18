@@ -31,7 +31,7 @@ class K32_wifi {
     static void task( void * parameter );
 
     byte otaEnable = true;
-    String nameDevice = "K32";
+    String nameDevice;
 
     static bool ok;
     static byte retry;

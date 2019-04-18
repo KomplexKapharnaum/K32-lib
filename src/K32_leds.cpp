@@ -63,40 +63,43 @@ void K32_leds::show() {
 }
 
 
-void K32_leds::blackout() {
+K32_leds* K32_leds::blackout() {
   this->setAll(0, 0, 0);
   this->show();
+  return this;
 }
 
-void K32_leds::setAll(int red, int green, int blue, int white) {
+K32_leds* K32_leds::setAll(int red, int green, int blue, int white) {
   this->setStrip(-1, red, green, blue, white);
+  return this;
 }
 
-void K32_leds::setAll(int red, int green, int blue) {
-  this->setAll(red, green, blue, 0);
+K32_leds* K32_leds::setAll(int red, int green, int blue) {
+  return this->setAll(red, green, blue, 0);
 }
 
-void K32_leds::setStrip(int strip, int red, int green, int blue, int white) {
+K32_leds* K32_leds::setStrip(int strip, int red, int green, int blue, int white) {
   for (int i = 0 ; i < LEDS_NUM_PIXEL ; i++)
     this->setPixel(strip, i, red, green, blue, white);
+  return this;
 }
 
-void K32_leds::setStrip(int strip, int red, int green, int blue) {
-  this->setStrip(strip, red, green, blue, 0);
+K32_leds* K32_leds::setStrip(int strip, int red, int green, int blue) {
+  return this->setStrip(strip, red, green, blue, 0);
 }
 
 
-void K32_leds::setPixel(int strip, int pixel, int red, int green, int blue) {
-  this->setPixel(strip, pixel, red, green, blue, 0);
+K32_leds* K32_leds::setPixel(int strip, int pixel, int red, int green, int blue) {
+  return this->setPixel(strip, pixel, red, green, blue, 0);
 }
 
-void K32_leds::setPixel(int strip, int pixel, int red, int green, int blue, int white) {
+K32_leds* K32_leds::setPixel(int strip, int pixel, int red, int green, int blue, int white) {
   if (strip == -1) {
     for (int s = 0; s < LEDS_NUM_STRIPS; s++)
       this->setPixel(s, pixel, red, green, blue);
   }
   else if (pixel == -1) this->setStrip(strip, red, green, blue);
-  else if ((strip < 0) or (strip >= LEDS_NUM_STRIPS) or (pixel < 0) or (pixel >= LEDS_NUM_PIXEL)) return;
+  else if ((strip < 0) or (strip >= LEDS_NUM_STRIPS) or (pixel < 0) or (pixel >= LEDS_NUM_PIXEL)) return this;
   else {
     if (red > 255) red = 255;       if (red < 0) red = 0;
     if (green > 255) green = 255;   if (green < 0) green = 0;
@@ -106,6 +109,7 @@ void K32_leds::setPixel(int strip, int pixel, int red, int green, int blue, int 
     this->buffer[strip][pixel] = pixelFromRGBW(red, green, blue, white);
     xSemaphoreGive(this->buffer_lock);
   }
+  return this;
 }
 
 void K32_leds::play( bool (*fn)( K32_leds* leds ) ) {

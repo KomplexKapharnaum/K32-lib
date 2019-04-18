@@ -22,16 +22,16 @@ class K32_leds {
 
     void show();
 
-    void blackout();
+    K32_leds* blackout();
 
-    void setAll(int red, int green, int blue, int white);
-    void setAll(int red, int green, int blue);
+    K32_leds* setAll(int red, int green, int blue, int white);
+    K32_leds* setAll(int red, int green, int blue);
 
-    void setStrip(int strip, int red, int green, int blue, int white);
-    void setStrip(int strip, int red, int green, int blue);
+    K32_leds* setStrip(int strip, int red, int green, int blue, int white);
+    K32_leds* setStrip(int strip, int red, int green, int blue);
 
-    void setPixel(int strip, int pixel, int red, int green, int blue);
-    void setPixel(int strip, int pixel, int red, int green, int blue, int white);
+    K32_leds* setPixel(int strip, int pixel, int red, int green, int blue);
+    K32_leds* setPixel(int strip, int pixel, int red, int green, int blue, int white);
 
     void play( bool (*fn)( K32_leds* leds ) );
     void stop();

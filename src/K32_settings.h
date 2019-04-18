@@ -11,7 +11,7 @@
 
 class K32_settings {
   public:
-    K32_settings(String keys[16]) {
+    K32_settings(const char* keys[16]) {
       this->lock = xSemaphoreCreateMutex();
 
       xSemaphoreTake(this->lock, portMAX_DELAY);
@@ -22,7 +22,7 @@ class K32_settings {
       xSemaphoreGive(this->lock);
     };
 
-    void set(String key, byte value) {
+    void set(const char* key, byte value) {
       xSemaphoreTake(this->lock, portMAX_DELAY);
       for (byte k=0; k<16; k++)
         if (this->keys[k] == key) {
@@ -36,7 +36,7 @@ class K32_settings {
        xSemaphoreGive(this->lock);
     }
 
-    byte get(String key) {
+    byte get(const char* key) {
       xSemaphoreTake(this->lock, portMAX_DELAY);
       for (byte k=0; k<16; k++)
         if (this->keys[k] == key) {
@@ -51,7 +51,7 @@ class K32_settings {
 
   private:
     SemaphoreHandle_t lock;
-    String keys[16];
+    const char* keys[16];
     byte values[16];
 };
 

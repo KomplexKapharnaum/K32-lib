@@ -16,8 +16,8 @@
  *   PUBLIC
  */
 
-K32_wifi::K32_wifi(String nameDevice) {
-  this->nameDevice = nameDevice;
+K32_wifi::K32_wifi(String nameDevice = "K32") : nameDevice(nameDevice) {
+
   ArduinoOTA.setHostname(this->nameDevice.c_str());
 
   // LOOP task
