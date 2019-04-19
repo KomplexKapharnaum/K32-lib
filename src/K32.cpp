@@ -33,8 +33,7 @@ K32::K32() {
 
   // LEDS
   leds = new K32_leds();
-  leds->play( K32_leds_anims::test );
-  // leds->play( K32_leds_anims::sinus );
+  leds->play( "test" );
 
   // SAMPLER MIDI
   sampler = new K32_samplermidi();

@@ -6,54 +6,95 @@
 #ifndef K32_leds_anims_h
 #define K32_leds_anims_h
 
-#include "K32_leds.h"
+#define LEDS_ANIMS_SLOTS  16
+#define LEDS_PARAM_SLOTS  6
 
+#include "K32_leds_rmt.h"
 
-class K32_leds_anims {
+//
+// NOTE: WHEN ADDING A NEW ANIM, REGISTER IT IN THE ANIMATOR DOWN THERE !
+//
+
+class K32_leds_anim {
   public:
+    virtual String name () { return ""; };
+    virtual bool loop ( K32_leds_rmt* leds ) { return false; };
+    void setParam(int k, int value) {
+      if (k >= LEDS_PARAM_SLOTS) return;
+      this->params[k] = value;
+    } 
+    int params[LEDS_PARAM_SLOTS];
+};
 
-    static bool test( K32_leds* leds ) {
-      int wait = 200;
 
-      delay(2000);
+//
+// TEST
+//
+class K32_leds_anim_test : public K32_leds_anim {
+  public:
+    K32_leds_anim_test() {
+      this->params[0] = 150;    // intensity
+      this->params[1] = 2000;   // initial delay
+      this->params[2] = 200;    // step duration
+    }
+    
+    String name () { return "test"; }
+    
+    bool loop ( K32_leds_rmt* leds ){
+    
+      int wait = this->params[2];
+
+      delay(this->params[1]);
       LOG("LEDS test");
 
       leds->blackout();
 
-      leds->setPixel(-1, 0, 150, 0, 0);
-      leds->setPixel(-1, 1, 150, 0, 0);
-      leds->setPixel(-1, 2, 150, 0, 0);
+      leds->setPixel(-1, 0, this->params[0], 0, 0);
+      leds->setPixel(-1, 1, this->params[0], 0, 0);
+      leds->setPixel(-1, 2, this->params[0], 0, 0);
       leds->show();
       delay(wait);
 
-      leds->setPixel(-1, 0, 0, 150, 0);
-      leds->setPixel(-1, 1, 0, 150, 0);
-      leds->setPixel(-1, 2, 0, 150, 0);
+      leds->setPixel(-1, 0, 0, this->params[0], 0);
+      leds->setPixel(-1, 1, 0, this->params[0], 0);
+      leds->setPixel(-1, 2, 0, this->params[0], 0);
       leds->show();
       delay(wait);
 
-      leds->setPixel(-1, 0, 0, 0, 150);
-      leds->setPixel(-1, 1, 0, 0, 150);
-      leds->setPixel(-1, 2, 0, 0, 150);
+      leds->setPixel(-1, 0, 0, 0, this->params[0]);
+      leds->setPixel(-1, 1, 0, 0, this->params[0]);
+      leds->setPixel(-1, 2, 0, 0, this->params[0]);
       leds->show();
       delay(wait);
 
-      leds->setPixel(-1, 0, 0, 0, 0, 150);
-      leds->setPixel(-1, 1, 0, 0, 0, 150);
-      leds->setPixel(-1, 2, 0, 0, 0, 150);
+      leds->setPixel(-1, 0, 0, 0, 0, this->params[0]);
+      leds->setPixel(-1, 1, 0, 0, 0, this->params[0]);
+      leds->setPixel(-1, 2, 0, 0, 0, this->params[0]);
       leds->show();
       delay(wait);
 
       leds->blackout();
 
-      return false;
+      return false;    // DON'T LOOP !
 
+    };
+};
+
+//
+// SINUS
+//
+class K32_leds_anim_sinus : public K32_leds_anim {
+  public:
+    K32_leds_anim_sinus() {
+      this->params[0] = 2000; // period
     }
 
-    static bool sinus( K32_leds* leds ) {
+    String name () { return "sinus"; }
+    
+    bool loop ( K32_leds_rmt* leds ){
 
       int max = 255;
-      int period = 2000;
+      int period = this->params[0];
       int white = 0;
       long start = millis();
       long progress = millis() - start;
@@ -66,16 +107,60 @@ class K32_leds_anims {
         leds->setAll(white, white, white, white);
         leds->show();
 
-        delay(1000/LEDS_FPS);
+        delay(1);
         progress = millis() - start;
       }
 
       leds->blackout();
-      return true;
-    }
+      return true;    // LOOP !
 
+    };
 };
 
+
+//
+// ANIMATOR BOOK
+//
+class K32_leds_animbook {
+  public:
+    K32_leds_animbook() {
+
+      //
+      // REGISTER AVAILABLE ANIMS !
+      //
+      this->add( new K32_leds_anim_test() );
+      this->add( new K32_leds_anim_sinus() );
+
+    }
+
+    K32_leds_anim* get( String name ) {
+      for (int k=0; k<this->counter; k++)
+        if (this->anims[k]->name() == name) {
+          LOGINL("ANIM found "); LOG(name);
+          return this->anims[k];
+        }
+        else {
+          LOG(this->anims[k]->name());
+        }
+      LOGINL("ANIM not found "); LOG(name);
+      return new K32_leds_anim();
+    }
+
+
+  private:
+    K32_leds_anim* anims[LEDS_ANIMS_SLOTS];
+    int counter = 0;
+
+    void add(K32_leds_anim* anim) {
+      if (this->counter >= LEDS_ANIMS_SLOTS) {
+        LOG("ERROR: no more slot available to register new animation");
+        return;
+      }
+      this->anims[ this->counter ] = anim;
+      this->counter++;
+    };
+    
+};
 
 
 #endif

@@ -134,8 +134,8 @@ K32_osc::K32_osc(int port, K32* engine)
               // PLAY
               msg.dispatch("/play", [](K32_osc* that, K32_oscmsg &msg){
 
-                if (msg.isString(0))
-                  that->engine->audio->play( msg.getStr(0) );
+                if (!msg.isString(0)) return;
+                that->engine->audio->play( msg.getStr(0) );
 
                 if (msg.isInt(1)) {
                   that->engine->audio->volume( msg.getInt(1) );
@@ -188,12 +188,12 @@ K32_osc::K32_osc(int port, K32* engine)
               // ALL LEDS
               msg.dispatch("/all", [](K32_osc* that, K32_oscmsg &msg){
 
-                if (msg.isInt(0) && msg.isInt(1) && msg.isInt(2))
-                  if (msg.isInt(3)) that->engine->leds->setAll( msg.getInt(0), msg.getInt(1), msg.getInt(2), msg.getInt(3) )->show();
-                  else that->engine->leds->setAll( msg.getInt(0), msg.getInt(1), msg.getInt(2) )->show();
+                // if (msg.isInt(0) && msg.isInt(1) && msg.isInt(2))
+                //   if (msg.isInt(3)) that->engine->leds->setAll( msg.getInt(0), msg.getInt(1), msg.getInt(2), msg.getInt(3) )->show();
+                //   else that->engine->leds->setAll( msg.getInt(0), msg.getInt(1), msg.getInt(2) )->show();
 
-                else if (msg.isInt(0))
-                  that->engine->leds->setAll( msg.getInt(0), msg.getInt(0), msg.getInt(0) )->show();
+                // else if (msg.isInt(0))
+                //   that->engine->leds->setAll( msg.getInt(0), msg.getInt(0), msg.getInt(0) )->show();
 
               }, offset);
 
@@ -203,8 +203,16 @@ K32_osc::K32_osc(int port, K32* engine)
               }, offset);
 
               // SINUS
-              msg.dispatch("/sinus", [](K32_osc* that, K32_oscmsg &msg){
-                that->engine->leds->play( K32_leds_anims::sinus );
+              msg.dispatch("/play", [](K32_osc* that, K32_oscmsg &msg){
+                
+                if (!msg.isString(0)) return;
+                K32_leds_anim* anim = that->engine->leds->anim( msg.getStr(0) );
+
+                for (int k=0; k<LEDS_PARAM_SLOTS; k++)
+                  if (msg.isInt(k+1)) anim->setParam(k, msg.getInt(k+1));
+
+                that->engine->leds->play( anim );
+
               }, offset);
 
 

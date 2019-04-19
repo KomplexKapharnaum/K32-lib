@@ -15,7 +15,7 @@ Tom Magnier - 04/2018
 
 class K32_stm32_api {
 public:
-  static constexpr char* PREAMBLE = "### ";
+  static constexpr const char* PREAMBLE = "### ";
 
   /* API Version */
   static constexpr uint8_t API_VERSION = 1;

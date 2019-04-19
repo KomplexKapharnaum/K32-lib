@@ -25,11 +25,10 @@ class K32;
 #include "K32_settings.h"
 #include "K32_stm32.h"
 #include "K32_wifi.h"
-#include "K32_osc.h"
 #include "K32_leds.h"
-#include "K32_leds_anims.h"
 #include "K32_audio.h"
 #include "K32_samplermidi.h"
+#include "K32_osc.h"
 
 
 class K32 {
