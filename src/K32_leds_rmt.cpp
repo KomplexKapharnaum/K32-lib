@@ -45,11 +45,11 @@ void K32_leds_rmt::show() {
     for (int pixel = 0 ; pixel < LEDS_NUM_PIXEL ; pixel++)
       this->STRANDS[strip].pixels[pixel] = this->buffer[strip][pixel];
 
-  // LOGINL("buffer copy ");
+  // LOGINL("\nbuffer copy ");
   // LOGINL(this->buffer[0][0].r); LOGINL(" ");
   // LOGINL(this->buffer[0][0].g); LOGINL(" ");
   // LOGINL(this->buffer[0][0].b); LOGINL(" / ");
-  //
+  
   // LOGINL(this->STRANDS[0].pixels[0].r); LOGINL(" ");
   // LOGINL(this->STRANDS[0].pixels[0].g); LOGINL(" ");
   // LOGINL(this->STRANDS[0].pixels[0].b); LOG("");
@@ -115,26 +115,23 @@ K32_leds_rmt* K32_leds_rmt::setPixel(int strip, int pixel, int red, int green, i
 
  void K32_leds_rmt::draw( void * parameter ) {
    K32_leds_rmt* that = (K32_leds_rmt*) parameter;
-   TickType_t xFrequency = pdMS_TO_TICKS(ceil(1000000/(LEDS_NUM_STRIPS*LEDS_NUM_PIXEL*3*8*1.25)));
+   TickType_t xWait = pdMS_TO_TICKS( ceil(LEDS_NUM_PIXEL*40.0/1000) );
 
    while(true) {
 
      // WAIT show() is called
      xSemaphoreTake(that->dirty, portMAX_DELAY);
-
      // PUSH LEDS TO RMT
      for (int s = 0; s < LEDS_NUM_STRIPS; s++)
       digitalLeds_updatePixels( &that->STRANDS[s] );
 
-     // LOGINL("strands show ");
-     // LOGINL(that->STRANDS[0].pixels[0].r); LOGINL(" ");
-     // LOGINL(that->STRANDS[0].pixels[0].g); LOGINL(" ");
-     // LOGINL(that->STRANDS[0].pixels[0].b); LOG("");
+    //  LOGINL("strands show ");
+    //  LOGINL(that->STRANDS[0].pixels[0].r); LOGINL(" ");
+    //  LOGINL(that->STRANDS[0].pixels[0].g); LOGINL(" ");
+    //  LOGINL(that->STRANDS[0].pixels[0].b); LOG("");
 
      xSemaphoreGive(that->strands_lock);
-
-     vTaskDelay( xFrequency );
-
+     yield();
    }
 
    vTaskDelete(NULL);

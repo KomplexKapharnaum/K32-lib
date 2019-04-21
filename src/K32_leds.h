@@ -6,11 +6,6 @@
 #ifndef K32_leds_h
 #define K32_leds_h
 
-#define LEDS_TEST_LEVEL 100
-#define LEDS_NUM_STRIPS 2
-#define LEDS_NUM_PIXEL 512
-#define LEDS_FPS 33
-
 #include "Arduino.h"
 #include "K32_leds_rmt.h"
 #include "K32_leds_anims.h"
@@ -21,6 +16,7 @@ class K32_leds {
   public:
     K32_leds();
 
+    K32_leds_rmt* leds();
     K32_leds_anim* anim( String animName);
 
     void play( K32_leds_anim* anim );
@@ -28,11 +24,12 @@ class K32_leds {
     void stop();
 
   private:
-    K32_leds_rmt* leds;
-    K32_leds_animbook* book;
+    K32_leds_rmt* _leds;
+    K32_leds_animbook* _book;
 
     TaskHandle_t animateHandle = NULL;
     K32_leds_anim* activeAnim;
+    bool running;
 
     static void animate( void * parameter );
 };

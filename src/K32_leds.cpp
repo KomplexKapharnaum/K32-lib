@@ -11,13 +11,17 @@
 K32_leds::K32_leds() {
   // ANIMATOR
   this->activeAnim = NULL;
-  this->leds = new K32_leds_rmt();
-  this->book = new K32_leds_animbook();
+  this->running = false;
+  this->_leds = new K32_leds_rmt();
+  this->_book = new K32_leds_animbook();
 }
 
+K32_leds_rmt* K32_leds::leds() {
+  return this->_leds;
+}
 
 K32_leds_anim* K32_leds::anim( String animName) {
-  return this->book->get(animName);
+  return this->_book->get(animName);
 }
 
 
@@ -25,12 +29,14 @@ void K32_leds::play( K32_leds_anim* anim ) {
   // ANIM task
   this->activeAnim = anim;
   this->stop();
+  this->running = true;
   xTaskCreate( this->animate,        // function
                 "leds_anim_task", // task name
-                1000,             // stack memory
+                10000,             // stack memory
                 (void*)this,      // args
                 3,                      // priority
-                &this->animateHandle);  // handler
+                &this->animateHandle );//, // handler
+                //1);                       //core
 }
 
 void K32_leds::play( String animName ) {
@@ -38,11 +44,13 @@ void K32_leds::play( String animName ) {
 }
 
 void K32_leds::stop() {
-  if (this->animateHandle) {
-    vTaskDelete( this->animateHandle );
-    this->animateHandle = NULL;
-  }
-  this->leds->blackout();
+  this->running = false;
+  while(this->animateHandle) delay(1);
+  // if (this->animateHandle) {
+  //   vTaskDelete( this->animateHandle );
+  //   this->animateHandle = NULL;
+  // }
+  this->_leds->blackout();
 }
 
 
@@ -54,7 +62,7 @@ void K32_leds::stop() {
    K32_leds* that = (K32_leds*) parameter;
 
    if (that->activeAnim)
-     while(that->activeAnim->loop( that->leds ));
+     while(that->activeAnim->loop( that->_leds ) && that->running) yield();
 
    that->animateHandle = NULL;
    vTaskDelete(NULL);

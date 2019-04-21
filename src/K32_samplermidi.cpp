@@ -82,7 +82,7 @@ String K32_samplermidi::pad3(int input) {
 
 void K32_samplermidi::task( void * parameter ) {
   K32_samplermidi* that = (K32_samplermidi*) parameter;
-  TickType_t xFrequency = pdMS_TO_TICKS(2);
+  TickType_t xFrequency = pdMS_TO_TICKS(5);
 
   xSemaphoreTake(that->lock, portMAX_DELAY);
 

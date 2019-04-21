@@ -6,10 +6,8 @@
 #ifndef K32_leds_rmt_h
 #define K32_leds_rmt_h
 
-#define LEDS_TEST_LEVEL 100
 #define LEDS_NUM_STRIPS 2
-#define LEDS_NUM_PIXEL 512
-#define LEDS_FPS 33
+#define LEDS_NUM_PIXEL 60
 
 #include "Arduino.h"
 #include "K32_log.h"

@@ -104,10 +104,9 @@ class K32_leds_anim_sinus : public K32_leds_anim {
       while (progress <= period) {
 
         white = (0.5f + 0.5f * sin( 2 * PI * progress / period - 0.5f * PI ) ) * max;
-        leds->setAll(white, white, white, white);
-        leds->show();
+        leds->setAll(white, white, white, white)->show();
 
-        delay(1);
+        yield();
         progress = millis() - start;
       }
 
@@ -117,6 +116,34 @@ class K32_leds_anim_sinus : public K32_leds_anim {
     };
 };
 
+
+//
+// STROBE
+//
+class K32_leds_anim_strobe : public K32_leds_anim {
+  public:
+    K32_leds_anim_strobe() {
+      this->params[0] = 2000; // period
+      this->params[1] = 50;   // % ON
+    }
+
+    String name () { return "strobe"; }
+    
+    bool loop ( K32_leds_rmt* leds ){
+        
+      int intensity = 255;
+      TickType_t xOn = max(1, (int)pdMS_TO_TICKS( (this->params[0]*this->params[1]/100) ));
+      TickType_t xOff = max(1, (int)pdMS_TO_TICKS( this->params[0] - (this->params[0]*this->params[1]/100) ));
+      
+      leds->setAll(intensity, intensity, intensity, intensity)->show();
+      vTaskDelay( xOn );
+      leds->blackout();
+      vTaskDelay( xOff );
+
+      return true;    // LOOP !
+
+    };
+};
 
 //
 // ANIMATOR BOOK
@@ -130,19 +157,17 @@ class K32_leds_animbook {
       //
       this->add( new K32_leds_anim_test() );
       this->add( new K32_leds_anim_sinus() );
+      this->add( new K32_leds_anim_strobe() );
 
     }
 
     K32_leds_anim* get( String name ) {
       for (int k=0; k<this->counter; k++)
         if (this->anims[k]->name() == name) {
-          LOGINL("ANIM found "); LOG(name);
+          // LOGINL("ANIM found "); LOG(name);
           return this->anims[k];
         }
-        else {
-          LOG(this->anims[k]->name());
-        }
-      LOGINL("ANIM not found "); LOG(name);
+      // LOGINL("ANIM not found "); LOG(name);
       return new K32_leds_anim();
     }
 

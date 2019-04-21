@@ -39,7 +39,7 @@ class K32 {
     K32_stm32* stm32;
     K32_wifi* wifi;
     K32_osc* osc;
-    K32_leds* leds;
+    K32_leds* light;
     K32_audio* audio;
     K32_samplermidi* sampler;
 

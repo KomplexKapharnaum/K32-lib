@@ -6,6 +6,7 @@
 
 #include "Arduino.h"
 #include "K32_osc.h"
+#include "K32_leds_rmt.h"
 
 #include <ESPmDNS.h>
 #include <ArduinoOTA.h>
@@ -185,33 +186,83 @@ K32_osc::K32_osc(int port, K32* engine)
             //
             msg.route("/leds", [](K32_osc* that, K32_oscmsg &msg, int offset){
 
-              // ALL LEDS
+              // SET ALL
               msg.dispatch("/all", [](K32_osc* that, K32_oscmsg &msg){
 
-                // if (msg.isInt(0) && msg.isInt(1) && msg.isInt(2))
-                //   if (msg.isInt(3)) that->engine->leds->setAll( msg.getInt(0), msg.getInt(1), msg.getInt(2), msg.getInt(3) )->show();
-                //   else that->engine->leds->setAll( msg.getInt(0), msg.getInt(1), msg.getInt(2) )->show();
+                if (!msg.isInt(0)) return;
+                int red, green, blue, white;
+                
+                red = msg.getInt(0);
+                if (msg.isInt(1) && msg.isInt(2)) {
+                  green = msg.getInt(1);
+                  blue = msg.getInt(2);
+                  white = msg.isInt(3) ? msg.getInt(3) : 0;
+                }
+                else { green = red; blue = red; white = red; }
 
-                // else if (msg.isInt(0))
-                //   that->engine->leds->setAll( msg.getInt(0), msg.getInt(0), msg.getInt(0) )->show();
+                that->engine->light->leds()->setAll( red, green, blue, white )->show();
 
+              }, offset);
+
+              // SET STRIP
+              msg.dispatch("/strip", [](K32_osc* that, K32_oscmsg &msg){
+
+                if (!msg.isInt(0) || !msg.isInt(1)) return;
+                int strip, red, green, blue, white;
+                
+                strip = msg.getInt(0);
+                red = msg.getInt(1);
+                if (msg.isInt(2) && msg.isInt(3)) {
+                  green = msg.getInt(2);
+                  blue = msg.getInt(3);
+                  white = msg.isInt(4) ? msg.getInt(4) : 0;
+                }
+                else { green = red; blue = red; white = red; }
+
+                that->engine->light->leds()->setStrip( strip, red, green, blue, white )->show();
+
+              }, offset);
+
+              // SET PIXEL
+              msg.dispatch("/pixel", [](K32_osc* that, K32_oscmsg &msg){
+                
+                if (!msg.isInt(0) || !msg.isInt(1) || !msg.isInt(2)) return;
+                int strip, pixel, red, green, blue, white;
+                
+                strip = msg.getInt(0);
+                pixel = msg.getInt(1);
+                red = msg.getInt(2);
+                if (msg.isInt(3) && msg.isInt(4)) {
+                  green = msg.getInt(3);
+                  blue = msg.getInt(4);
+                  white = msg.isInt(5) ? msg.getInt(5) : 0;
+                }
+                else { green = red; blue = red; white = red; }
+
+                that->engine->light->leds()->setPixel( strip, pixel, red, green, blue, white )->show();
+
+              }, offset);
+
+              // BLACKOUT
+              msg.dispatch("/blackout", [](K32_osc* that, K32_oscmsg &msg){
+                that->engine->light->stop();
               }, offset);
 
               // STOP
               msg.dispatch("/stop", [](K32_osc* that, K32_oscmsg &msg){
-                that->engine->leds->stop();
+                that->engine->light->stop();
               }, offset);
 
-              // SINUS
+              // ANIMATION
               msg.dispatch("/play", [](K32_osc* that, K32_oscmsg &msg){
                 
                 if (!msg.isString(0)) return;
-                K32_leds_anim* anim = that->engine->leds->anim( msg.getStr(0) );
+                K32_leds_anim* anim = that->engine->light->anim( msg.getStr(0) );
 
                 for (int k=0; k<LEDS_PARAM_SLOTS; k++)
                   if (msg.isInt(k+1)) anim->setParam(k, msg.getInt(k+1));
 
-                that->engine->leds->play( anim );
+                that->engine->light->play( anim );
 
               }, offset);
 

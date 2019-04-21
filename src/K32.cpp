@@ -24,24 +24,24 @@ K32::K32() {
   // stm32->listen(true, true);
 
   // AUDIO
-  audio = new K32_audio();
-  if(!audio->isEngineOK()) {
-    LOG("Audio engine failed to start.. RESET !");
-    stm32->reset();
-  }
+  // audio = new K32_audio();
+  // if(!audio->isEngineOK()) {
+  //   LOG("Audio engine failed to start.. RESET !");
+  //   stm32->reset();
+  // }
   // delay(2000);
 
   // LEDS
-  leds = new K32_leds();
-  leds->play( "test" );
+  light = new K32_leds();
+  light->play( "test" );
 
   // SAMPLER MIDI
-  sampler = new K32_samplermidi();
+  // sampler = new K32_samplermidi();
 
   // WIFI init
   wifi = new K32_wifi( "esp-" + String(settings->get("id")) + "-v" + String(K32_VERSION, 2) );
   //wifi->static("192.168.0.237");
-  wifi->connect("kxkm-wifi", "KOMPLEXKAPHARNAUM");
+  wifi->connect("interweb", "superspeed37");
   // if (!wifi->wait(10)) {
   //   stm32->reset();
   // }
