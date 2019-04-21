@@ -35,8 +35,8 @@ void K32_leds::play( K32_leds_anim* anim ) {
                 10000,             // stack memory
                 (void*)this,      // args
                 3,                      // priority
-                &this->animateHandle );//, // handler
-                //1);                       //core
+                &this->animateHandle ); // handler
+  //  LOGINL("created - ");
 }
 
 void K32_leds::play( String animName ) {
@@ -46,6 +46,7 @@ void K32_leds::play( String animName ) {
 void K32_leds::stop() {
   this->running = false;
   while(this->animateHandle) delay(1);
+  // LOG("done");
   // if (this->animateHandle) {
   //   vTaskDelete( this->animateHandle );
   //   this->animateHandle = NULL;
@@ -60,10 +61,10 @@ void K32_leds::stop() {
 
  void K32_leds::animate( void * parameter ) {
    K32_leds* that = (K32_leds*) parameter;
-
+  //  LOG("go");
    if (that->activeAnim)
      while(that->activeAnim->loop( that->_leds ) && that->running) yield();
-
+  //  LOGINL("exit - ");
    that->animateHandle = NULL;
    vTaskDelete(NULL);
  }

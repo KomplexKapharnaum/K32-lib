@@ -115,7 +115,6 @@ K32_leds_rmt* K32_leds_rmt::setPixel(int strip, int pixel, int red, int green, i
 
  void K32_leds_rmt::draw( void * parameter ) {
    K32_leds_rmt* that = (K32_leds_rmt*) parameter;
-   TickType_t xWait = pdMS_TO_TICKS( ceil(LEDS_NUM_PIXEL*40.0/1000) );
 
    while(true) {
 

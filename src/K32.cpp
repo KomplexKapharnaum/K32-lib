@@ -36,7 +36,7 @@ K32::K32() {
   light->play( "test" );
 
   // SAMPLER MIDI
-  // sampler = new K32_samplermidi();
+  sampler = new K32_samplermidi();
 
   // WIFI init
   wifi = new K32_wifi( "esp-" + String(settings->get("id")) + "-v" + String(K32_VERSION, 2) );
