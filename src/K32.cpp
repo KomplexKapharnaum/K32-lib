@@ -24,11 +24,11 @@ K32::K32() {
   // stm32->listen(true, true);
 
   // AUDIO
-  // audio = new K32_audio();
-  // if(!audio->isEngineOK()) {
-  //   LOG("Audio engine failed to start.. RESET !");
-  //   stm32->reset();
-  // }
+  audio = new K32_audio();
+  if(!audio->isEngineOK()) {
+    LOG("Audio engine failed to start.. RESET !");
+    stm32->reset();
+  }
   // delay(2000);
 
   // LEDS

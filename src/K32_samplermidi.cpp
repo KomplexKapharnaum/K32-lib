@@ -93,10 +93,10 @@ void K32_samplermidi::task( void * parameter ) {
         that->samples[bank][note][k] = 0;
 
   // // Check Bank dirs
-  LOG("\nScanning...");
+  LOG("\nSAMPLER: Scanning...");
   for (byte i = 0; i < MIDI_MAX_BANK; i++) {
     if (SD.exists("/" + that->pad3(i))) {
-      LOG("Scanning bank " + that->pad3(i));
+      LOG("  - scanning bank " + that->pad3(i));
       File dir = SD.open("/" + that->pad3(i));
 
       // Check Notes files
@@ -121,7 +121,7 @@ void K32_samplermidi::task( void * parameter ) {
     }
   }
   xSemaphoreGive(that->lock);
-  LOG("Scan done.");
+  LOG("SAMPLER: ready.");
 
   vTaskDelete(NULL);
 };

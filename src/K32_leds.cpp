@@ -63,7 +63,7 @@ void K32_leds::stop() {
    K32_leds* that = (K32_leds*) parameter;
   //  LOG("go");
    if (that->activeAnim)
-     while(that->activeAnim->loop( that->_leds ) && that->running) yield();
+     while(that->activeAnim->loop( that->_leds ) && that->running) vTaskDelay(1);
   //  LOGINL("exit - ");
    that->animateHandle = NULL;
    vTaskDelete(NULL);
