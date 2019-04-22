@@ -210,7 +210,7 @@ class K32_leds_animbook {
     K32_leds_anim* get( String name ) {
       for (int k=0; k<this->counter; k++)
         if (this->anims[k]->name() == name) {
-          // LOGINL("ANIM: "); LOG(name);
+          LOGINL("LEDS: "); LOG(name);
           return this->anims[k];
         }
       LOGINL("ANIM: not found "); LOG(name);

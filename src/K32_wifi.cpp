@@ -98,6 +98,7 @@ bool K32_wifi::isOK() {
        K32_wifi::didDisconnect = true;
        K32_wifi::ok = false;
      }
+     else LOG("WIFI: can't connect...");
      K32_wifi::retry += 1;
    }
    else if (event == SYSTEM_EVENT_STA_GOT_IP) {

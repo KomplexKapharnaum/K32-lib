@@ -16,15 +16,17 @@
 
 
 K32_audio::K32_audio() {
-  LOG("AUDIO init");
+  LOG("AUDIO: init");
 
   this->lock = xSemaphoreCreateMutex();
+  this->runflag = xSemaphoreCreateBinary();
+  xSemaphoreGive(this->runflag);
 
   // Start SD
   if (SD.exists("/")) this->sdOK = true;
   else this->sdOK = SD.begin();
-  if (this->sdOK) LOG("SD card OK");
-  else LOG("SD card ERROR");
+  if (this->sdOK) LOG("AUDIO: sd card OK");
+  else LOG("AUDIO: sd card ERROR");
 
   // Start I2S output
   this->out = new AudioOutputI2S(0,AudioOutputI2S::EXTERNAL_I2S, 8, AudioOutputI2S::APLL_DISABLE);
@@ -36,27 +38,27 @@ K32_audio::K32_audio() {
   this->pcm = new PCM51xx(Wire);
   Wire.begin(2, 4);
   if (this->pcm->begin(PCM51xx::SAMPLE_RATE_44_1K, PCM51xx::BITS_PER_SAMPLE_16))
-      LOG("PCM51xx initialized successfully.");
+      LOG("AUDIO: PCM51xx initialized successfully.");
   else
   {
-    LOG("Failed to initialize PCM51xx.");
+    LOG("AUDIO: Failed to initialize PCM51xx.");
     uint8_t powerState = this->pcm->getPowerState();
     if (powerState == PCM51xx::POWER_STATE_I2C_FAILURE)
     {
-      LOGINL("No answer on I2C bus at address ");
+      LOGINL("AUDIO: No answer on I2C bus at address ");
       LOG(this->pcm->getI2CAddr());
     }
     else
     {
-      LOGINL("Power state : ");
+      LOGINL("AUDIO: Power state = ");
       LOG(this->pcm->getPowerState());
-      LOG("I2S stream must be started before calling begin()");
-      LOG("Check that the sample rate / bit depth combination is supported.");
+      LOG("AUDIO: I2S stream must be started before calling begin()");
+      LOG("AUDIO: Check that the sample rate / bit depth combination is supported.");
     }
     pcmOK = false;
   }
-  if (!pcmOK) LOG("ERROR: Audio engine failed to start..");
-  else LOG("SUCCESS: Audio engine started..");
+  if (!pcmOK) LOG("AUDIO: engine failed to start..");
+  else LOG("AUDIO: engine started..");
 
   // Start PCM engine
   this->engineOK = pcmOK;
@@ -89,7 +91,7 @@ void K32_audio::volume(int vol)
 {
   if (!this->engineOK) return;
 
-  LOGF("GAIN: %i\n", vol);
+  LOGF("AUDIO: gain = %i\n", vol);
   xSemaphoreTake(this->lock, portMAX_DELAY);
   vol = map(vol, 0, 100, this->gainMin, this->gainMax);
   this->pcm->setVolume(vol);
@@ -101,30 +103,6 @@ void K32_audio::loop(bool doLoop) {
   xSemaphoreTake(this->lock, portMAX_DELAY);
   this->doLoop = doLoop;
   xSemaphoreGive(this->lock);
-}
-
-
-bool K32_audio::run() {
-  if (this->isPlaying()) {
-    xSemaphoreTake(this->lock, portMAX_DELAY);
-    if (this->gen->loop()) {
-      xSemaphoreGive(this->lock);
-      return true;
-    }
-    else if (this->doLoop && this->currentFile != "") {
-      //this->play(currentFile);
-      this->file->seek(0, SEEK_SET);
-      LOG("loop: " + this->currentFile);
-      xSemaphoreGive(this->lock);
-      return true;
-    }
-    else {
-      xSemaphoreGive(this->lock);
-      this->stop();
-      return false;
-    }
-  }
-  return false;
 }
 
 
@@ -140,7 +118,7 @@ bool K32_audio::play(String filePath) {
     return false;
   }
 
-  if (this->isPlaying()) this->stop();
+  this->stop();
   if (filePath == "") return false;
 
   xSemaphoreTake(this->lock, portMAX_DELAY);
@@ -157,10 +135,18 @@ bool K32_audio::play(String filePath) {
     xSemaphoreTake(this->lock, portMAX_DELAY);
     this->currentFile = filePath;
     xSemaphoreGive(this->lock);
-    LOG("play: " + filePath);
+    LOG("AUDIO: play " + filePath);
+
+    xSemaphoreTake(this->runflag, portMAX_DELAY);
+    xTaskCreate( this->task,          // function
+                  "audio_task",       // task name
+                  10000,              // stack memory
+                  (void*)this,        // args
+                  10,                 // priority
+                  NULL);              // handler
   }
   else {
-    LOG("not found: " + filePath);
+    LOG("AUDIO: file not found = " + filePath);
     xSemaphoreTake(this->lock, portMAX_DELAY);
     this->errorPlayer = "not found (" + filePath + ")";
     xSemaphoreGive(this->lock);
@@ -181,9 +167,12 @@ void K32_audio::stop() {
     this->file->close();
     this->currentFile = "";
     this->errorPlayer = "";
-    LOG("stop");
+    LOG("AUDIO: stop");
     xSemaphoreGive(this->lock);
   }
+
+  xSemaphoreTake(this->runflag, portMAX_DELAY);
+  xSemaphoreGive(this->runflag);
 }
 
 
@@ -210,3 +199,39 @@ String K32_audio::error() {
   xSemaphoreGive(this->lock);
   return c;
 }
+
+/*
+ *   PRIVATE
+ */
+
+void K32_audio::task( void * parameter ) {
+  K32_audio* that = (K32_audio*) parameter;
+
+  // loop
+  bool RUN = true;
+  while (RUN) {
+
+    RUN = false;
+    if (that->isPlaying()) {
+
+      xSemaphoreTake(that->lock, portMAX_DELAY);
+
+      if (that->gen->loop()) RUN = true;
+
+      else if (that->doLoop && that->currentFile != "") {
+        that->file->seek(0, SEEK_SET);
+        LOG("AUDIO: loop " + that->currentFile);
+        RUN = true;
+      }
+
+      xSemaphoreGive(that->lock);
+    }
+    yield();
+
+  }
+
+  xSemaphoreGive(that->runflag);
+  that->stop();
+
+  vTaskDelete(NULL);
+};

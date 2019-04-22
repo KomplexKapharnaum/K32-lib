@@ -65,6 +65,7 @@ void K32_leds::stop() {
    if (that->activeAnim)
      while(that->activeAnim->loop( that->_leds ) && that->running) vTaskDelay(1);
   //  LOGINL("exit - ");
+   
    that->animateHandle = NULL;
    vTaskDelete(NULL);
  }

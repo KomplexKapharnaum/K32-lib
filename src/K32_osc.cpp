@@ -130,6 +130,7 @@ K32_osc::K32_osc(int port, K32* engine)
             //
             // AUDIO
             //
+            if (that->engine->audio)
             msg.route("/audio", [](K32_osc* that, K32_oscmsg &msg, int offset){
 
               // PLAY
@@ -149,6 +150,7 @@ K32_osc::K32_osc(int port, K32* engine)
               }, offset);
 
               // PLAY MIDI
+              if (that->engine->sampler)
               msg.dispatch("/sampler", [](K32_osc* that, K32_oscmsg &msg){
 
                 if (msg.isInt(0) && msg.isInt(1))
@@ -184,6 +186,7 @@ K32_osc::K32_osc(int port, K32* engine)
             //
             // LEDS
             //
+            if (that->engine->leds)
             msg.route("/leds", [](K32_osc* that, K32_oscmsg &msg, int offset){
 
               // SET ALL
@@ -200,7 +203,7 @@ K32_osc::K32_osc(int port, K32* engine)
                 }
                 else { green = red; blue = red; white = red; }
 
-                that->engine->light->leds()->setAll( red, green, blue, white )->show();
+                that->engine->leds->leds()->setAll( red, green, blue, white )->show();
 
               }, offset);
 
@@ -219,7 +222,7 @@ K32_osc::K32_osc(int port, K32* engine)
                 }
                 else { green = red; blue = red; white = red; }
 
-                that->engine->light->leds()->setStrip( strip, red, green, blue, white )->show();
+                that->engine->leds->leds()->setStrip( strip, red, green, blue, white )->show();
 
               }, offset);
 
@@ -239,30 +242,30 @@ K32_osc::K32_osc(int port, K32* engine)
                 }
                 else { green = red; blue = red; white = red; }
 
-                that->engine->light->leds()->setPixel( strip, pixel, red, green, blue, white )->show();
+                that->engine->leds->leds()->setPixel( strip, pixel, red, green, blue, white )->show();
 
               }, offset);
 
               // BLACKOUT
               msg.dispatch("/blackout", [](K32_osc* that, K32_oscmsg &msg){
-                that->engine->light->stop();
+                that->engine->leds->stop();
               }, offset);
 
               // STOP
               msg.dispatch("/stop", [](K32_osc* that, K32_oscmsg &msg){
-                that->engine->light->stop();
+                that->engine->leds->stop();
               }, offset);
 
               // ANIMATION
               msg.dispatch("/play", [](K32_osc* that, K32_oscmsg &msg){
                 
                 if (!msg.isString(0)) return;
-                K32_leds_anim* anim = that->engine->light->anim( msg.getStr(0) );
+                K32_leds_anim* anim = that->engine->leds->anim( msg.getStr(0) );
 
                 for (int k=0; k<LEDS_PARAM_SLOTS; k++)
                   if (msg.isInt(k+1)) anim->setParam(k, msg.getInt(k+1));
 
-                that->engine->light->play( anim );
+                that->engine->leds->play( anim );
 
               }, offset);
 

@@ -31,7 +31,6 @@ class K32_audio {
     void volume(int vol);
     void loop(bool doLoop);
 
-    bool run();
     bool play(String filePath);
     void stop();
 
@@ -42,6 +41,8 @@ class K32_audio {
 
   private:
     SemaphoreHandle_t lock;
+    SemaphoreHandle_t runflag;
+    static void task( void * parameter );
 
     PCM51xx* pcm;
     AudioOutputI2S *out;
@@ -50,7 +51,7 @@ class K32_audio {
     // AudioFileSourceBuffer *buff;
 
     String currentFile = "";
-    bool doLoop = false;
+    bool doLoop = true;
     bool sdOK = false;
     bool engineOK = false;
     String errorPlayer = "";
