@@ -62,7 +62,7 @@ K32_audio::K32_audio() {
   }
   if (!pcmOK) LOG("AUDIO: engine failed to start..");
   else LOG("AUDIO: engine started..");
-  this->pcm->setVolume(60);
+  this->pcm->setVolume(this->gainMax);
 
   // Start PCM engine
   this->engineOK = pcmOK;
