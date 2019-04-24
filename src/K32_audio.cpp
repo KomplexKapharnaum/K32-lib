@@ -24,12 +24,15 @@ K32_audio::K32_audio() {
 
   // Start SD
   if (SD.exists("/")) this->sdOK = true;
-  else this->sdOK = SD.begin();
+  else {
+    LOG("AUDIO: attaching SD");
+    this->sdOK = SD.begin(SS, SPI, 25000000);
+  }
   if (this->sdOK) LOG("AUDIO: sd card OK");
   else LOG("AUDIO: sd card ERROR");
 
   // Start I2S output
-  this->out = new AudioOutputI2S(0,AudioOutputI2S::EXTERNAL_I2S, 8, AudioOutputI2S::APLL_DISABLE);
+  this->out = new AudioOutputI2S();
   this->out->SetPinout(25, 27, 26); //HW dependent ! BCK, LRCK, DATA
   this->out->SetGain( 1 );
 
@@ -59,6 +62,7 @@ K32_audio::K32_audio() {
   }
   if (!pcmOK) LOG("AUDIO: engine failed to start..");
   else LOG("AUDIO: engine started..");
+  this->pcm->setVolume(60);
 
   // Start PCM engine
   this->engineOK = pcmOK;
@@ -93,8 +97,9 @@ void K32_audio::volume(int vol)
 
   LOGF("AUDIO: gain = %i\n", vol);
   xSemaphoreTake(this->lock, portMAX_DELAY);
-  vol = map(vol, 0, 100, this->gainMin, this->gainMax);
-  this->pcm->setVolume(vol);
+  // vol = map(vol, 0, 100, this->gainMin, this->gainMax);
+  // this->pcm->setVolume(vol);
+  this->out->SetGain( vol/100.0 );
   xSemaphoreGive(this->lock);
 }
 
@@ -156,6 +161,14 @@ bool K32_audio::play(String filePath) {
   return isStarted;
 }
 
+bool K32_audio::play() {
+  if (this->currentFile != "") 
+    return this->play(this->currentFile);
+  
+  this->stop();
+  return false;
+}
+
 
 void K32_audio::stop() {
   if (!this->engineOK) return;
@@ -167,7 +180,6 @@ void K32_audio::stop() {
     this->file->close();
     this->currentFile = "";
     this->errorPlayer = "";
-    LOG("AUDIO: stop");
     xSemaphoreGive(this->lock);
   }
 
@@ -207,31 +219,25 @@ String K32_audio::error() {
 void K32_audio::task( void * parameter ) {
   K32_audio* that = (K32_audio*) parameter;
 
-  // loop
+  // play
   bool RUN = true;
-  while (RUN) {
-
-    RUN = false;
-    if (that->isPlaying()) {
-
-      xSemaphoreTake(that->lock, portMAX_DELAY);
-
-      if (that->gen->loop()) RUN = true;
-
-      else if (that->doLoop && that->currentFile != "") {
-        that->file->seek(0, SEEK_SET);
-        LOG("AUDIO: loop " + that->currentFile);
-        RUN = true;
-      }
-
-      xSemaphoreGive(that->lock);
-    }
+  while (that->isPlaying() && RUN) {
+    xSemaphoreTake(that->lock, portMAX_DELAY);
+    RUN = that->gen->loop();
+    xSemaphoreGive(that->lock);
     yield();
-
-  }
+  } 
 
   xSemaphoreGive(that->runflag);
-  that->stop();
+
+  if (that->doLoop) {
+    LOG("AUDIO: loop");
+    that->play();
+  }
+  else {
+    LOG("AUDIO: stop");
+    that->stop();
+  }
 
   vTaskDelete(NULL);
 };

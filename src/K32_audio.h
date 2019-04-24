@@ -32,6 +32,7 @@ class K32_audio {
     void loop(bool doLoop);
 
     bool play(String filePath);
+    bool play();
     void stop();
 
     bool isPlaying();
@@ -51,7 +52,7 @@ class K32_audio {
     // AudioFileSourceBuffer *buff;
 
     String currentFile = "";
-    bool doLoop = true;
+    bool doLoop = false;
     bool sdOK = false;
     bool engineOK = false;
     String errorPlayer = "";

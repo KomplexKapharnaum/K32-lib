@@ -51,9 +51,11 @@ K32::K32(k32conf conf) {
     // if (!wifi->wait(10)) {
     //   stm32->reset();
     // }
+  
+    // OSC init
+    if (conf.wifi.osc > 0) osc = new K32_osc(conf.wifi.osc, this);
   }
 
-  // OSC init
-  if (conf.osc > 0) osc = new K32_osc(conf.osc, this);
+  
 
 };

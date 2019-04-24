@@ -87,23 +87,22 @@ class K32_leds_anim_sinus : public K32_leds_anim {
   public:
     K32_leds_anim_sinus() {
       this->params[0] = 2000; // period
+      this->params[1] = 255;  //intensity
     }
 
     String name () { return "sinus"; }
     
     bool loop ( K32_leds_rmt* leds ){
 
-      int max = 255;
-      int period = this->params[0];
       int white = 0;
       long start = millis();
       long progress = millis() - start;
 
       // LOG("LEDS sinus");
 
-      while (progress <= period) {
+      while (progress <= this->params[0]) {
 
-        white = (0.5f + 0.5f * sin( 2 * PI * progress / period - 0.5f * PI ) ) * max;
+        white = (0.5f + 0.5f * sin( 2 * PI * progress / this->params[0] - 0.5f * PI ) ) * this->params[1];
         leds->setAll(white, white, white, white)->show();
 
         yield();

@@ -34,6 +34,7 @@ struct wificonf {
    const char* ssid;
    const char* password;
    const char* ip;
+   int osc;
 };
 
 struct k32conf {
@@ -41,7 +42,6 @@ struct k32conf {
   bool leds;
   bool audio;
   bool sampler;
-  int osc;
   wificonf wifi;
 };
 

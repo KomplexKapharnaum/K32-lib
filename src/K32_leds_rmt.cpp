@@ -14,11 +14,9 @@ K32_leds_rmt::K32_leds_rmt() {
   xSemaphoreGive(this->strands_lock);
 
   int pins[LEDS_NUM_STRIPS] = {21, 22};
-  for (int s = 0; s < LEDS_NUM_STRIPS; s++) {
+  for (int s = 0; s < LEDS_NUM_STRIPS; s++)
     this->STRANDS[s] = {.rmtChannel = s, .gpioNum = pins[s], .ledType = LED_WS2812B_V1, .brightLimit = 255, .numPixels = LEDS_NUM_PIXEL, .pixels = nullptr, ._stateVars = nullptr};
-    pinMode (s, OUTPUT);
-    digitalWrite (s, LOW);
-  }
+
   digitalLeds_initStrands( this->STRANDS, LEDS_NUM_STRIPS);
 
   for (int s = 0; s < LEDS_NUM_STRIPS; s++) {
@@ -115,6 +113,8 @@ K32_leds_rmt* K32_leds_rmt::setPixel(int strip, int pixel, int red, int green, i
 
  void K32_leds_rmt::draw( void * parameter ) {
    K32_leds_rmt* that = (K32_leds_rmt*) parameter;
+  
+   LOG("LEDS: engine started");
 
    while(true) {
 

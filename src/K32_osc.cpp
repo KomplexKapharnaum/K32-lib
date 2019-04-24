@@ -66,7 +66,6 @@ K32_osc::K32_osc(int port, K32* engine)
                 NULL);              // handler
 
 
-
 };
 
 
@@ -80,6 +79,8 @@ K32_osc::K32_osc(int port, K32* engine)
    int size = 0;
    K32_oscmsg msg(that);
    IPAddress remoteIP;
+
+   LOGF("OSC: listening on port %d\n", that->port);
 
    char idpath[8];
    sprintf(idpath, "/e%u", that->engine->settings->get("id"));
@@ -141,28 +142,24 @@ K32_osc::K32_osc(int port, K32* engine)
 
                 if (msg.isInt(1)) {
                   that->engine->audio->volume( msg.getInt(1) );
-                  if (msg.isBoolean(2))
-                    that->engine->audio->loop( msg.getBoolean(2) );
+                  if (msg.isInt(2))
+                    that->engine->audio->loop( msg.getInt(2) > 0 );
                 }
-                else if (msg.isBoolean(1))
-                  that->engine->audio->loop( msg.getBoolean(1) );
 
               }, offset);
 
               // PLAY MIDI
               if (that->engine->sampler)
-              msg.dispatch("/sampler", [](K32_osc* that, K32_oscmsg &msg){
+              msg.dispatch("/midi", [](K32_osc* that, K32_oscmsg &msg){
 
                 if (msg.isInt(0) && msg.isInt(1))
                   that->engine->audio->play( that->engine->sampler->path( msg.getInt(0), msg.getInt(1) ) );
 
                 if (msg.isInt(2)) {
                   that->engine->audio->volume( msg.getInt(2) );
-                  if (msg.isBoolean(3))
-                    that->engine->audio->loop( msg.getBoolean(3) );
+                  if (msg.isInt(3))
+                    that->engine->audio->loop( msg.getInt(3) > 0 );
                 }
-                else if (msg.isBoolean(2))
-                  that->engine->audio->loop( msg.getBoolean(2) );
 
               }, offset);
 
@@ -178,7 +175,7 @@ K32_osc::K32_osc(int port, K32* engine)
 
               // LOOP
               msg.dispatch("/loop", [](K32_osc* that, K32_oscmsg &msg){
-                if (msg.isBoolean(0)) that->engine->audio->loop( msg.getBoolean(0) );
+                if (msg.isInt(0)) that->engine->audio->loop( msg.getInt(0) > 0 );
               }, offset);
 
             }, offset);
