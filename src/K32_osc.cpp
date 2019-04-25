@@ -51,29 +51,133 @@ String K32_oscmsg::getStr(int position) {
  *   PUBLIC
  */
 
-K32_osc::K32_osc(int port, K32* engine)
-  : port(port), engine(engine)
+K32_osc::K32_osc(int port, K32* engine, int beatInterval, int beaconInterval)
+  : port(port), engine(engine), beatInterval(beatInterval), beaconInterval(beaconInterval)
 {
   this->udp = new WiFiUDP();
   this->udp->begin(this->port);
 
-  // LOOP task
-  xTaskCreate( this->task,          // function
-                "osc_task",         // task name
+  // LOOP server
+  xTaskCreate( this->server,          // function
+                "osc_server",         // server name
                 10000,              // stack memory
                 (void*)this,        // args
                 4,                  // priority
                 NULL);              // handler
 
+    // LOOP beat
+  if (this->beatInterval > 0)
+  xTaskCreate( this->beat,          // function
+                "osc_beat",         // server name
+                1000,              // stack memory
+                (void*)this,        // args
+                1,                  // priority
+                NULL);              // handler
 
+  // LOOP beacon
+  if (this->beaconInterval > 0)
+  xTaskCreate( this->beacon,          // function
+                "osc_beacon",         // server name
+                1000,              // stack memory
+                (void*)this,        // args
+                1,                  // priority
+                NULL);              // handler
+
+  
 };
+
+
+OSCMessage K32_osc::info() {
+
+    OSCMessage msg("/info");
+
+    // identity
+    msg.add(this->engine->settings->get("id"));
+    msg.add(this->engine->settings->get("channel"));
+    msg.add(K32_VERSION);
+
+    // wifi 
+    char mac[18] = { 0 };
+    sprintf(mac, "%02X:%02X:%02X", WiFi.BSSID()[3], WiFi.BSSID()[4], WiFi.BSSID()[5]);
+    msg.add(mac);
+    msg.add(WiFi.RSSI());
+    (this->linkedIP) ? msg.add(true) : msg.add(false);
+    
+    // energy 
+    msg.add(this->engine->stm32->battery());
+
+    // audio 
+    if (this->engine->audio) {
+      msg.add(this->engine->audio->isSdOK());
+      (this->engine->audio->media() != "") ? msg.add(this->engine->audio->media().c_str()) : msg.add("stop");
+      msg.add(this->engine->audio->error().c_str());
+    }
+    else {
+      msg.add(false);
+      msg.add("stop");
+      msg.add("");
+    }
+
+    // filesync 
+    // msg.add(sync_size());
+    // msg.add(sync_getStatus().c_str());
+    
+    return msg;
+}
 
 
 /*
  *   PRIVATE
  */
 
- void K32_osc::task( void * parameter ) {
+void K32_osc::beat( void * parameter ) {
+    K32_osc* that = (K32_osc*) parameter;
+    TickType_t xFrequency = pdMS_TO_TICKS(that->beatInterval);
+
+    IPAddress broadcast (255, 255, 255, 255);
+
+    while(true) 
+    {
+      OSCMessage msg("/beat");
+
+      // send
+      that->udp->beginPacket( (that->linkedIP) ? that->linkedIP : broadcast , that->port);
+      msg.send(*that->udp);
+      that->udp->endPacket();
+
+      vTaskDelay( xFrequency );
+    }
+
+    vTaskDelete(NULL);
+}
+
+
+
+void K32_osc::beacon( void * parameter ) {
+
+    K32_osc* that = (K32_osc*) parameter;
+    TickType_t xFrequency = pdMS_TO_TICKS(that->beaconInterval);
+
+    IPAddress broadcast (255, 255, 255, 255);
+
+    while(true) 
+    {
+      // send
+      that->udp->beginPacket( (that->linkedIP) ? that->linkedIP : broadcast , that->port);
+      that->info().send(*that->udp);
+      that->udp->endPacket();
+
+      //LOG("beacon");
+
+      vTaskDelay( xFrequency );
+    }
+
+    vTaskDelete(NULL);
+}
+
+
+
+void K32_osc::server( void * parameter ) {
    K32_osc* that = (K32_osc*) parameter;
    TickType_t xFrequency = pdMS_TO_TICKS(1);
    int size = 0;
@@ -103,9 +207,20 @@ K32_osc::K32_osc(int port, K32* engine)
             LOGINL("OSC: /ping RECV from " );
             LOG(that->udp->remoteIP());
 
+            that->linkedIP = that->udp->remoteIP();
+
             OSCMessage response("/pong");
             that->udp->beginPacket(that->udp->remoteIP(), that->port);
             response.send(*that->udp);
+            that->udp->endPacket();
+          });
+
+          //
+          // GENERAL INFO
+          //
+          msg.dispatch("/info", [](K32_osc* that, K32_oscmsg &msg){
+            that->udp->beginPacket(that->udp->remoteIP(), that->port);
+            that->info().send(*that->udp);
             that->udp->endPacket();
           });
 
@@ -286,4 +401,4 @@ K32_osc::K32_osc(int port, K32* engine)
    }
 
    vTaskDelete(NULL);
- }
+}

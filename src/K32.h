@@ -30,11 +30,16 @@ class K32;
 #include "K32_samplermidi.h"
 #include "K32_osc.h"
 
+struct oscconf {
+   int port;
+   int beat;
+   int beacon;
+};
+
 struct wificonf {
    const char* ssid;
    const char* password;
    const char* ip;
-   int osc;
 };
 
 struct k32conf {
@@ -43,6 +48,7 @@ struct k32conf {
   bool audio;
   bool sampler;
   wificonf wifi;
+  oscconf osc;
 };
 
 class K32 {
