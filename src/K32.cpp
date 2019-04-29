@@ -14,11 +14,6 @@ K32::K32(k32conf conf) {
   const char* keys[16] = {"id", "channel", "model"};
   settings = new K32_settings(keys);
 
-  // Settings SET
-  settings->set("id", 0);
-  settings->set("channel", 1);
-  settings->set("model", 1);   // 0: proto -- 1: big -- 2: small
-
   // STM32
   stm32 = new K32_stm32();
   if (conf.stm32) stm32->listen(true, true);

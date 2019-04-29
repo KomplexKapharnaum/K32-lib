@@ -225,7 +225,7 @@ void K32_audio::task( void * parameter ) {
     xSemaphoreTake(that->lock, portMAX_DELAY);
     RUN = that->gen->loop();
     xSemaphoreGive(that->lock);
-    yield();
+    vTaskDelay(1);
   } 
 
   xSemaphoreGive(that->runflag);

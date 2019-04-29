@@ -24,6 +24,7 @@ class K32_leds_anim {
       this->params[k] = value;
     } 
     int params[LEDS_PARAM_SLOTS];
+    bool running;
 };
 
 
@@ -100,12 +101,12 @@ class K32_leds_anim_sinus : public K32_leds_anim {
 
       // LOG("LEDS sinus");
 
-      while (progress <= this->params[0]) {
+      while (progress <= this->params[0] && this->running) {
 
         white = (0.5f + 0.5f * sin( 2 * PI * progress / this->params[0] - 0.5f * PI ) ) * this->params[1];
         leds->setAll(white, white, white, white)->show();
 
-        yield();
+        delay(5);
         progress = millis() - start;
       }
 

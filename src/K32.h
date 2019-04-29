@@ -7,7 +7,7 @@
 #define K32_h
 
 #ifndef K32_VERSION
-  #define K32_VERSION 0.0
+  #define K32_VERSION 0.95
 #endif
 
 #include <Arduino.h>

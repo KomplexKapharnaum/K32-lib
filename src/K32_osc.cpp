@@ -62,7 +62,7 @@ K32_osc::K32_osc(int port, K32* engine, int beatInterval, int beaconInterval)
                 "osc_server",         // server name
                 10000,              // stack memory
                 (void*)this,        // args
-                4,                  // priority
+                5,                  // priority
                 NULL);              // handler
 
     // LOOP beat
@@ -200,6 +200,11 @@ void K32_osc::server( void * parameter ) {
         if (!msg.hasError()) {
           remoteIP = that->udp->remoteIP();
 
+          char adr[256];
+          msg.getAddress(adr);
+          LOGINL("OSC: rcv  ");
+          LOG(adr);
+
           //
           // GENERAL PING
           //
@@ -265,7 +270,7 @@ void K32_osc::server( void * parameter ) {
 
               // PLAY MIDI
               if (that->engine->sampler)
-              msg.dispatch("/midi", [](K32_osc* that, K32_oscmsg &msg){
+              msg.dispatch("/sample", [](K32_osc* that, K32_oscmsg &msg){
 
                 if (msg.isInt(0) && msg.isInt(1))
                   that->engine->audio->play( that->engine->sampler->path( msg.getInt(0), msg.getInt(1) ) );

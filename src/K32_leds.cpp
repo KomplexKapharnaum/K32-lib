@@ -30,6 +30,7 @@ void K32_leds::play( K32_leds_anim* anim ) {
   this->activeAnim = anim;
   this->stop();
   this->running = true;
+  this->activeAnim->running = true;
   xTaskCreate( this->animate,        // function
                 "leds_anim_task", // task name
                 10000,             // stack memory
@@ -45,6 +46,7 @@ void K32_leds::play( String animName ) {
 
 void K32_leds::stop() {
   this->running = false;
+  this->activeAnim->running = false;
   while(this->animateHandle) delay(1);
   // LOG("done");
   // if (this->animateHandle) {
