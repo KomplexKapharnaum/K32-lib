@@ -78,7 +78,7 @@ K32_osc::K32_osc(int port, K32* engine, int beatInterval, int beaconInterval)
   if (this->beaconInterval > 0)
   xTaskCreate( this->beacon,          // function
                 "osc_beacon",         // server name
-                1000,              // stack memory
+                10000,              // stack memory
                 (void*)this,        // args
                 1,                  // priority
                 NULL);              // handler
@@ -87,9 +87,9 @@ K32_osc::K32_osc(int port, K32* engine, int beatInterval, int beaconInterval)
 };
 
 
-OSCMessage K32_osc::info() {
+OSCMessage K32_osc::status() {
 
-    OSCMessage msg("/info");
+    OSCMessage msg("/status");
 
     // identity
     msg.add(this->engine->settings->get("id"));
@@ -97,9 +97,11 @@ OSCMessage K32_osc::info() {
     msg.add(K32_VERSION);
 
     // wifi 
-    char mac[18] = { 0 };
-    sprintf(mac, "%02X:%02X:%02X", WiFi.BSSID()[3], WiFi.BSSID()[4], WiFi.BSSID()[5]);
-    msg.add(mac);
+    byte mac[6];
+    WiFi.macAddress(mac);
+    char shortmac[16];
+    sprintf(shortmac, "%02X:%02X:%02X", mac[3], mac[4], mac[5]);
+    msg.add(shortmac);
     msg.add(WiFi.RSSI());
     (this->linkedIP) ? msg.add(true) : msg.add(false);
     
@@ -113,7 +115,7 @@ OSCMessage K32_osc::info() {
       msg.add(this->engine->audio->error().c_str());
     }
     else {
-      msg.add(false);
+      msg.add(false);   /// TODO : SD check without audio engine
       msg.add("stop");
       msg.add("");
     }
@@ -156,19 +158,17 @@ void K32_osc::beat( void * parameter ) {
 void K32_osc::beacon( void * parameter ) {
 
     K32_osc* that = (K32_osc*) parameter;
-    TickType_t xFrequency = pdMS_TO_TICKS(that->beaconInterval);
-
     IPAddress broadcast (255, 255, 255, 255);
 
     while(true) 
     {
       // send
       that->udp->beginPacket( (that->linkedIP) ? that->linkedIP : broadcast , that->port);
-      that->info().send(*that->udp);
+      that->status().send(*that->udp);
       that->udp->endPacket();
 
       //LOG("beacon");
-
+      TickType_t xFrequency = pdMS_TO_TICKS(that->beaconInterval);
       vTaskDelay( xFrequency );
     }
 
@@ -225,7 +225,7 @@ void K32_osc::server( void * parameter ) {
           //
           msg.dispatch("/info", [](K32_osc* that, K32_oscmsg &msg){
             that->udp->beginPacket(that->udp->remoteIP(), that->port);
-            that->info().send(*that->udp);
+            that->status().send(*that->udp);
             that->udp->endPacket();
           });
 

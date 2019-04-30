@@ -17,14 +17,21 @@
 
 class K32_leds_anim {
   public:
+    K32_leds_anim() {
+      this->critical = xSemaphoreCreateMutex();
+    }
+
     virtual String name () { return ""; };
     virtual bool loop ( K32_leds_rmt* leds ) { return false; };
+    
     void setParam(int k, int value) {
-      if (k >= LEDS_PARAM_SLOTS) return;
-      this->params[k] = value;
+      if (k < LEDS_PARAM_SLOTS) this->params[k] = value;
     } 
+    void lock() { xSemaphoreTake(this->critical, portMAX_DELAY); }
+    void unlock() { xSemaphoreGive(this->critical); }
+    
     int params[LEDS_PARAM_SLOTS];
-    bool running;
+    SemaphoreHandle_t critical;
 };
 
 
@@ -48,33 +55,46 @@ class K32_leds_anim_test : public K32_leds_anim {
       delay(this->params[1]);
       LOG("LEDS: test");
 
+      this->lock();
       leds->blackout();
 
       leds->setPixel(-1, 0, this->params[0], 0, 0);
       leds->setPixel(-1, 1, this->params[0], 0, 0);
       leds->setPixel(-1, 2, this->params[0], 0, 0);
       leds->show();
-      delay(wait);
+      this->unlock();
 
+      vTaskDelay(pdMS_TO_TICKS(wait));
+      this->lock();
       leds->setPixel(-1, 0, 0, this->params[0], 0);
       leds->setPixel(-1, 1, 0, this->params[0], 0);
       leds->setPixel(-1, 2, 0, this->params[0], 0);
       leds->show();
-      delay(wait);
+      this->unlock();
 
+      vTaskDelay(pdMS_TO_TICKS(wait));
+
+      this->lock();
       leds->setPixel(-1, 0, 0, 0, this->params[0]);
       leds->setPixel(-1, 1, 0, 0, this->params[0]);
       leds->setPixel(-1, 2, 0, 0, this->params[0]);
       leds->show();
-      delay(wait);
+      this->unlock();
 
+      vTaskDelay(pdMS_TO_TICKS(wait));
+
+      this->lock();
       leds->setPixel(-1, 0, 0, 0, 0, this->params[0]);
       leds->setPixel(-1, 1, 0, 0, 0, this->params[0]);
       leds->setPixel(-1, 2, 0, 0, 0, this->params[0]);
       leds->show();
-      delay(wait);
+      this->unlock();
 
+      vTaskDelay(pdMS_TO_TICKS(wait));
+
+      this->lock();
       leds->blackout();
+      this->unlock();
 
       return false;    // DON'T LOOP !
 
@@ -96,21 +116,27 @@ class K32_leds_anim_sinus : public K32_leds_anim {
     bool loop ( K32_leds_rmt* leds ){
 
       int white = 0;
-      long start = millis();
-      long progress = millis() - start;
+      unsigned long start = millis();
+      unsigned long progress = 0;
 
       // LOG("LEDS sinus");
 
-      while (progress <= this->params[0] && this->running) {
+      while (progress <= this->params[0]) {
 
         white = (0.5f + 0.5f * sin( 2 * PI * progress / this->params[0] - 0.5f * PI ) ) * this->params[1];
-        leds->setAll(white, white, white, white)->show();
 
-        delay(5);
+        this->lock();
+        leds->setAll(white, white, white, white)->show();
+        this->unlock();
+
+        vTaskDelay(pdMS_TO_TICKS(1));
         progress = millis() - start;
       }
 
+      this->lock();
       leds->blackout();
+      this->unlock();
+
       return true;    // LOOP !
 
     };
@@ -135,9 +161,16 @@ class K32_leds_anim_strobe : public K32_leds_anim {
       TickType_t xOn = max(1, (int)pdMS_TO_TICKS( (this->params[0]*this->params[1]/100) ));
       TickType_t xOff = max(1, (int)pdMS_TO_TICKS( this->params[0] - (this->params[0]*this->params[1]/100) ));
       
+      this->lock();
       leds->setAll(intensity, intensity, intensity, intensity)->show();
+      this->unlock();
+
       vTaskDelay( xOn );
+
+      this->lock();
       leds->blackout();
+      this->unlock();
+
       vTaskDelay( xOff );
 
       return true;    // LOOP !
@@ -169,14 +202,18 @@ class K32_leds_anim_hardstrobe : public K32_leds_anim {
         // OFF -> ON
         if(!state) {
           this->nextEvent = millis() + (this->params[0]*this->params[1]/100) ;
+
+          this->lock();
           leds->setAll(intensity, intensity, intensity, intensity)->show();
-          // LOGINL(" ON - "); LOG(millis()); 
+          this->unlock();
         }
         // ON -> OFF
         else {
           this->nextEvent = millis() + this->params[0] - (this->params[0]*this->params[1]/100);
+          
+          this->lock();
           leds->blackout();
-          // LOGINL(" OFF - "); LOG(millis());
+          this->unlock();
         }
         state = !state;
       }

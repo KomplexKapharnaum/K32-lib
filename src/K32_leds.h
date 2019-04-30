@@ -29,9 +29,10 @@ class K32_leds {
 
     TaskHandle_t animateHandle = NULL;
     K32_leds_anim* activeAnim;
-    bool running;
+    SemaphoreHandle_t stop_lock;
 
     static void animate( void * parameter );
+    static void async_stop( void * parameter );
 };
 
 

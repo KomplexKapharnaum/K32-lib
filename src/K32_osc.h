@@ -22,7 +22,7 @@ class K32_osc {
     const char* id_path();
     const char* chan_path();
 
-    OSCMessage info();
+    OSCMessage status();
 
   private:
     static void server( void * parameter );

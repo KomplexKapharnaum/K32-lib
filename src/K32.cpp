@@ -38,6 +38,7 @@ K32::K32(k32conf conf) {
   }
 
   // WIFI init
+  btStop();
   if (conf.wifi.ssid) {
     wifi = new K32_wifi( "esp-" + String(settings->get("id")) + "-v" + String(K32_VERSION, 2) );
     if (conf.wifi.ip) wifi->staticIP(conf.wifi.ip);
@@ -50,8 +51,8 @@ K32::K32(k32conf conf) {
     // OSC init
     if (conf.osc.port > 0)
       osc = new K32_osc(conf.osc.port, this, conf.osc.beat, conf.osc.beacon);
-
   }
+  else WiFi.mode(WIFI_OFF);
 
   
 

@@ -40,9 +40,11 @@ String K32_samplermidi::path(int bank, int note) {
   xSemaphoreTake(this->lock, portMAX_DELAY);
   if (this->samples[bank][note][0] > 1) path += String(this->samples[bank][note]);
   xSemaphoreGive(this->lock);
-  //if (SD.exists(path)) return path;
-  //else return "";
-  return path;
+  if (SD.exists(path)) 
+    return path;
+  
+  LOGF("SAMPLER: %s not found..\n", path.c_str());
+  return "";
 }
 
 

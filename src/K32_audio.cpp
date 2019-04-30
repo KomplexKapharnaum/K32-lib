@@ -112,6 +112,7 @@ void K32_audio::loop(bool doLoop) {
 
 
 bool K32_audio::play(String filePath) {
+  LOG(filePath);
   xSemaphoreTake(this->lock, portMAX_DELAY);
   this->errorPlayer = "";
   xSemaphoreGive(this->lock);
@@ -122,10 +123,9 @@ bool K32_audio::play(String filePath) {
     xSemaphoreGive(this->lock);
     return false;
   }
-
+  
   this->stop();
   if (filePath == "") return false;
-
   xSemaphoreTake(this->lock, portMAX_DELAY);
   if (filePath.endsWith("wav") || filePath.endsWith("WAV")) this->gen = new AudioGeneratorWAV();
   else if (filePath.endsWith("mp3") || filePath.endsWith("MP3")) this->gen = new AudioGeneratorMP3();
@@ -178,10 +178,13 @@ void K32_audio::stop() {
     this->gen->stop();
     this->out->stop();
     this->file->close();
-    this->currentFile = "";
-    this->errorPlayer = "";
     xSemaphoreGive(this->lock);
   }
+
+  xSemaphoreTake(this->lock, portMAX_DELAY);
+  this->currentFile = "";
+  this->errorPlayer = "";
+  xSemaphoreGive(this->lock);
 
   xSemaphoreTake(this->runflag, portMAX_DELAY);
   xSemaphoreGive(this->runflag);
