@@ -49,7 +49,7 @@ K32::K32(k32conf conf) {
     // }
   
     // OSC init
-    osc = new K32_osc(&conf.osc, this);
+    osc = new K32_osc(conf.osc, this);
   }
   else WiFi.mode(WIFI_OFF);
 

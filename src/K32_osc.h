@@ -18,21 +18,22 @@ class K32_osc;      // prevent cicular include error
 
 class K32_osc {
   public:
-    K32_osc(oscconf* conf, K32* engine);
+    K32_osc(oscconf conf, K32* engine);
     const char* id_path();
     const char* chan_path();
 
     OSCMessage status();
 
   private:
+    SemaphoreHandle_t lock;
     static void server( void * parameter );
     static void beacon( void * parameter );
     static void beat( void * parameter );
 
-    WiFiUDP* udp;
+    WiFiUDP* udp;         // must be protected with lock 
     IPAddress linkedIP;
 
-    oscconf* conf;
+    oscconf conf;
     K32* engine;
 };
 
