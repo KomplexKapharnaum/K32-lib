@@ -160,6 +160,7 @@ void K32_stm32::send(K32_stm32_api::CommandType cmd, int arg) {
   Serial.write(cmd);
   Serial.write(' ');
   Serial.println(arg);
+  this->flush();
 }
 
 
@@ -168,6 +169,7 @@ void K32_stm32::send(K32_stm32_api::CommandType cmd) {
   Serial.write(K32_stm32_api::PREAMBLE);
   Serial.write(cmd);
   Serial.println("");
+  this->flush();
 }
 
 
@@ -176,6 +178,7 @@ long K32_stm32::get(K32_stm32_api::CommandType cmd) {
   Serial.write(K32_stm32_api::PREAMBLE);
   Serial.write(cmd);
   Serial.println("");
+  this->flush();
   long answer = this->read();
   return answer;
 }

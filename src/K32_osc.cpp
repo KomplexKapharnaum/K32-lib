@@ -58,7 +58,7 @@ K32_osc::K32_osc(oscconf conf, K32* engine) : conf(conf), engine(engine)
 
   // OSC INPUT
   if (this->conf.port_in > 0) {
-    this->udp->begin(this->conf.port_out);
+    this->udp->begin(this->conf.port_in);
 
     // LOOP server
     xTaskCreate( this->server,          // function
