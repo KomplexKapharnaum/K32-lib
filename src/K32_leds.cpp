@@ -55,6 +55,11 @@ void K32_leds::stop() {
                 NULL );                 // handler
   xSemaphoreTake(this->stop_lock, portMAX_DELAY);
   xSemaphoreGive(this->stop_lock);
+  LOG("LEDS: stop");
+}
+
+bool K32_leds::isPlaying() {
+  return (this->activeAnim != NULL);
 }
 
 

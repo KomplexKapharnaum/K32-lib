@@ -18,7 +18,9 @@
 
 K32_wifi::K32_wifi(String nameDevice = "K32") : nameDevice(nameDevice) {
 
+  this->lock = xSemaphoreCreateMutex();
   ArduinoOTA.setHostname(this->nameDevice.c_str());
+  this->_broadcastIP = IPAddress(255, 255, 255, 255);
 
   // LOOP task
   xTaskCreate( this->task,        // function
@@ -80,6 +82,15 @@ bool K32_wifi::isOK() {
 }
 
 
+IPAddress K32_wifi::broadcastIP() {
+  IPAddress b;
+  xSemaphoreTake(this->lock, portMAX_DELAY);
+  b = this->_broadcastIP;
+  xSemaphoreGive(this->lock);
+  return b;
+}
+
+
 
 
 /*
@@ -119,17 +130,27 @@ bool K32_wifi::isOK() {
      // CONNECTED
      if (that->didConnect) {
 
-       that->didConnect = false;
+        that->didConnect = false;
 
-       // INFO
-       LOGINL("WIFI: connected = ");
-       LOG(WiFi.localIP());
+        // INFO
+        LOGINL("WIFI: connected = ");
+        LOG(WiFi.localIP());
 
-       // OTA
-       if (!that->otaEnable || !that->ok) return;
-       ArduinoOTA.begin();
-       LOGINL("OTA: started = ");
-       LOG(that->nameDevice);
+        // OTA
+        if (!that->otaEnable || !that->ok) return;
+        ArduinoOTA.begin();
+        LOGINL("OTA: started = ");
+        LOG(that->nameDevice);
+
+        // BROADCAST
+        IPAddress myIP = WiFi.localIP();
+        IPAddress mask = WiFi.subnetMask();
+        xSemaphoreTake(that->lock, portMAX_DELAY);
+        that->_broadcastIP[0] = myIP[0] | (~mask[0]);
+        that->_broadcastIP[1] = myIP[1] | (~mask[1]);
+        that->_broadcastIP[2] = myIP[2] | (~mask[2]);
+        that->_broadcastIP[3] = myIP[3] | (~mask[3]);
+        xSemaphoreGive(that->lock);
 
      }
 

@@ -23,6 +23,8 @@ class K32_leds {
     void play( String animName );
     void stop();
 
+    bool isPlaying();
+
   private:
     K32_leds_rmt* _leds;
     K32_leds_animbook* _book;

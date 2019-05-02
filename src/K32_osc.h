@@ -18,7 +18,7 @@ class K32_osc;      // prevent cicular include error
 
 class K32_osc {
   public:
-    K32_osc(int port, K32* engine, int beatInterval, int beaconInterval);
+    K32_osc(oscconf* conf, K32* engine);
     const char* id_path();
     const char* chan_path();
 
@@ -30,11 +30,9 @@ class K32_osc {
     static void beat( void * parameter );
 
     WiFiUDP* udp;
-    int port;
     IPAddress linkedIP;
-    int  beatInterval = 0;
-    int beaconInterval = 0;
 
+    oscconf* conf;
     K32* engine;
 };
 

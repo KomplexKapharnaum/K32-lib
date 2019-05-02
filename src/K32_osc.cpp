@@ -51,37 +51,44 @@ String K32_oscmsg::getStr(int position) {
  *   PUBLIC
  */
 
-K32_osc::K32_osc(int port, K32* engine, int beatInterval, int beaconInterval)
-  : port(port), engine(engine), beatInterval(beatInterval), beaconInterval(beaconInterval)
+K32_osc::K32_osc(oscconf* conf, K32* engine) : conf(conf), engine(engine)
 {
   this->udp = new WiFiUDP();
-  this->udp->begin(this->port);
 
-  // LOOP server
-  xTaskCreate( this->server,          // function
-                "osc_server",         // server name
-                10000,              // stack memory
-                (void*)this,        // args
-                5,                  // priority
-                NULL);              // handler
+  // OSC INPUT
+  if (this->conf->port_in > 0) {
+    this->udp->begin(this->conf->port_out);
 
+    // LOOP server
+    xTaskCreate( this->server,          // function
+                  "osc_server",         // server name
+                  10000,              // stack memory
+                  (void*)this,        // args
+                  5,                  // priority
+                  NULL);              // handler
+  }
+
+  // OSC OUTPUT
+  if (this->conf->port_out > 0) {
+    
     // LOOP beat
-  if (this->beatInterval > 0)
-  xTaskCreate( this->beat,          // function
-                "osc_beat",         // server name
-                1000,              // stack memory
-                (void*)this,        // args
-                1,                  // priority
-                NULL);              // handler
+    if (this->conf->beatInterval > 0)
+      xTaskCreate( this->beat,          // function
+                  "osc_beat",         // server name
+                  1000,              // stack memory
+                  (void*)this,        // args
+                  1,                  // priority
+                  NULL);              // handler
 
-  // LOOP beacon
-  if (this->beaconInterval > 0)
-  xTaskCreate( this->beacon,          // function
-                "osc_beacon",         // server name
-                10000,              // stack memory
-                (void*)this,        // args
-                1,                  // priority
-                NULL);              // handler
+    // LOOP beacon
+    if (this->conf->beaconInterval > 0)
+      xTaskCreate( this->beacon,          // function
+                  "osc_beacon",         // server name
+                  10000,              // stack memory
+                  (void*)this,        // args
+                  1,                  // priority
+                  NULL);              // handler
+  }
 
   
 };
@@ -134,16 +141,15 @@ OSCMessage K32_osc::status() {
 
 void K32_osc::beat( void * parameter ) {
     K32_osc* that = (K32_osc*) parameter;
-    TickType_t xFrequency = pdMS_TO_TICKS(that->beatInterval);
-
-    IPAddress broadcast (255, 255, 255, 255);
+    TickType_t xFrequency = pdMS_TO_TICKS(that->conf->beatInterval);
 
     while(true) 
     {
       OSCMessage msg("/beat");
 
       // send
-      that->udp->beginPacket( (that->linkedIP) ? that->linkedIP : broadcast , that->port);
+      IPAddress dest = (that->linkedIP) ? that->linkedIP : that->engine->wifi->broadcastIP();
+      that->udp->beginPacket( dest, that->conf->port_out);
       msg.send(*that->udp);
       that->udp->endPacket();
 
@@ -158,17 +164,17 @@ void K32_osc::beat( void * parameter ) {
 void K32_osc::beacon( void * parameter ) {
 
     K32_osc* that = (K32_osc*) parameter;
-    IPAddress broadcast (255, 255, 255, 255);
 
     while(true) 
     {
       // send
-      that->udp->beginPacket( (that->linkedIP) ? that->linkedIP : broadcast , that->port);
+      IPAddress dest = (that->linkedIP) ? that->linkedIP : that->engine->wifi->broadcastIP();
+      that->udp->beginPacket( dest, that->conf->port_out);
       that->status().send(*that->udp);
       that->udp->endPacket();
 
       //LOG("beacon");
-      TickType_t xFrequency = pdMS_TO_TICKS(that->beaconInterval);
+      TickType_t xFrequency = pdMS_TO_TICKS(that->conf->beaconInterval);
       vTaskDelay( xFrequency );
     }
 
@@ -184,7 +190,7 @@ void K32_osc::server( void * parameter ) {
    K32_oscmsg msg(that);
    IPAddress remoteIP;
 
-   LOGF("OSC: listening on port %d\n", that->port);
+   LOGF("OSC: listening on port %d\n", that->conf->port_in);
 
    char idpath[8];
    sprintf(idpath, "/e%u", that->engine->settings->get("id"));
@@ -214,19 +220,26 @@ void K32_osc::server( void * parameter ) {
 
             that->linkedIP = that->udp->remoteIP();
 
-            OSCMessage response("/pong");
-            that->udp->beginPacket(that->udp->remoteIP(), that->port);
-            response.send(*that->udp);
-            that->udp->endPacket();
+            if (that->conf->port_out > 0) {
+              OSCMessage response("/pong");
+              that->udp->beginPacket(that->udp->remoteIP(), that->conf->port_out);
+              response.send(*that->udp);
+              that->udp->endPacket();
+            }
           });
 
           //
           // GENERAL INFO
           //
           msg.dispatch("/info", [](K32_osc* that, K32_oscmsg &msg){
-            that->udp->beginPacket(that->udp->remoteIP(), that->port);
-            that->status().send(*that->udp);
-            that->udp->endPacket();
+            LOGINL("OSC: /info RECV from " );
+            LOG(that->udp->remoteIP());
+
+            if (that->conf->port_out > 0) {
+              that->udp->beginPacket(that->udp->remoteIP(), that->conf->port_out);
+              that->status().send(*that->udp);
+              that->udp->endPacket();
+            }
           });
 
           //
@@ -244,7 +257,7 @@ void K32_osc::server( void * parameter ) {
             //
             // SHUTDOWN
             //
-            msg.dispatch("/shutdown", [](K32_osc* that, K32_oscmsg &msg){
+            msg.dispatch("/poweroff", [](K32_osc* that, K32_oscmsg &msg){
               that->engine->stm32->shutdown();
             }, offset);
 

@@ -173,6 +173,11 @@ bool K32_audio::play() {
 void K32_audio::stop() {
   if (!this->engineOK) return;
 
+  xSemaphoreTake(this->lock, portMAX_DELAY);
+  this->currentFile = "";
+  this->errorPlayer = "";
+  xSemaphoreGive(this->lock);
+
   if (this->isPlaying()) {
     xSemaphoreTake(this->lock, portMAX_DELAY);
     this->gen->stop();
@@ -180,11 +185,6 @@ void K32_audio::stop() {
     this->file->close();
     xSemaphoreGive(this->lock);
   }
-
-  xSemaphoreTake(this->lock, portMAX_DELAY);
-  this->currentFile = "";
-  this->errorPlayer = "";
-  xSemaphoreGive(this->lock);
 
   xSemaphoreTake(this->runflag, portMAX_DELAY);
   xSemaphoreGive(this->runflag);
@@ -233,7 +233,7 @@ void K32_audio::task( void * parameter ) {
 
   xSemaphoreGive(that->runflag);
 
-  if (that->doLoop) {
+  if (that->doLoop && that->currentFile != "") {
     LOG("AUDIO: loop");
     that->play();
   }

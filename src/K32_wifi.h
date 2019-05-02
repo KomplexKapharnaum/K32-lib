@@ -26,8 +26,11 @@ class K32_wifi {
 
     bool isOK();
 
+    IPAddress broadcastIP();
+
 
   private:
+    SemaphoreHandle_t lock;
     static void task( void * parameter );
 
     byte otaEnable = true;
@@ -39,6 +42,7 @@ class K32_wifi {
     static bool didDisconnect;
     static void event(WiFiEvent_t event);
 
+    IPAddress _broadcastIP;
 
 };
 

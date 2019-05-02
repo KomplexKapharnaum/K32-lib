@@ -6,9 +6,8 @@
 #ifndef K32_h
 #define K32_h
 
-#ifndef K32_VERSION
-  #define K32_VERSION 0.95
-#endif
+#define K32_VERSION 0.96 
+
 
 #include <Arduino.h>
 #include <WiFi.h>
@@ -21,19 +20,11 @@
 // prevent cicular include error
 class K32;
 
-// K32 components
-#include "K32_settings.h"
-#include "K32_stm32.h"
-#include "K32_wifi.h"
-#include "K32_leds.h"
-#include "K32_audio.h"
-#include "K32_samplermidi.h"
-#include "K32_osc.h"
-
 struct oscconf {
-   int port;
-   int beat;
-   int beacon;
+   int port_in;
+   int port_out;
+   int beatInterval;
+   int beaconInterval;
 };
 
 struct wificonf {
@@ -50,6 +41,15 @@ struct k32conf {
   wificonf wifi;
   oscconf osc;
 };
+
+// K32 components
+#include "K32_settings.h"
+#include "K32_stm32.h"
+#include "K32_wifi.h"
+#include "K32_leds.h"
+#include "K32_audio.h"
+#include "K32_samplermidi.h"
+#include "K32_osc.h"
 
 class K32 {
   public:
