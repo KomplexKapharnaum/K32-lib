@@ -110,6 +110,7 @@ OSCMessage K32_osc::status() {
     char shortmac[16];
     sprintf(shortmac, "%02X:%02X:%02X", mac[3], mac[4], mac[5]);
     msg.add(shortmac);
+    msg.add(WiFi.localIP().toString().c_str());
     msg.add(WiFi.RSSI());
     (this->linkedIP) ? msg.add(true) : msg.add(false);
     

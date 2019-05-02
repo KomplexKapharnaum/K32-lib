@@ -41,6 +41,10 @@ void K32_stm32::leds(uint8_t *values) {
   this->send(K32_stm32_api::SET_LEDS, arg);
 };
 
+void K32_stm32::gauge(int percent) {
+  this->send(K32_stm32_api::SET_LED_GAUGE, percent);
+};
+
 
 int K32_stm32::battery() {
   xSemaphoreTake(this->lock, portMAX_DELAY);

@@ -6,7 +6,7 @@
 #ifndef K32_stm32_h
 #define K32_stm32_h
 
-#define STM32_CHECK 100           // task loop in ms
+#define STM32_CHECK 200           // task loop in ms
 #define STM32_CHECK_BATT 5000     // check battery in ms
 
 #include "Arduino.h"
@@ -23,6 +23,7 @@ class K32_stm32 {
     void listen(bool btn, bool battery);      // Start monitoring thread (configurable)
 
     void leds(uint8_t *values);      // Set Leds
+    void gauge(int percent);          // Set led gauge %
 
     int battery();      // Get Battery %
     bool clicked();     // Get Btn Click
