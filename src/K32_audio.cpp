@@ -142,7 +142,9 @@ bool K32_audio::play(String filePath) {
     xSemaphoreGive(this->lock);
     LOG("AUDIO: play " + filePath);
 
+    // LOG("AUDIO: take runflag");
     xSemaphoreTake(this->runflag, portMAX_DELAY);
+    // LOG("AUDIO: start task");
     xTaskCreate( this->task,          // function
                   "audio_task",       // task name
                   10000,              // stack memory
@@ -186,6 +188,7 @@ void K32_audio::stop() {
     xSemaphoreGive(this->lock);
   }
 
+  // LOG("AUDIO: stop check runflag");
   xSemaphoreTake(this->runflag, portMAX_DELAY);
   xSemaphoreGive(this->runflag);
 }
@@ -221,6 +224,7 @@ String K32_audio::error() {
 
 void K32_audio::task( void * parameter ) {
   K32_audio* that = (K32_audio*) parameter;
+  // LOG("AUDIO: task started");
 
   // play
   bool RUN = true;
@@ -231,6 +235,7 @@ void K32_audio::task( void * parameter ) {
     vTaskDelay(1);
   } 
 
+  // LOG("AUDIO: giving back runflag");
   xSemaphoreGive(that->runflag);
 
   if (that->doLoop && that->currentFile != "") {

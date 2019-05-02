@@ -28,7 +28,7 @@ void K32_samplermidi::scan() {
   // Checking task
   xTaskCreate( this->task,
                 "sampler_task",
-                50000,
+                40000,
                 (void*)this,
                 1,                // priority
                 NULL);

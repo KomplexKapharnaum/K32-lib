@@ -76,7 +76,7 @@ K32_osc::K32_osc(oscconf conf, K32* engine) : conf(conf), engine(engine)
     if (this->conf.beatInterval > 0)
       xTaskCreate( this->beat,          // function
                   "osc_beat",         // server name
-                  1000,              // stack memory
+                  5000,              // stack memory
                   (void*)this,        // args
                   1,                  // priority
                   NULL);              // handler
@@ -85,7 +85,7 @@ K32_osc::K32_osc(oscconf conf, K32* engine) : conf(conf), engine(engine)
     if (this->conf.beaconInterval > 0)
       xTaskCreate( this->beacon,          // function
                   "osc_beacon",         // server name
-                  10000,              // stack memory
+                  5000,              // stack memory
                   (void*)this,        // args
                   1,                  // priority
                   NULL);              // handler
@@ -143,6 +143,7 @@ OSCMessage K32_osc::status() {
 void K32_osc::beat( void * parameter ) {
     K32_osc* that = (K32_osc*) parameter;
     TickType_t xFrequency = pdMS_TO_TICKS(that->conf.beatInterval);
+    WiFiUDP sock;
 
     while(true) 
     {
@@ -151,9 +152,9 @@ void K32_osc::beat( void * parameter ) {
       // send
       xSemaphoreTake(that->lock, portMAX_DELAY);
       IPAddress dest = (that->linkedIP) ? that->linkedIP : that->engine->wifi->broadcastIP();
-      that->udp->beginPacket( dest, that->conf.port_out);
-      msg.send(*that->udp);
-      that->udp->endPacket();
+      sock.beginPacket( dest, that->conf.port_out);
+      msg.send(sock);
+      sock.endPacket();
       xSemaphoreGive(that->lock);
       // LOG("beat");
 
@@ -168,20 +169,20 @@ void K32_osc::beat( void * parameter ) {
 void K32_osc::beacon( void * parameter ) {
 
     K32_osc* that = (K32_osc*) parameter;
+    TickType_t xFrequency = pdMS_TO_TICKS(that->conf.beaconInterval);
+    WiFiUDP sock;
 
     while(true) 
     {
       // send
       xSemaphoreTake(that->lock, portMAX_DELAY);
       IPAddress dest = (that->linkedIP) ? that->linkedIP : that->engine->wifi->broadcastIP();
-      that->udp->beginPacket( dest, that->conf.port_out);
-      that->status().send(*that->udp);
-      that->udp->endPacket();
+      sock.beginPacket( dest, that->conf.port_out);
+      that->status().send(sock);
+      sock.endPacket();
       xSemaphoreGive(that->lock);
       // LOG("beacon");
 
-      //LOG("beacon");
-      TickType_t xFrequency = pdMS_TO_TICKS(that->conf.beaconInterval);
       vTaskDelay( xFrequency );
     }
 
