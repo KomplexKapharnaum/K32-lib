@@ -6,7 +6,9 @@
 #ifndef K32_h
 #define K32_h
 
-#define K32_VERSION 0.97 
+#define K32_VERSION 1.00  
+#define K32_VERSION 1.01  // audio forced kill to avoid deadlock
+#define K32_VERSION 1.02  // audio keep task active
 
 
 #include <Arduino.h>

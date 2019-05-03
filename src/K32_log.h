@@ -8,7 +8,7 @@
 
 #include "Arduino.h"
 
-//#define KDEBUG
+// #define KDEBUG
 
 #ifdef KDEBUG
  #define LOGSETUP()                    Serial.begin(115200)

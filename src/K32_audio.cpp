@@ -71,6 +71,14 @@ K32_audio::K32_audio() {
   this->volume(100);
   this->gen = NULL;
 
+  // Start task
+  xTaskCreate( this->task,          // function
+      "audio_task",       // task name
+      10000,              // stack memory
+      (void*)this,        // args
+      10,                 // priority
+      NULL);              // handler
+
 };
 
 
@@ -125,14 +133,15 @@ bool K32_audio::play(String filePath) {
   }
   
   this->stop();
+
   if (filePath == "") return false;
+
   xSemaphoreTake(this->lock, portMAX_DELAY);
   if (filePath.endsWith("wav") || filePath.endsWith("WAV")) this->gen = new AudioGeneratorWAV();
   else if (filePath.endsWith("mp3") || filePath.endsWith("MP3")) this->gen = new AudioGeneratorMP3();
   else if (filePath.endsWith("flac") || filePath.endsWith("FLAC")) this->gen = new AudioGeneratorFLAC();
   else if (filePath.endsWith("aac") || filePath.endsWith("AAC")) this->gen = new AudioGeneratorAAC();
   this->file = new AudioFileSourceSD(filePath.c_str());
-  // this->buff = new AudioFileSourceBuffer(file, 4096);
   bool isStarted = this->gen->begin(file, out);
   xSemaphoreGive(this->lock);
 
@@ -141,16 +150,6 @@ bool K32_audio::play(String filePath) {
     this->currentFile = filePath;
     xSemaphoreGive(this->lock);
     LOG("AUDIO: play " + filePath);
-
-    // LOG("AUDIO: take runflag");
-    xSemaphoreTake(this->runflag, portMAX_DELAY);
-    // LOG("AUDIO: start task");
-    xTaskCreate( this->task,          // function
-                  "audio_task",       // task name
-                  10000,              // stack memory
-                  (void*)this,        // args
-                  10,                 // priority
-                  NULL);              // handler
   }
   else {
     LOG("AUDIO: file not found = " + filePath);
@@ -187,10 +186,7 @@ void K32_audio::stop() {
     this->file->close();
     xSemaphoreGive(this->lock);
   }
-
-  // LOG("AUDIO: stop check runflag");
-  xSemaphoreTake(this->runflag, portMAX_DELAY);
-  xSemaphoreGive(this->runflag);
+  
 }
 
 
@@ -226,26 +222,30 @@ void K32_audio::task( void * parameter ) {
   K32_audio* that = (K32_audio*) parameter;
   // LOG("AUDIO: task started");
 
-  // play
-  bool RUN = true;
-  while (that->isPlaying() && RUN) {
-    xSemaphoreTake(that->lock, portMAX_DELAY);
-    RUN = that->gen->loop();
-    xSemaphoreGive(that->lock);
-    vTaskDelay(1);
-  } 
+  bool RUN;
+  while(true) {
 
-  // LOG("AUDIO: giving back runflag");
-  xSemaphoreGive(that->runflag);
+    if (that->isPlaying()) {
+      xSemaphoreTake(that->lock, portMAX_DELAY);
+      RUN = that->gen->loop();
+      xSemaphoreGive(that->lock);
+      
+      // end of file
+      if (RUN) vTaskDelay(1);
+      else {     
+        if (that->doLoop && that->currentFile != "") {
+          LOG("AUDIO: loop");
+          that->play();
+        }
+        else {
+          LOG("AUDIO: stop");
+          that->stop();
+        }
+      }
+    }
+    else vTaskDelay(10);
 
-  if (that->doLoop && that->currentFile != "") {
-    LOG("AUDIO: loop");
-    that->play();
-  }
-  else {
-    LOG("AUDIO: stop");
-    that->stop();
-  }
+  }  
 
   vTaskDelete(NULL);
 };
