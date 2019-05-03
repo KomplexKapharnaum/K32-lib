@@ -6,7 +6,7 @@
 #ifndef K32_stm32_h
 #define K32_stm32_h
 
-#define STM32_CHECK 200           // task loop in ms
+#define STM32_CHECK 300           // task loop in ms
 #define STM32_CHECK_BATT 5000     // check battery in ms
 
 #include "Arduino.h"
@@ -14,6 +14,8 @@
 #include "K32_stm32_api.h"
 #include "esp_task_wdt.h"
 #include <WiFi.h>
+
+#include "RemoteDebug.h"
 
 class K32_stm32 {
   public:
@@ -24,6 +26,7 @@ class K32_stm32 {
 
     void leds(uint8_t *values);      // Set Leds
     void gauge(int percent);          // Set led gauge %
+    int firmware();
 
     int battery();      // Get Battery %
     bool clicked();     // Get Btn Click
@@ -50,6 +53,9 @@ class K32_stm32 {
     long get(K32_stm32_api::CommandType cmd);
     long read();
     void flush();
+
+    RemoteDebug Debug;
+
 
 };
 

@@ -46,6 +46,11 @@ void K32_stm32::gauge(int percent) {
 };
 
 
+int K32_stm32::firmware() {
+  return this->get(K32_stm32_api::GET_FW_VERSION);
+}; 
+
+
 int K32_stm32::battery() {
   xSemaphoreTake(this->lock, portMAX_DELAY);
   int battLevel = this->_battery;
@@ -125,7 +130,7 @@ void K32_stm32::task( void * parameter ) {
     xSemaphoreTake(that->lock, portMAX_DELAY);
 
     // check Button
-    if (that->_btn_listen) {
+    if (that->_btn_listen && STM32_CHECK > 0) {
       event = that->get(K32_stm32_api::GET_BUTTON_EVENT);
       if (event == K32_stm32_api::BUTTON_CLICK_EVENT) {
          that->_btn_click = true;
@@ -138,7 +143,7 @@ void K32_stm32::task( void * parameter ) {
     }
 
     // check Battery
-    if (that->_batt_listen) {
+    if (that->_batt_listen && STM32_CHECK_BATT > 0) {
       tickerBattery -= 1;
       if (tickerBattery <= 0) {
         int batt = that->get(K32_stm32_api::GET_BATTERY_PERCENTAGE);
@@ -164,7 +169,6 @@ void K32_stm32::send(K32_stm32_api::CommandType cmd, int arg) {
   Serial.write(cmd);
   Serial.write(' ');
   Serial.println(arg);
-  this->flush();
 }
 
 
@@ -173,7 +177,6 @@ void K32_stm32::send(K32_stm32_api::CommandType cmd) {
   Serial.write(K32_stm32_api::PREAMBLE);
   Serial.write(cmd);
   Serial.println("");
-  this->flush();
 }
 
 
@@ -182,7 +185,6 @@ long K32_stm32::get(K32_stm32_api::CommandType cmd) {
   Serial.write(K32_stm32_api::PREAMBLE);
   Serial.write(cmd);
   Serial.println("");
-  this->flush();
   long answer = this->read();
   return answer;
 }

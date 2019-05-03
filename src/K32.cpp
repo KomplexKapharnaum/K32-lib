@@ -8,7 +8,6 @@
 
 K32::K32(k32conf conf) {
 
-  LOGSETUP(); // based on #define DEBUG
 
   // Settings config
   const char* keys[16] = {"id", "channel", "model"};
@@ -17,7 +16,7 @@ K32::K32(k32conf conf) {
   // STM32
   stm32 = new K32_stm32();
   if (conf.stm32) stm32->listen(true, true);
-
+  // LOGSETUP(); // based on #define DEBUG
 
   // AUDIO  (Note: Audio must be started before LEDS !!)
   if (conf.audio) {
