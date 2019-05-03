@@ -15,8 +15,6 @@
 #include "esp_task_wdt.h"
 #include <WiFi.h>
 
-#include "RemoteDebug.h"
-
 class K32_stm32 {
   public:
     K32_stm32();
@@ -53,8 +51,6 @@ class K32_stm32 {
     long get(K32_stm32_api::CommandType cmd);
     long read();
     void flush();
-
-    RemoteDebug Debug;
 
 
 };
