@@ -59,7 +59,6 @@ class K32 {
   public:
     K32(k32conf conf);
 
-    K32_log* log;
     K32_settings* settings;
     K32_stm32* stm32;
     K32_wifi* wifi;
