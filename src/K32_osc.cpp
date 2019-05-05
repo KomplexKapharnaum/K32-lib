@@ -63,7 +63,7 @@ K32_osc::K32_osc(oscconf conf, K32* engine) : conf(conf), engine(engine)
     // LOOP server
     xTaskCreate( this->server,          // function
                   "osc_server",         // server name
-                  10000,              // stack memory
+                  2000,              // stack memory
                   (void*)this,        // args
                   5,                  // priority
                   NULL);              // handler
@@ -76,7 +76,7 @@ K32_osc::K32_osc(oscconf conf, K32* engine) : conf(conf), engine(engine)
     if (this->conf.beatInterval > 0)
       xTaskCreate( this->beat,          // function
                   "osc_beat",         // server name
-                  5000,              // stack memory
+                  2000,              // stack memory
                   (void*)this,        // args
                   1,                  // priority
                   NULL);              // handler
@@ -85,7 +85,7 @@ K32_osc::K32_osc(oscconf conf, K32* engine) : conf(conf), engine(engine)
     if (this->conf.beaconInterval > 0)
       xTaskCreate( this->beacon,          // function
                   "osc_beacon",         // server name
-                  5000,              // stack memory
+                  2000,              // stack memory
                   (void*)this,        // args
                   1,                  // priority
                   NULL);              // handler
@@ -151,13 +151,15 @@ void K32_osc::beat( void * parameter ) {
       OSCMessage msg("/beat");
 
       // send
-      xSemaphoreTake(that->lock, portMAX_DELAY);
-      IPAddress dest = (that->linkedIP) ? that->linkedIP : that->engine->wifi->broadcastIP();
-      sock.beginPacket( dest, that->conf.port_out);
-      msg.send(sock);
-      sock.endPacket();
-      xSemaphoreGive(that->lock);
-      // LOG("beat");
+      if (that->engine->wifi->isOK()) { 
+        xSemaphoreTake(that->lock, portMAX_DELAY);
+        IPAddress dest = (that->linkedIP) ? that->linkedIP : that->engine->wifi->broadcastIP();
+        sock.beginPacket( dest, that->conf.port_out);
+        msg.send(sock);
+        sock.endPacket();
+        xSemaphoreGive(that->lock);
+        // LOG("beat");
+      }
 
       vTaskDelay( xFrequency );
     }
@@ -175,14 +177,16 @@ void K32_osc::beacon( void * parameter ) {
 
     while(true) 
     {
-      // send
-      xSemaphoreTake(that->lock, portMAX_DELAY);
-      IPAddress dest = (that->linkedIP) ? that->linkedIP : that->engine->wifi->broadcastIP();
-      sock.beginPacket( dest, that->conf.port_out);
-      that->status().send(sock);
-      sock.endPacket();
-      xSemaphoreGive(that->lock);
-      // LOG("beacon");
+      if (that->engine->wifi->isOK()) { 
+        // send
+        xSemaphoreTake(that->lock, portMAX_DELAY);
+        IPAddress dest = (that->linkedIP) ? that->linkedIP : that->engine->wifi->broadcastIP();
+        sock.beginPacket( dest, that->conf.port_out);
+        that->status().send(sock);
+        sock.endPacket();
+        xSemaphoreGive(that->lock);
+        // LOG("beacon");
+      }
 
       vTaskDelay( xFrequency );
     }
@@ -208,6 +212,7 @@ void K32_osc::server( void * parameter ) {
    sprintf(chpath, "/c%u", that->engine->settings->get("channel"));
 
    while(true) {
+     
       xSemaphoreTake(that->lock, portMAX_DELAY);
 
       size = that->udp->parsePacket();

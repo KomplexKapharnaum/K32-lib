@@ -25,7 +25,7 @@ K32_wifi::K32_wifi(String nameDevice = "K32") : nameDevice(nameDevice) {
   // LOOP task
   xTaskCreate( this->task,        // function
                 "wifi_task",      // task name
-                10000,             // stack memory
+                2000,             // stack memory
                 (void*)this,      // args
                 1,                // priority
                 NULL);            // handler

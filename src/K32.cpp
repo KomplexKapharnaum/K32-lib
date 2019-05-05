@@ -8,6 +8,8 @@
 
 K32::K32(k32conf conf) {
 
+  // LOGS
+  log = new K32_log();
 
   // Settings config
   const char* keys[16] = {"id", "channel", "model"};

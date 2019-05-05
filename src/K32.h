@@ -9,6 +9,7 @@
 #define K32_VERSION 1.00  
 #define K32_VERSION 1.01  // audio forced kill to avoid deadlock
 #define K32_VERSION 1.02  // audio keep task active
+#define K32_VERSION 1.03  // fixed audio memory leak
 
 
 #include <Arduino.h>
@@ -45,6 +46,7 @@ struct k32conf {
 };
 
 // K32 components
+#include "K32_log.h"
 #include "K32_settings.h"
 #include "K32_stm32.h"
 #include "K32_wifi.h"
@@ -57,6 +59,7 @@ class K32 {
   public:
     K32(k32conf conf);
 
+    K32_log* log;
     K32_settings* settings;
     K32_stm32* stm32;
     K32_wifi* wifi;

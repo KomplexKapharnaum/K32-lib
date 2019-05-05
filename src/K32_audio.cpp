@@ -69,14 +69,15 @@ K32_audio::K32_audio() {
 
   // Set Volume
   this->volume(100);
-  this->gen = NULL;
+  this->gen = new AudioGeneratorWAV();
+  this->file = new AudioFileSourceSD();
 
   // Start task
   xTaskCreate( this->task,          // function
       "audio_task",       // task name
-      10000,              // stack memory
+      5000,              // stack memory
       (void*)this,        // args
-      10,                 // priority
+      20,                 // priority
       NULL);              // handler
 
 };
@@ -137,6 +138,8 @@ bool K32_audio::play(String filePath) {
   if (filePath == "") return false;
 
   xSemaphoreTake(this->lock, portMAX_DELAY);
+  delete this->gen;
+  delete this->file;
   if (filePath.endsWith("wav") || filePath.endsWith("WAV")) this->gen = new AudioGeneratorWAV();
   else if (filePath.endsWith("mp3") || filePath.endsWith("MP3")) this->gen = new AudioGeneratorMP3();
   else if (filePath.endsWith("flac") || filePath.endsWith("FLAC")) this->gen = new AudioGeneratorFLAC();
@@ -186,7 +189,7 @@ void K32_audio::stop() {
     this->file->close();
     xSemaphoreGive(this->lock);
   }
-  
+    
 }
 
 
