@@ -7,7 +7,7 @@
 #include "K32.h"
 
 K32::K32(k32conf conf) {
-
+ 
   // Settings config
   const char* keys[16] = {"id", "channel", "model"};
   settings = new K32_settings(keys);

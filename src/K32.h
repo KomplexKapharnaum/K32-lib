@@ -10,6 +10,7 @@
 #define K32_VERSION 1.01  // audio forced kill to avoid deadlock
 #define K32_VERSION 1.02  // audio keep task active
 #define K32_VERSION 1.03  // fixed audio memory leak
+#define K32_VERSION 1.04  // v2 board
 
 
 #include <Arduino.h>

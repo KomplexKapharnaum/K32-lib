@@ -9,13 +9,40 @@
 #include "SD.h"
 #include "K32_samplermidi.h"
 
+#if HW_REVISION == 1
+  const uint8_t I2C_SDA_PIN = 2;
+  const uint8_t I2C_SCL_PIN = 4;
+  const uint8_t I2S_LRCK_PIN = 27;
+  const uint8_t I2S_DATA_PIN = 26;
+  const uint8_t I2S_BCK_PIN = 25;
+  const uint8_t SD_DI_PIN = 23;
+  const uint8_t SD_DO_PIN = 19;
+  const uint8_t SD_SCK_PIN = 18;
+  const uint8_t SD_CS_PIN = 5;
+
+#elif HW_REVISION == 2
+  const uint8_t I2C_SDA_PIN = 32;
+  const uint8_t I2C_SCL_PIN = 33;
+  const uint8_t I2S_LRCK_PIN = 25;
+  const uint8_t I2S_DATA_PIN = 26;
+  const uint8_t I2S_BCK_PIN = 27;
+  const uint8_t SD_DI_PIN = 19;
+  const uint8_t SD_DO_PIN = 5;
+  const uint8_t SD_SCK_PIN = 18;
+  const uint8_t SD_CS_PIN = 21;
+
+#else
+  #error "HW_REVISION undefined or invalid. Should be 1 or 2"
+#endif
+
 
 K32_samplermidi::K32_samplermidi() {
   this->lock = xSemaphoreCreateMutex();
 
   // Start SD
   if (!SD.exists("/")) {
-    if (SD.begin()) LOG("SD card OK");
+    SPI.begin(SD_SCK_PIN, SD_DO_PIN, SD_DI_PIN);
+    if (SD.begin(SD_CS_PIN)) LOG("SD card OK");
     else LOG("SD card ERROR");
   }
 
@@ -117,7 +144,7 @@ void K32_samplermidi::task( void * parameter ) {
             }
           }
           vTaskDelay( xFrequency );
-          //LOG("File found: "+String(entry.name())+" size="+String(entry.size()));
+          // LOG("File found: "+String(entry.name())+" size="+String(entry.size()));
         }
       }
     }

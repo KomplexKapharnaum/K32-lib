@@ -15,6 +15,33 @@
 #include "AudioGeneratorAAC.h"
 
 
+#if HW_REVISION == 1
+  const uint8_t I2C_SDA_PIN = 2;
+  const uint8_t I2C_SCL_PIN = 4;
+  const uint8_t I2S_LRCK_PIN = 27;
+  const uint8_t I2S_DATA_PIN = 26;
+  const uint8_t I2S_BCK_PIN = 25;
+  const uint8_t SD_DI_PIN = 23;
+  const uint8_t SD_DO_PIN = 19;
+  const uint8_t SD_SCK_PIN = 18;
+  const uint8_t SD_CS_PIN = 5;
+
+#elif HW_REVISION == 2
+  const uint8_t I2C_SDA_PIN = 32;
+  const uint8_t I2C_SCL_PIN = 33;
+  const uint8_t I2S_LRCK_PIN = 25;
+  const uint8_t I2S_DATA_PIN = 26;
+  const uint8_t I2S_BCK_PIN = 27;
+  const uint8_t SD_DI_PIN = 19;
+  const uint8_t SD_DO_PIN = 5;
+  const uint8_t SD_SCK_PIN = 18;
+  const uint8_t SD_CS_PIN = 21;
+
+#else
+  #error "HW_REVISION undefined or invalid. Should be 1 or 2"
+#endif
+
+
 K32_audio::K32_audio() {
   LOG("AUDIO: init");
 
@@ -23,23 +50,26 @@ K32_audio::K32_audio() {
   xSemaphoreGive(this->runflag);
 
   // Start SD
-  if (SD.exists("/")) this->sdOK = true;
-  else {
-    LOG("AUDIO: attaching SD");
-    this->sdOK = SD.begin(SS, SPI, 25000000);
-  }
+  LOG("AUDIO: attaching SD");
+  SPI.begin(SD_SCK_PIN, SD_DO_PIN, SD_DI_PIN);
+  this->sdOK = SD.begin(SD_CS_PIN);
   if (this->sdOK) LOG("AUDIO: sd card OK");
   else LOG("AUDIO: sd card ERROR");
 
   // Start I2S output
   this->out = new AudioOutputI2S();
-  this->out->SetPinout(25, 27, 26); //HW dependent ! BCK, LRCK, DATA
+  this->out->SetPinout(I2S_BCK_PIN, I2S_LRCK_PIN, I2S_DATA_PIN); 
+  this->out->SetBitsPerSample(16);
+  this->out->SetRate(44100);
   this->out->SetGain( 1 );
+
+  // LOG("AUDIO: Waiting for 5V");
+  // delay(2000);
 
   // Start PCM51xx
   bool pcmOK = true;
+  Wire.begin(I2C_SDA_PIN, I2C_SCL_PIN); 
   this->pcm = new PCM51xx(Wire);
-  Wire.begin(2, 4);
   if (this->pcm->begin(PCM51xx::SAMPLE_RATE_44_1K, PCM51xx::BITS_PER_SAMPLE_16))
       LOG("AUDIO: PCM51xx initialized successfully.");
   else
@@ -245,7 +275,7 @@ void K32_audio::task( void * parameter ) {
           that->stop();
         }
       }
-    }
+    } 
     else vTaskDelay(10);
 
   }  

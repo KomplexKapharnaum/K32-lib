@@ -130,7 +130,7 @@ K32_leds_rmt* K32_leds_rmt::setPixel(int strip, int pixel, int red, int green, i
     //  LOGINL(that->STRANDS[0].pixels[0].b); LOG("");
 
      xSemaphoreGive(that->strands_lock);
-     yield();
+    //  yield();  // semaphore take dirty
    }
 
    vTaskDelete(NULL);

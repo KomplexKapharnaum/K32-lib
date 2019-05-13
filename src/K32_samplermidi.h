@@ -13,7 +13,6 @@
 #define MIDI_MAX_NOTE 128     //128
 #define MIDI_MAX_TITLE 14     // Filename length
 
-
 class K32_samplermidi {
   public:
     K32_samplermidi();

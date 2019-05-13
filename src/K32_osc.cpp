@@ -87,7 +87,7 @@ K32_osc::K32_osc(oscconf conf, K32* engine) : conf(conf), engine(engine)
                   "osc_beacon",         // server name
                   2000,              // stack memory
                   (void*)this,        // args
-                  1,                  // priority
+                  2,                  // priority
                   NULL);              // handler
   }
 
@@ -426,9 +426,8 @@ void K32_osc::server( void * parameter ) {
           msg.route(chpath, router);
 
         } else {
-          OSCErrorCode error = msg.getError();
           LOGINL("OSC: error ");
-          LOG(error);
+          LOG(msg.getError());
         }
 
 
