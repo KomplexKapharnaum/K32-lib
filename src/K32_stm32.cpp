@@ -45,10 +45,21 @@ void K32_stm32::gauge(int percent) {
   this->send(K32_stm32_api::SET_LED_GAUGE, percent);
 };
 
+void K32_stm32::blink(uint8_t *values, int duration_ms)
+{
+  this->_blink_leds = values;
+  this->_blink_duration = duration_ms;
+  xTaskCreate( this->blink_task,
+                "blink_task",
+                1000,
+                (void*)this,
+                0,              // priority
+                NULL);
+}
 
 int K32_stm32::firmware() {
   return this->get(K32_stm32_api::GET_FW_VERSION);
-}; 
+};
 
 
 int K32_stm32::battery() {
@@ -161,6 +172,21 @@ void K32_stm32::task( void * parameter ) {
   }
   vTaskDelete(NULL);
 };
+
+
+void K32_stm32::blink_task( void * parameter ) {
+  K32_stm32* that = (K32_stm32*) parameter ;
+  long startTime = millis();
+  uint8_t leds_off[6] = {0,0,0,0,0,0};
+  while ((millis() - startTime) < that->_blink_duration)
+  {
+    vTaskDelay(100);
+    that->leds(that->_blink_leds);
+    vTaskDelay(100);
+    that->leds(leds_off);
+  }
+  vTaskDelete(NULL);
+}
 
 
 void K32_stm32::send(K32_stm32_api::CommandType cmd, int arg) {

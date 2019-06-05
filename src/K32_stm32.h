@@ -24,6 +24,7 @@ class K32_stm32 {
 
     void leds(uint8_t *values);      // Set Leds
     void gauge(int percent);          // Set led gauge %
+    void blink(uint8_t *values, int duration_ms);  //Blink led value for a fixed duration
     int firmware();
 
     int battery();      // Get Battery %
@@ -45,7 +46,11 @@ class K32_stm32 {
     bool _btn_listen = true;
     bool _batt_listen = true;
 
+    uint8_t *_blink_leds;
+    int _blink_duration;
+
     static void task( void * parameter );
+    static void blink_task (void * parameter);
     void send(K32_stm32_api::CommandType cmd, int arg);
     void send(K32_stm32_api::CommandType cmd);
     long get(K32_stm32_api::CommandType cmd);
