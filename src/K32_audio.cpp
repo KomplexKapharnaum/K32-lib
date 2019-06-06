@@ -63,8 +63,8 @@ K32_audio::K32_audio() {
   this->out->SetRate(44100);
   this->out->SetGain( 1 );
 
-  // LOG("AUDIO: Waiting for 5V");
-  // delay(2000);
+  LOG("AUDIO: Waiting for 5V");
+  delay(2000);
 
   // Start PCM51xx
   bool pcmOK = true;

@@ -15,7 +15,8 @@ K32_leds_rmt::K32_leds_rmt() {
 
   int pins[LEDS_NUM_STRIPS] = {21, 22};
   for (int s = 0; s < LEDS_NUM_STRIPS; s++)
-    this->STRANDS[s] = {.rmtChannel = s, .gpioNum = pins[s], .ledType = LED_WS2812B_V1, .brightLimit = 255, .numPixels = LEDS_NUM_PIXEL, .pixels = nullptr, ._stateVars = nullptr};
+    // this->STRANDS[s] = {.rmtChannel = s, .gpioNum = pins[s], .ledType = LED_WS2812B_V1, .brightLimit = 255, .numPixels = LEDS_NUM_PIXEL, .pixels = nullptr, ._stateVars = nullptr};
+    this->STRANDS[s] = {.rmtChannel = s, .gpioNum = pins[s], .ledType = LED_SK6812W_V1, .brightLimit = 255, .numPixels = LEDS_NUM_PIXEL, .pixels = nullptr, ._stateVars = nullptr};
 
   digitalLeds_initStrands( this->STRANDS, LEDS_NUM_STRIPS);
 
@@ -90,9 +91,9 @@ K32_leds_rmt* K32_leds_rmt::setPixel(int strip, int pixel, int red, int green, i
 K32_leds_rmt* K32_leds_rmt::setPixel(int strip, int pixel, int red, int green, int blue, int white) {
   if (strip == -1) {
     for (int s = 0; s < LEDS_NUM_STRIPS; s++)
-      this->setPixel(s, pixel, red, green, blue);
+      this->setPixel(s, pixel, red, green, blue, white);
   }
-  else if (pixel == -1) this->setStrip(strip, red, green, blue);
+  else if (pixel == -1) this->setStrip(strip, red, green, blue, white);
   else if ((strip < 0) or (strip >= LEDS_NUM_STRIPS) or (pixel < 0) or (pixel >= LEDS_NUM_PIXEL)) return this;
   else {
     if (red > 255) red = 255;       if (red < 0) red = 0;

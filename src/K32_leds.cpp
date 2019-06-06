@@ -32,6 +32,7 @@ void K32_leds::play( K32_leds_anim* anim ) {
   // ANIM task
   this->stop();
   this->activeAnim = anim;
+  this->activeAnim->init();
   xTaskCreate( this->animate,        // function
                 "leds_anim_task", // task name
                 2000,             // stack memory    // 5000 not enough 
