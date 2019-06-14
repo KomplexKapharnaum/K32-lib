@@ -45,6 +45,16 @@ void K32_stm32::gauge(int percent) {
   this->send(K32_stm32_api::SET_LED_GAUGE, percent);
 };
 
+void K32_stm32::custom(int Ulow, int U1, int U2, int U3, int U4, int U5, int Umax) {
+  this->send(K32_stm32_api::SET_BATTERY_VOLTAGE_LOW, Ulow);
+  this->send(K32_stm32_api::SET_BATTERY_VOLTAGE_1, U1);
+  this->send(K32_stm32_api::SET_BATTERY_VOLTAGE_2, U2);
+  this->send(K32_stm32_api::SET_BATTERY_VOLTAGE_3, U3);
+  this->send(K32_stm32_api::SET_BATTERY_VOLTAGE_4, U4);
+  this->send(K32_stm32_api::SET_BATTERY_VOLTAGE_5, U5);
+  this->send(K32_stm32_api::SET_BATTERY_VOLTAGE_6, Umax);
+};
+
 
 int K32_stm32::firmware() {
   return this->get(K32_stm32_api::GET_FW_VERSION);
@@ -58,6 +68,9 @@ int K32_stm32::battery() {
   return battLevel;
 };
 
+int K32_stm32::voltage() {
+  return this->get(K32_stm32_api::GET_BATTERY_VOLTAGE);
+};
 
 bool K32_stm32::clicked() {
   xSemaphoreTake(this->lock, portMAX_DELAY);
