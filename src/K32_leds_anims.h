@@ -7,7 +7,7 @@
 #define K32_leds_anims_h
 
 #define LEDS_ANIMS_SLOTS  16
-#define LEDS_PARAM_SLOTS  6
+#define LEDS_PARAM_SLOTS  16
 
 #include "K32_leds_rmt.h"
 
@@ -24,14 +24,16 @@ class K32_leds_anim {
     virtual String name () { return ""; };
     virtual bool loop ( K32_leds_rmt* leds ) { return false; };
     
-    void setParam(int k, int value) {
-      if (k < LEDS_PARAM_SLOTS) this->params[k] = value;
-    } 
+    void init() { this->startTime = millis(); }
+    void setParam(int k, int value) { if (k < LEDS_PARAM_SLOTS) this->params[k] = value; } 
     void lock() { xSemaphoreTake(this->critical, portMAX_DELAY); }
     void unlock() { xSemaphoreGive(this->critical); }
     
     int params[LEDS_PARAM_SLOTS];
     SemaphoreHandle_t critical;
+
+  protected:
+    unsigned long startTime = 0;
 };
 
 
@@ -48,6 +50,8 @@ class K32_leds_anim_test : public K32_leds_anim {
     
     String name () { return "test"; }
     
+    void init() {}
+
     bool loop ( K32_leds_rmt* leds ){
     
       int wait = this->params[2];
@@ -108,14 +112,20 @@ class K32_leds_anim_sinus : public K32_leds_anim {
   public:
     K32_leds_anim_sinus() {
       this->params[0] = 2000; // period
-      this->params[1] = 255;  //intensity
+      this->params[1] = 255;  // intensity max
+      this->params[2] = 0;    // intensity min
+      this->params[3] = 255;  // red
+      this->params[4] = 255;  // green
+      this->params[5] = 255;  // blue
+      this->params[6] = 255;  // white
+      this->params[7] = 0;    // duration (seconds) 0 = infinite
     }
 
     String name () { return "sinus"; }
     
     bool loop ( K32_leds_rmt* leds ){
 
-      int white = 0;
+      float factor = 0;
       unsigned long start = millis();
       unsigned long progress = 0;
 
@@ -123,19 +133,25 @@ class K32_leds_anim_sinus : public K32_leds_anim {
 
       while (progress <= this->params[0]) {
 
-        white = (0.5f + 0.5f * sin( 2 * PI * progress / this->params[0] - 0.5f * PI ) ) * this->params[1];
+        factor = ((0.5f + 0.5f * sin( 2 * PI * progress / this->params[0] - 0.5f * PI ) ) * (this->params[1]-this->params[2]) + this->params[2]) / 255;
 
         this->lock();
-        leds->setAll(white, white, white, white)->show();
+        leds->setAll( (int)(this->params[3]*factor),  (int)(this->params[4]*factor),  (int)(this->params[5]*factor),  (int)(this->params[6]*factor));
+        leds->show();
         this->unlock();
 
         vTaskDelay(pdMS_TO_TICKS(1));
         progress = millis() - start;
       }
 
-      this->lock();
-      leds->blackout();
-      this->unlock();
+      // ANIMATION Timeout
+      if (this->params[7] > 0)
+        if (millis() > (this->startTime+this->params[7]*1000)) {
+          this->lock();
+          leds->blackout();
+          this->unlock();
+          return false;
+        }
 
       return true;    // LOOP !
 
