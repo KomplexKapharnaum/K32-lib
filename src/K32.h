@@ -6,7 +6,7 @@
 #ifndef K32_h
 #define K32_h
 
-#define K32_VERSION 1.00  
+#define K32_VERSION 1.00
 #define K32_VERSION 1.01  // audio forced kill to avoid deadlock
 #define K32_VERSION 1.02  // audio keep task active
 #define K32_VERSION 1.03  // fixed audio memory leak
@@ -61,13 +61,13 @@ class K32 {
   public:
     K32(k32conf conf);
 
-    K32_settings* settings;
-    K32_stm32* stm32;
-    K32_wifi* wifi;
-    K32_osc* osc;
-    K32_leds* leds;
-    K32_audio* audio;
-    K32_samplermidi* sampler;
+    K32_settings* settings = NULL;
+    K32_stm32* stm32 = NULL;
+    K32_wifi* wifi = NULL;
+    K32_osc* osc = NULL;
+    K32_leds* leds = NULL;
+    K32_audio* audio = NULL;
+    K32_samplermidi* sampler = NULL;
 
   private:
 
