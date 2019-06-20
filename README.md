@@ -1,1 +1,2 @@
-ESP32 framework for KXKM board
+ESP32 framework libraries for KXKM board
+

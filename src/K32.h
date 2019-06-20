@@ -11,6 +11,7 @@
 #define K32_VERSION 1.02  // audio keep task active
 #define K32_VERSION 1.03  // fixed audio memory leak
 #define K32_VERSION 1.04  // v2 board
+#define K32_VERSION 1.05  // led anim sinus ++
 
 
 #include <Arduino.h>

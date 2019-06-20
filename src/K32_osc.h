@@ -24,6 +24,8 @@ class K32_osc {
 
     OSCMessage status();
 
+    void send(OSCMessage msg);
+
   private:
     SemaphoreHandle_t lock;
     static void server( void * parameter );
@@ -31,6 +33,7 @@ class K32_osc {
     static void beat( void * parameter );
 
     WiFiUDP* udp;         // must be protected with lock 
+    WiFiUDP* sendSock;
     IPAddress linkedIP;
 
     oscconf conf;
@@ -46,7 +49,8 @@ class K32_oscmsg : public OSCMessage {
     bool route(const char * pattern, void (*callback)(K32_osc* env, K32_oscmsg &, int), int = 0);
     String getStr(int position);
 
-    K32_osc* env;
+    K32_osc* env;;
+
 };
 
 #endif

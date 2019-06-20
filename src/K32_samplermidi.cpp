@@ -9,6 +9,10 @@
 #include "SD.h"
 #include "K32_samplermidi.h"
 
+#ifndef HW_REVISION
+#define HW_REVISION 2
+#endif
+
 #if HW_REVISION == 1
   const uint8_t I2C_SDA_PIN = 2;
   const uint8_t I2C_SCL_PIN = 4;

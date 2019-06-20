@@ -55,6 +55,7 @@ K32_osc::K32_osc(oscconf conf, K32* engine) : conf(conf), engine(engine)
 { 
   this->lock = xSemaphoreCreateMutex();
   this->udp = new WiFiUDP();
+  this->sendSock = new WiFiUDP();
 
   // OSC INPUT
   if (this->conf.port_in > 0) {
@@ -63,7 +64,7 @@ K32_osc::K32_osc(oscconf conf, K32* engine) : conf(conf), engine(engine)
     // LOOP server
     xTaskCreate( this->server,          // function
                   "osc_server",         // server name
-                  2000,              // stack memory
+                  5000,               // stack memory
                   (void*)this,        // args
                   5,                  // priority
                   NULL);              // handler
@@ -136,6 +137,17 @@ OSCMessage K32_osc::status() {
     return msg;
 }
 
+void K32_osc::send( OSCMessage msg ) {
+  if (this->engine->wifi->isOK() && this->conf.port_out > 0) { 
+    xSemaphoreTake(this->lock, portMAX_DELAY);
+    IPAddress dest = (this->linkedIP) ? this->linkedIP : this->engine->wifi->broadcastIP();
+    this->sendSock->beginPacket( dest, this->conf.port_out);
+    msg.send(*this->sendSock);
+    this->sendSock->endPacket();
+    xSemaphoreGive(this->lock);
+  }
+}
+
 
 /*
  *   PRIVATE
@@ -147,20 +159,8 @@ void K32_osc::beat( void * parameter ) {
     WiFiUDP sock;
 
     while(true) 
-    {
-      OSCMessage msg("/beat");
-
-      // send
-      if (that->engine->wifi->isOK()) { 
-        xSemaphoreTake(that->lock, portMAX_DELAY);
-        IPAddress dest = (that->linkedIP) ? that->linkedIP : that->engine->wifi->broadcastIP();
-        sock.beginPacket( dest, that->conf.port_out);
-        msg.send(sock);
-        sock.endPacket();
-        xSemaphoreGive(that->lock);
-        // LOG("beat");
-      }
-
+    { 
+      that->send( OSCMessage("/beat") );
       vTaskDelay( xFrequency );
     }
 
@@ -267,6 +267,7 @@ void K32_osc::server( void * parameter ) {
             // RESET
             //
             msg.dispatch("/reset", [](K32_osc* that, K32_oscmsg &msg){
+
               that->engine->stm32->reset();
             }, offset);
 
@@ -301,8 +302,10 @@ void K32_osc::server( void * parameter ) {
               if (that->engine->sampler)
               msg.dispatch("/sample", [](K32_osc* that, K32_oscmsg &msg){
 
-                if (msg.isInt(0) && msg.isInt(1))
+                if (msg.isInt(0) && msg.isInt(1)) {
                   that->engine->audio->play( that->engine->sampler->path( msg.getInt(0), msg.getInt(1) ) );
+                  LOGINL("OSC Sample: "); LOGINL(msg.getInt(0)); LOGINL(msg.getInt(1)); 
+                }
 
                 if (msg.isInt(2)) {
                   that->engine->audio->volume( msg.getInt(2) );
@@ -407,9 +410,14 @@ void K32_osc::server( void * parameter ) {
                 
                 if (!msg.isString(0)) return;
                 K32_leds_anim* anim = that->engine->leds->anim( msg.getStr(0) );
+                LOGINL("LEDS: play "); LOGINL(msg.getStr(0));
 
-                for (int k=0; k<LEDS_PARAM_SLOTS; k++)
-                  if (msg.isInt(k+1)) anim->setParam(k, msg.getInt(k+1));
+                for (int k=0; k<LEDS_PARAM_SLOTS; k++) 
+                  if (msg.isInt(k+1)) {
+                    anim->setParam(k, msg.getInt(k+1));
+                    LOGINL(" "); LOGINL(msg.getInt(k+1));
+                  }
+                LOG("");
 
                 that->engine->leds->play( anim );
 

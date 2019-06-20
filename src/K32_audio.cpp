@@ -14,6 +14,9 @@
 #include "AudioGeneratorFLAC.h"
 #include "AudioGeneratorAAC.h"
 
+#ifndef HW_REVISION
+#define HW_REVISION 2
+#endif
 
 #if HW_REVISION == 1
   const uint8_t I2C_SDA_PIN = 2;
@@ -63,8 +66,8 @@ K32_audio::K32_audio() {
   this->out->SetRate(44100);
   this->out->SetGain( 1 );
 
-  // LOG("AUDIO: Waiting for 5V");
-  // delay(2000);
+  LOG("AUDIO: Waiting for 5V");
+  delay(2000);
 
   // Start PCM51xx
   bool pcmOK = true;
