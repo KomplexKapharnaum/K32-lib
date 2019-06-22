@@ -1,6 +1,6 @@
 {
     "name": "K32-lib",
-    "version": "1.04",
+    "version": "1.0.7",
     "keywords": "ESP32 KXKM",
     "description": "ESP32 framework libraries for KXKM board",
     "repository": {

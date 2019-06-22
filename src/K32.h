@@ -12,7 +12,8 @@
 // #define K32_VERSION 1.03  // fixed audio memory leak
 // #define K32_VERSION 1.04  // v2 board
 // #define K32_VERSION 1.05  // led anim sinus ++
-#define K32_VERSION 1.06  // mqtt
+// #define K32_VERSION 1.06  // mqtt (not enabled yet)
+#define K32_VERSION 1.07     // fix various bug (wifi reconnect / audio missing / ...)
 
 
 #include <Arduino.h>

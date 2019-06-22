@@ -68,14 +68,23 @@ void K32_wifi::staticIP(String ip) {
 
 
 void K32_wifi::connect(const char* ssid, const char* password) {
+
+  WiFi.persistent(false); // Don't use FLASH to store wifi..
   WiFi.mode(WIFI_STA);
   WiFi.onEvent(&K32_wifi::event);
   WiFi.setHostname(this->nameDevice.c_str());
-  if (password != NULL) WiFi.begin(ssid, password);
-  else WiFi.begin(ssid);
-
   this->_ssid = String(ssid);
-  this->_password = String(password);
+  if (password != NULL)  {
+    WiFi.begin(ssid, password);
+    this->_password = String(password);
+  }
+  else {
+    WiFi.begin(ssid);
+    this->_password = ""; 
+  }
+
+  this->engageConnection = millis();
+  
 }
 
 void K32_wifi::reconnect() {
@@ -153,7 +162,6 @@ IPAddress K32_wifi::broadcastIP() {
  */
 
  bool K32_wifi::ok = false;
- byte K32_wifi::retry = 0;
  bool K32_wifi::didConnect = false;
  bool K32_wifi::didDisconnect = false;
 
@@ -164,11 +172,8 @@ IPAddress K32_wifi::broadcastIP() {
        K32_wifi::didDisconnect = true;
        K32_wifi::ok = false;
      }
-     else LOG("WIFI: can't connect...");
-     K32_wifi::retry += 1;
    }
    else if (event == SYSTEM_EVENT_STA_GOT_IP) {
-     K32_wifi::retry = 0;
      if (K32_wifi::ok) return;
      K32_wifi::ok = true;
      K32_wifi::didConnect = true;
@@ -186,6 +191,8 @@ IPAddress K32_wifi::broadcastIP() {
      if (that->didConnect) {
 
         that->didConnect = false;
+        that->engageConnection = 0;
+        that->retry = 0;
 
         // INFO
         LOGINL("WIFI: connected = ");
@@ -211,20 +218,28 @@ IPAddress K32_wifi::broadcastIP() {
 
      // DISCONNECTED
      if (that->didDisconnect) {
-
-        that->didDisconnect = false;
-
-        // INFO
         LOG("WIFI: disconnected");
+        that->didDisconnect = false;
+        that->engageConnection = -1*KWIFI_CONNECTION_TIMEOUT;
+     }
+
+     // RECONNECT
+     if (that->engageConnection != 0)
+      if ((millis() - that->engageConnection) > KWIFI_CONNECTION_TIMEOUT) {
+        ++that->retry;
+        if (that->engageConnection > 0) LOG("WIFI: can't establish connection..");
+
         WiFi.disconnect(true);
         WiFi.mode(WIFI_OFF);
         vTaskDelay( pdMS_TO_TICKS(100) );
 
-        LOGF("WIFI: reconnecting.. %i\n", K32_wifi::retry);
+        LOGF("WIFI: reconnecting.. %i\n", that->retry);
+        //  that->engageConnection = millis();
         //  WiFi.reconnect();
         that->reconnect();
+      }
 
-     }
+
 
      // OTA Loop
      if (that->otaEnable && that->ok) ArduinoOTA.handle();

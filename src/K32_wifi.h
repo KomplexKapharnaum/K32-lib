@@ -6,10 +6,13 @@
 #ifndef K32_wifi_h
 #define K32_wifi_h
 
+#define KWIFI_CONNECTION_TIMEOUT 10000
+
 #include "Arduino.h"
 #include "K32_log.h"
 
 #include <WiFi.h>
+
 
 
 class K32_wifi {
@@ -40,10 +43,12 @@ class K32_wifi {
     String nameDevice;
 
     static bool ok;
-    static byte retry;
     static bool didConnect;
     static bool didDisconnect;
     static void event(WiFiEvent_t event);
+    
+    long engageConnection = 0;
+    byte retry = 0;
 
     IPAddress _broadcastIP;
 
@@ -53,6 +58,7 @@ class K32_wifi {
     
     String _ssid;
     String _password;
+
 
 };
 
