@@ -26,6 +26,8 @@ class K32_wifi {
     bool wait(int timeout_s);
 
     bool isOK();
+    long getRSSI();
+    void getWiFiLevel(uint8_t (&led_display)[6]);
 
     IPAddress broadcastIP();
 

@@ -103,6 +103,39 @@ bool K32_wifi::isOK() {
   return this->ok;
 }
 
+long K32_wifi::getRSSI(){
+  return WiFi.RSSI();
+}
+
+void K32_wifi::getWiFiLevel(uint8_t (&led_display)[6]){
+  if(this->isOK())
+  {
+    led_display[0] = 0 ;
+    led_display[1] = 4 ;
+    long wifiRSSI = this->getRSSI();
+    long comp = -80; // Used to compare RSSI value
+    LOGF("\nWIFI: Rssi : %d \n", wifiRSSI);
+    for (int l = 2; l < 6; l++ )
+    {
+      if(wifiRSSI>comp)
+      {
+        led_display[l]=4;
+      } else
+      {
+        led_display[l]=0;
+      }
+      comp += 10;
+    }
+  } else {
+    led_display[0]= 4;
+    for (int l = 1; l< 6; l++)
+    {
+      led_display[l]=0;
+    }
+
+    LOG("\nWifi not connected \n");
+  }
+}
 
 IPAddress K32_wifi::broadcastIP() {
   IPAddress b;
