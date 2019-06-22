@@ -21,7 +21,7 @@ K32::K32(k32conf conf) {
   if (conf.audio) {
     audio = new K32_audio();
     if(!audio->isEngineOK()) {
-      LOG("Audio engine failed to start.. RESET !");
+      LOG("Audio engine failed to start..");
       // stm32->reset();
     }
   }

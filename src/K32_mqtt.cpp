@@ -1,21 +1,21 @@
-// /*
-//   K32_mqtt.cpp
-//   Created by Thomas BOHL, february 2019.
-//   Released under GPL v3.0
-// */
+/*
+  K32_mqtt.cpp
+  Created by Thomas BOHL, february 2019.
+  Released under GPL v3.0
+*/
 
-// #include "Arduino.h"
-// #include "K32_mqtt.h"
+#include "Arduino.h"
+#include "K32_mqtt.h"
 
 
 
-// /*
-//  *   PUBLIC
-//  */
+/*
+ *   PUBLIC
+ */
 
-// K32_mqtt::K32_mqtt(mqttconf conf, K32* engine) : conf(conf), engine(engine)
-// { 
-//   this->lock = xSemaphoreCreateMutex();
+K32_mqtt::K32_mqtt(mqttconf conf, K32* engine) : conf(conf), engine(engine)
+{ 
+  this->lock = xSemaphoreCreateMutex();
 //   this->udp = new WiFiUDP();
 //   this->sendSock = new WiFiUDP();
 
@@ -55,7 +55,7 @@
 //   }
 
   
-// };
+};
 
 
 // OSCMessage K32_mqtt::status() {

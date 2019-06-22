@@ -22,6 +22,13 @@ K32_wifi::K32_wifi(String nameDevice = "K32") : nameDevice(nameDevice) {
   ArduinoOTA.setHostname(this->nameDevice.c_str());
   this->_broadcastIP = IPAddress(255, 255, 255, 255);
 
+  this->_staticIP = "";
+  this->_staticGW = "";
+  this->_staticMK = "";
+
+  this->_ssid = "";
+  this->_password = "";
+
   // LOOP task
   xTaskCreate( this->task,        // function
                 "wifi_task",      // task name
@@ -49,6 +56,10 @@ void K32_wifi::staticIP(String ip, String gateway, String mask) {
   IPAddress maskIP;
   maskIP.fromString(mask);
   WiFi.config(addrIP, gateIP, maskIP);
+
+  this->_staticIP = ip;
+  this->_staticGW = gateway;
+  this->_staticMK = mask;
 }
 
 void K32_wifi::staticIP(String ip) {
@@ -62,6 +73,17 @@ void K32_wifi::connect(const char* ssid, const char* password) {
   WiFi.setHostname(this->nameDevice.c_str());
   if (password != NULL) WiFi.begin(ssid, password);
   else WiFi.begin(ssid);
+
+  this->_ssid = String(ssid);
+  this->_password = String(password);
+}
+
+void K32_wifi::reconnect() {
+  if (this->_staticIP != "")
+    this->staticIP(this->_staticIP, this->_staticGW, this->_staticMK);
+  if (this->_ssid != "")
+    if (this->_password != "") this->connect(this->_ssid.c_str(), this->_password.c_str());
+    else this->connect(this->_ssid.c_str(), NULL);
 }
 
 
@@ -157,12 +179,17 @@ IPAddress K32_wifi::broadcastIP() {
      // DISCONNECTED
      if (that->didDisconnect) {
 
-       that->didDisconnect = false;
+        that->didDisconnect = false;
 
-       // INFO
-       LOG("WIFI: disconnected");
-       LOGF("WIFI: reconnecting.. %i\n", K32_wifi::retry);
-       WiFi.reconnect();
+        // INFO
+        LOG("WIFI: disconnected");
+        WiFi.disconnect(true);
+        WiFi.mode(WIFI_OFF);
+        vTaskDelay( pdMS_TO_TICKS(100) );
+
+        LOGF("WIFI: reconnecting.. %i\n", K32_wifi::retry);
+        //  WiFi.reconnect();
+        that->reconnect();
 
      }
 

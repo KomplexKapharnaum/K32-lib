@@ -22,6 +22,7 @@ class K32_wifi {
     void staticIP(String ip);
 
     void connect(const char* ssid, const char* password);
+    void reconnect();
     bool wait(int timeout_s);
 
     bool isOK();
@@ -43,6 +44,13 @@ class K32_wifi {
     static void event(WiFiEvent_t event);
 
     IPAddress _broadcastIP;
+
+    String _staticIP;
+    String _staticGW;
+    String _staticMK;
+    
+    String _ssid;
+    String _password;
 
 };
 
