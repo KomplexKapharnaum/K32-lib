@@ -6,6 +6,7 @@
 
 #include "K32.h"
 
+
 K32::K32(k32conf conf) {
  
   // Settings config
@@ -38,16 +39,17 @@ K32::K32(k32conf conf) {
   // WIFI init
   btStop();
   if (conf.wifi.ssid) {
-    wifi = new K32_wifi( "esp-" + String(settings->get("id")) + "-v" + String(K32_VERSION, 2) );
+
+    wifi = new K32_wifi( "esp-" + String(settings->get("id")) + "-v" + String(K32_VERSION, 2), this );
     if (conf.wifi.ip) wifi->staticIP(conf.wifi.ip);
     wifi->connect(conf.wifi.ssid, conf.wifi.password);
-    
-    // if (!wifi->wait(10)) {
-    //   stm32->reset();
-    // }
   
     // OSC init
     osc = new K32_osc(conf.osc, this);
+
+    // MQTT init
+    mqtt = new K32_mqtt(conf.mqtt, this);
+    
   }
   else WiFi.mode(WIFI_OFF);
 

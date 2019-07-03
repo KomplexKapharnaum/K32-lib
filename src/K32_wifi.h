@@ -6,6 +6,9 @@
 #ifndef K32_wifi_h
 #define K32_wifi_h
 
+class K32_wifi;      // prevent cicular include error
+#include "K32.h"
+
 #define KWIFI_CONNECTION_TIMEOUT 10000
 
 #include "Arduino.h"
@@ -13,11 +16,12 @@
 
 #include <WiFi.h>
 
+using WifiCallback = void(*)(K32*);
 
 
 class K32_wifi {
   public:
-    K32_wifi(String nameDevice);
+    K32_wifi(String nameDevice, K32* engine);
 
     void ota(bool enable);
 
@@ -41,6 +45,7 @@ class K32_wifi {
 
     byte otaEnable = true;
     String nameDevice;
+    K32* engine;
 
     static bool ok;
     static bool didConnect;
@@ -58,7 +63,6 @@ class K32_wifi {
     
     String _ssid;
     String _password;
-
 
 };
 

@@ -7,7 +7,8 @@
 #include "Arduino.h"
 #include "K32_mqtt.h"
 
-
+WiFiClient espClient;
+void callback(char* topic, byte* payload, unsigned int length);
 
 /*
  *   PUBLIC
@@ -16,21 +17,21 @@
 K32_mqtt::K32_mqtt(mqttconf conf, K32* engine) : conf(conf), engine(engine)
 { 
   this->lock = xSemaphoreCreateMutex();
-//   this->udp = new WiFiUDP();
-//   this->sendSock = new WiFiUDP();
 
-//   // OSC INPUT
-//   if (this->conf.port_in > 0) {
-//     this->udp->begin(this->conf.port_in);
+  this->mqttc = new PubSubClient(espClient);
+  this->mqttc->setServer(this->conf.broker, 1883);
+  this->mqttc->setCallback(callback);
 
-//     // LOOP server
-//     xTaskCreate( this->server,          // function
-//                   "osc_server",         // server name
-//                   2000,              // stack memory
-//                   (void*)this,        // args
-//                   5,                  // priority
-//                   NULL);              // handler
-//   }
+  if (this->mqttc->connected()) LOG("MQTT: init connected");
+  else LOG("MQTT: init notconnected");
+
+  // LOOP client
+  xTaskCreate( this->loop,          // function
+                "mqtt_client",      // name
+                10000,               // stack memory
+                (void*)this,        // args
+                5,                  // priority
+                NULL);              // handler
 
 //   // OSC OUTPUT
 //   if (this->conf.port_out > 0) {
@@ -56,6 +57,37 @@ K32_mqtt::K32_mqtt(mqttconf conf, K32* engine) : conf(conf), engine(engine)
 
   
 };
+
+void K32_mqtt::reconnect() {
+  String myChan = "c3"; 
+  
+  // Loop until we're reconnected
+  while (!this->mqttc->connected() && this->engine->wifi->isOK()) {
+    Serial.print("Attempting MQTT connection...");
+    // Create a random client ID
+    String clientId = "ESP32-";
+    clientId += String(random(0xffff), HEX);
+    // Attempt to connect
+    if (this->mqttc->connect(clientId.c_str())) {
+      Serial.println("connected");
+      // Once connected, publish an announcement...
+      this->mqttc->publish("esp", "hello world");
+      // ... and resubscribe
+      this->mqttc->subscribe( ("midi/"+myChan).c_str(), 1);
+      this->mqttc->subscribe( "midi/sys", 1);
+      this->mqttc->subscribe( "midi/all", 1);
+      this->mqttc->subscribe( ("osc/"+myChan+"/#").c_str(), 1);
+      this->mqttc->subscribe( "osc/all", 1);
+
+    } else {
+      Serial.print("failed, rc=");
+      Serial.print(this->mqttc->state());
+      Serial.println(" try again in 5 seconds");
+      // Wait 5 seconds before retrying
+      delay(5000);
+    }
+  }
+}
 
 
 // OSCMessage K32_mqtt::status() {
@@ -99,21 +131,98 @@ K32_mqtt::K32_mqtt(mqttconf conf, K32* engine) : conf(conf), engine(engine)
 //     return msg;
 // }
 
-// void K32_mqtt::send( OSCMessage msg ) {
-//   if (this->engine->wifi->isOK() && this->conf.port_out > 0) { 
-//     xSemaphoreTake(this->lock, portMAX_DELAY);
-//     IPAddress dest = (this->linkedIP) ? this->linkedIP : this->engine->wifi->broadcastIP();
-//     this->sendSock->beginPacket( dest, this->conf.port_out);
-//     msg.send(*this->sendSock);
-//     this->sendSock->endPacket();
-//     xSemaphoreGive(this->lock);
-//   }
-// }
+void K32_mqtt::send( OSCMessage msg ) {
+  if (this->mqttc->connected()) { 
+    xSemaphoreTake(this->lock, portMAX_DELAY);
+    char path[256];
+    msg.getAddress(path);
+    this->mqttc->publish(("esp"+String(path)).c_str(), "hello world");
+    xSemaphoreGive(this->lock);
+  }
+}
 
 
 // /*
 //  *   PRIVATE
 //  */
+
+void K32_mqtt::loop(void * parameter) {
+    K32_mqtt* that = (K32_mqtt*) parameter;
+    TickType_t xFrequency = pdMS_TO_TICKS(10);
+
+    while(true) { 
+      that->reconnect();
+      xSemaphoreTake(that->lock, portMAX_DELAY);
+      that->mqttc->loop();
+      xSemaphoreGive(that->lock);
+      vTaskDelay( xFrequency );
+    }
+    vTaskDelete(NULL);
+}
+
+void splitString(char* data, char* separator, int index, char* result)
+{   
+    char input[strlen(data)];
+    strcpy(input, data);
+
+    char* command = strtok(input, separator);
+    for (int k=0; k<index; k++)
+      if (command != NULL) command = strtok(NULL, separator);
+    
+    if (command == NULL) strcpy(result, "");
+    else strcpy(result, command);
+}
+
+void callback(char* topic, byte* payload, unsigned int length) {
+  
+  payload[length] = 0;
+
+  // ENGINE
+  char engine[16];
+  splitString(topic, "/", 0, engine);
+
+  // OSC
+  if (strcmp(engine, "osc") == 0) {
+    Serial.print("OSC : ");
+    Serial.print(topic);
+    Serial.print(" ");
+       
+    char val[128];
+    byte inc =0;
+    splitString((char*)payload, "§", inc, val);
+    while (strcmp(val, "") != 0) {
+      Serial.print(val);
+      Serial.print(" ");
+      ++inc;
+      splitString((char*)payload, "§", inc, val);
+    }
+    Serial.println("");
+
+  }
+
+  // MIDI
+  if (strcmp(engine, "midi") == 0) {
+    Serial.print("MIDI: ");
+    Serial.print(topic);
+    Serial.print(" ");
+
+    char val[16];
+    splitString((char*)payload, "-", 0, val);
+    Serial.print(atoi(val));
+    Serial.print(" ");
+    splitString((char*)payload, "-", 1, val);
+    Serial.print(atoi(val));
+    Serial.print(" ");
+    splitString((char*)payload, "-", 2, val);
+    Serial.print(atoi(val));
+    Serial.print(" ");
+    Serial.println("");
+
+  }
+
+}
+
+
 
 // void K32_mqtt::beat( void * parameter ) {
 //     K32_mqtt* that = (K32_mqtt*) parameter;

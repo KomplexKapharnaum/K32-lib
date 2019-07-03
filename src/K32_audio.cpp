@@ -279,7 +279,7 @@ void K32_audio::task( void * parameter ) {
         }
       }
     } 
-    else vTaskDelay(10);
+    else vTaskDelay(10);  
 
   }  
 

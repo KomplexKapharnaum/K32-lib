@@ -16,7 +16,7 @@
  *   PUBLIC
  */
 
-K32_wifi::K32_wifi(String nameDevice = "K32") : nameDevice(nameDevice) {
+K32_wifi::K32_wifi(String nameDevice, K32* engine) : nameDevice(nameDevice), engine(engine) {
 
   this->lock = xSemaphoreCreateMutex();
   ArduinoOTA.setHostname(this->nameDevice.c_str());
@@ -106,7 +106,6 @@ bool K32_wifi::wait(int timeout_s) {
   LOG("\nWIFI: timeout is over..\n");
   return false;
 }
-
 
 bool K32_wifi::isOK() {
   return this->ok;

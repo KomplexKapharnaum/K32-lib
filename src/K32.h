@@ -27,14 +27,15 @@
 // prevent cicular include error
 class K32;
 
+struct mqttconf {
+   const char* broker;
+};
+
 struct oscconf {
    int port_in;
    int port_out;
    int beatInterval;
    int beaconInterval;
-};
-
-struct mqttconf {
 };
 
 struct wificonf {
@@ -50,6 +51,7 @@ struct k32conf {
   bool sampler;
   wificonf wifi;
   oscconf osc;
+  mqttconf mqtt;
 };
 
 // K32 components
@@ -61,6 +63,7 @@ struct k32conf {
 #include "K32_audio.h"
 #include "K32_samplermidi.h"
 #include "K32_osc.h"
+#include "K32_mqtt.h"
 
 class K32 {
   public:
@@ -70,6 +73,7 @@ class K32 {
     K32_stm32* stm32 = NULL;
     K32_wifi* wifi = NULL;
     K32_osc* osc = NULL;
+    K32_mqtt* mqtt = NULL;
     K32_leds* leds = NULL;
     K32_audio* audio = NULL;
     K32_samplermidi* sampler = NULL;
