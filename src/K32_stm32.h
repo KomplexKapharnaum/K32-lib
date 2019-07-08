@@ -28,8 +28,9 @@ class K32_stm32 {
     void custom(int Ulow, int U1, int U2, int U3, int U4, int U5, int Umax); // set CUSTOM progile
     int firmware();
 
+    int current();      // Get Load current (mA)
     int battery();      // Get Battery %
-    int voltage();      // Get Battery %
+    int voltage();      // Get Battery voltage (mV)
     bool clicked();     // Get Btn Click
     bool dblclicked();  // Get Btn DblClick
 

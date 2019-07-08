@@ -7,7 +7,7 @@
 #include "K32.h"
 
 K32::K32(k32conf conf) {
- 
+
   // Settings config
   const char* keys[16] = {"id", "channel", "model"};
   settings = new K32_settings(keys);
@@ -28,12 +28,15 @@ K32::K32(k32conf conf) {
 
   // SAMPLER MIDI
   if (conf.sampler) sampler = new K32_samplermidi();
-  
+
   // LEDS
   if (conf.leds) {
     leds = new K32_leds();
     leds->play( "test" );
   }
+
+  // Power monitoring
+  if (conf.power) power = new K32_power(stm32); 
 
   // WIFI init
   btStop();
@@ -41,16 +44,16 @@ K32::K32(k32conf conf) {
     wifi = new K32_wifi( "esp-" + String(settings->get("id")) + "-v" + String(K32_VERSION, 2) );
     if (conf.wifi.ip) wifi->staticIP(conf.wifi.ip);
     wifi->connect(conf.wifi.ssid, conf.wifi.password);
-    
+
     // if (!wifi->wait(10)) {
     //   stm32->reset();
     // }
-  
+
     // OSC init
     osc = new K32_osc(conf.osc, this);
   }
   else WiFi.mode(WIFI_OFF);
 
-  
+
 
 };

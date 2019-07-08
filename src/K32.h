@@ -43,6 +43,7 @@ struct k32conf {
   bool leds;
   bool audio;
   bool sampler;
+  bool power;
   wificonf wifi;
   oscconf osc;
 };
@@ -56,6 +57,7 @@ struct k32conf {
 #include "K32_audio.h"
 #include "K32_samplermidi.h"
 #include "K32_osc.h"
+#include "K32_power.h"
 
 class K32 {
   public:
@@ -68,6 +70,7 @@ class K32 {
     K32_leds* leds = NULL;
     K32_audio* audio = NULL;
     K32_samplermidi* sampler = NULL;
+    K32_power* power = NULL;
 
   private:
 

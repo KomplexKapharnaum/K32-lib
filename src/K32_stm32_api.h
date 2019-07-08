@@ -47,6 +47,11 @@ public:
        See enum BatteryType for the possible answers from the STM32. */
     GET_BATTERY_TYPE = 'T',
 
+    /* Get load switch current.
+   No argument.
+   The STM32 will answer with the approximate current in mA. */
+    GET_LOAD_CURRENT = 'C',
+
     /* Set the LEDs independently.
        Argument : for each LED a number between 0 (Off) and 4 (On). Missing LEDs will be treated as 0.
         Example : 444000 will set the first 3 LEDs to full brightness and the last 3 to Off.
