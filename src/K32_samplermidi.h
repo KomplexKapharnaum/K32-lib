@@ -19,14 +19,18 @@ class K32_samplermidi {
 
     void scan();
 
-    String path(int bank, int note);
-    int size(byte bank, byte note);
-    void remove(byte bank, byte note);
+    String path(int note, int bank = -1);
+    void bank(int bank); 
+    int bank(); 
+
+    int size(byte note, byte bank = -1);
+    void remove(byte note, byte bank = -1);
 
   private:
     SemaphoreHandle_t lock;
     static void task( void * parameter );
 
+    int _bank = 1;
     char samples[MIDI_MAX_BANK][MIDI_MAX_NOTE][MIDI_MAX_TITLE];
 
     String pad3(int input);

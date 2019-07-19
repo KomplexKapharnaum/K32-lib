@@ -8,6 +8,8 @@
 
 class K32_mqtt;      // prevent cicular include error
 #include "K32.h"
+
+#define MQTT_SOCKET_TIMEOUT 2
 #include <PubSubClient.h>
 
 #include <OSCMessage.h>
@@ -22,23 +24,18 @@ class K32_mqtt {
 //     const char* id_path();
 //     const char* chan_path();
 //     OSCMessage status();
-    void send(OSCMessage msg);
 
   private:
     SemaphoreHandle_t lock;
     PubSubClient* mqttc;
+    WiFiClient* client;
 
     static void loop(void * parameter);
+    static void beat( void * parameter );
+    void dispatch(char* topic, byte* payload, unsigned int length);
+    void dispatch2(String &topic, String &payload);
 
-    // void callback(char* topic, byte* payload, unsigned int length);
-
-//     static void server( void * parameter );
-//     static void beacon( void * parameter );
-//     static void beat( void * parameter );
-
-//     WiFiUDP* udp;         // must be protected with lock 
-//     WiFiUDP* sendSock;
-//     IPAddress linkedIP;
+    bool noteOFF = true;
 
     mqttconf conf;
     K32* engine;

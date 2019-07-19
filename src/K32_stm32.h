@@ -37,6 +37,9 @@ class K32_stm32 {
     void reset();       // Reset board
     void shutdown();    // Shutdown board
 
+    void send(K32_stm32_api::CommandType cmd, int arg);
+    void send(K32_stm32_api::CommandType cmd);
+    long get(K32_stm32_api::CommandType cmd);
 
   private:
     SemaphoreHandle_t lock;
@@ -53,9 +56,6 @@ class K32_stm32 {
 
     static void task( void * parameter );
     static void blink_task (void * parameter);
-    void send(K32_stm32_api::CommandType cmd, int arg);
-    void send(K32_stm32_api::CommandType cmd);
-    long get(K32_stm32_api::CommandType cmd);
     long read();
     void flush();
 

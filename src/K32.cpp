@@ -20,7 +20,7 @@ K32::K32(k32conf conf) {
 
   // AUDIO  (Note: Audio must be started before LEDS !!)
   if (conf.audio) {
-    audio = new K32_audio();
+    audio = new K32_audio(this);
     if(!audio->isEngineOK()) {
       LOG("Audio engine failed to start..");
       // stm32->reset();
@@ -40,7 +40,7 @@ K32::K32(k32conf conf) {
   btStop();
   if (conf.wifi.ssid) {
 
-    wifi = new K32_wifi( "esp-" + String(settings->get("id")) + "-v" + String(K32_VERSION, 2), this );
+    wifi = new K32_wifi( "esp-" + String(settings->get("id")) + "-v" + String(K32_VERSION, 2) + "-c" + String(settings->get("channel")), this );
     if (conf.wifi.ip) wifi->staticIP(conf.wifi.ip);
     wifi->connect(conf.wifi.ssid, conf.wifi.password);
   

@@ -130,15 +130,21 @@ OSCMessage K32_osc::status() {
       msg.add("");
     }
 
+    // sampler
+    if (this->engine->sampler) msg.add(this->engine->sampler->bank());
+    else msg.add(0);
+
     // filesync 
     // msg.add(sync_size());
     // msg.add(sync_getStatus().c_str());
+    msg.add(0);   // SYNC count files
+    msg.add("");  // SYNC erro
     
     return msg;
 }
 
 void K32_osc::send( OSCMessage msg ) {
-  if (this->engine->wifi->isOK() && this->conf.port_out > 0) { 
+  if (this->engine->wifi->isConnected() && this->conf.port_out > 0) { 
     xSemaphoreTake(this->lock, portMAX_DELAY);
     IPAddress dest = (this->linkedIP) ? this->linkedIP : this->engine->wifi->broadcastIP();
     this->sendSock->beginPacket( dest, this->conf.port_out);
@@ -177,7 +183,7 @@ void K32_osc::beacon( void * parameter ) {
 
     while(true) 
     {
-      if (that->engine->wifi->isOK()) { 
+      if (that->engine->wifi->isConnected()) { 
         // send
         xSemaphoreTake(that->lock, portMAX_DELAY);
         IPAddress dest = (that->linkedIP) ? that->linkedIP : that->engine->wifi->broadcastIP();
@@ -273,8 +279,19 @@ void K32_osc::server( void * parameter ) {
             //
             // SHUTDOWN
             //
-            msg.dispatch("/poweroff", [](K32_osc* that, K32_oscmsg &msg){
+            msg.dispatch("/shutdown", [](K32_osc* that, K32_oscmsg &msg){
               that->engine->stm32->shutdown();
+            }, offset);
+
+            //
+            // CHANNEL
+            //
+            msg.dispatch("/channel", [](K32_osc* that, K32_oscmsg &msg){
+              if (msg.isInt(0)) {
+                that->engine->settings->set("channel", msg.getInt(0));
+                delay(100);
+                that->engine->stm32->reset();
+              }
             }, offset);
 
             //
@@ -297,12 +314,13 @@ void K32_osc::server( void * parameter ) {
 
               }, offset);
 
-              // PLAY MIDI
+              // SAMPLER NOTEN
               if (that->engine->sampler)
-              msg.dispatch("/sample", [](K32_osc* that, K32_oscmsg &msg){
+              msg.dispatch("/noteon", [](K32_osc* that, K32_oscmsg &msg){
 
                 if (msg.isInt(0) && msg.isInt(1)) {
-                  that->engine->audio->play( that->engine->sampler->path( msg.getInt(0), msg.getInt(1) ) );
+                  that->engine->sampler->bank( msg.getInt(0) );
+                  that->engine->audio->play( that->engine->sampler->path( msg.getInt(1) ) );
                   LOGINL("OSC Sample: "); LOGINL(msg.getInt(0)); LOGINL(msg.getInt(1)); 
                 }
 
@@ -311,6 +329,16 @@ void K32_osc::server( void * parameter ) {
                   if (msg.isInt(3))
                     that->engine->audio->loop( msg.getInt(3) > 0 );
                 }
+
+              }, offset);
+
+              // SAMPLER NOTEOFF
+              if (that->engine->sampler)
+              msg.dispatch("/noteoff", [](K32_osc* that, K32_oscmsg &msg){
+                
+                if (msg.isInt(0)) 
+                  if (that->engine->audio->media() == that->engine->sampler->path( msg.getInt(0) ))
+                    that->engine->audio->stop();
 
               }, offset);
 
@@ -327,6 +355,7 @@ void K32_osc::server( void * parameter ) {
               // LOOP
               msg.dispatch("/loop", [](K32_osc* that, K32_oscmsg &msg){
                 if (msg.isInt(0)) that->engine->audio->loop( msg.getInt(0) > 0 );
+                else LOG('invalid arg');
               }, offset);
 
             }, offset);

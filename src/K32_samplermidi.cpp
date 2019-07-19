@@ -66,9 +66,10 @@ void K32_samplermidi::scan() {
 }
 
 
-String K32_samplermidi::path(int bank, int note) {
-  String path = "/" + this->pad3(bank) + "/" + this->pad3(note);
+String K32_samplermidi::path(int note, int bank) {
   xSemaphoreTake(this->lock, portMAX_DELAY);
+  if (bank < 0) bank = this->_bank;
+  String path = "/" + this->pad3(bank) + "/" + this->pad3(note);
   if (this->samples[bank][note][0] > 1) path += String(this->samples[bank][note]);
   xSemaphoreGive(this->lock);
   if (SD.exists(path)) 
@@ -78,17 +79,30 @@ String K32_samplermidi::path(int bank, int note) {
   return "";
 }
 
+void K32_samplermidi::bank(int bank) {
+  xSemaphoreTake(this->lock, portMAX_DELAY);
+  this->_bank = bank;
+  xSemaphoreGive(this->lock);
+}
 
-int K32_samplermidi::size(byte bank, byte note) {
+int K32_samplermidi::bank() {
+  int b = 0;
+  xSemaphoreTake(this->lock, portMAX_DELAY);
+  b = this->_bank;
+  xSemaphoreGive(this->lock);
+  return b;
+}
+
+int K32_samplermidi::size(byte note, byte bank) {
   int sizeN = 0;
-  String path = this->path(bank, note);
+  String path = this->path(note, bank);
   if (SD.exists(path)) sizeN = SD.open(path).size();
   return sizeN;
 }
 
 
-void K32_samplermidi::remove(byte bank, byte note) {
-  String path = this->path(bank, note);
+void K32_samplermidi::remove(byte note, byte bank) {
+  String path = this->path(note, bank);
   if (SD.exists(path)) {
     SD.remove(path);
     xSemaphoreTake(this->lock, portMAX_DELAY);

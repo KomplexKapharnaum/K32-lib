@@ -13,8 +13,14 @@
 // #define K32_VERSION 1.04  // v2 board
 // #define K32_VERSION 1.05  // led anim sinus ++
 // #define K32_VERSION 1.06  // mqtt (not enabled yet)
-#define K32_VERSION 1.07     // fix various bug (wifi reconnect / audio missing / ...)
-
+// #define K32_VERSION 1.07  // fix various bug (wifi reconnect / audio missing / ...)
+// #define K32_VERSION 1.08     // mqtt sampler
+// #define K32_VERSION 1.09     // mqtt leds
+// #define K32_VERSION 1.10     // mqtt audio
+// #define K32_VERSION 1.11     // fix
+// #define K32_VERSION 1.12     // mqtt ping before reconnect
+#define K32_VERSION 1.13     // mqtt fix reconnect
+#define K32_VERSION 1.15     // mqtt bank select
 
 #include <Arduino.h>
 #include <WiFi.h>
@@ -29,6 +35,7 @@ class K32;
 
 struct mqttconf {
    const char* broker;
+   int beatInterval;
 };
 
 struct oscconf {

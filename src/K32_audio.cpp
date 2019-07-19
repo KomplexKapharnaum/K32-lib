@@ -15,7 +15,8 @@
 #include "AudioGeneratorAAC.h"
 
 #ifndef HW_REVISION
-#define HW_REVISION 2
+#define HW_REVISION 1
+#warning "No revision specified, using HW_REVISION 1"
 #endif
 
 #if HW_REVISION == 1
@@ -45,7 +46,7 @@
 #endif
 
 
-K32_audio::K32_audio() {
+K32_audio::K32_audio(K32* engine) : engine(engine) {
   LOG("AUDIO: init");
 
   this->lock = xSemaphoreCreateMutex();
@@ -59,46 +60,7 @@ K32_audio::K32_audio() {
   if (this->sdOK) LOG("AUDIO: sd card OK");
   else LOG("AUDIO: sd card ERROR");
 
-  // Start I2S output
-  this->out = new AudioOutputI2S();
-  this->out->SetPinout(I2S_BCK_PIN, I2S_LRCK_PIN, I2S_DATA_PIN); 
-  this->out->SetBitsPerSample(16);
-  this->out->SetRate(44100);
-  this->out->SetGain( 1 );
-
-  LOG("AUDIO: Waiting for 5V");
-  delay(2000);
-
-  // Start PCM51xx
-  bool pcmOK = true;
-  Wire.begin(I2C_SDA_PIN, I2C_SCL_PIN); 
-  this->pcm = new PCM51xx(Wire);
-  if (this->pcm->begin(PCM51xx::SAMPLE_RATE_44_1K, PCM51xx::BITS_PER_SAMPLE_16))
-      LOG("AUDIO: PCM51xx initialized successfully.");
-  else
-  {
-    LOG("AUDIO: Failed to initialize PCM51xx.");
-    uint8_t powerState = this->pcm->getPowerState();
-    if (powerState == PCM51xx::POWER_STATE_I2C_FAILURE)
-    {
-      LOGINL("AUDIO: No answer on I2C bus at address ");
-      LOG(this->pcm->getI2CAddr());
-    }
-    else
-    {
-      LOGINL("AUDIO: Power state = ");
-      LOG(this->pcm->getPowerState());
-      LOG("AUDIO: I2S stream must be started before calling begin()");
-      LOG("AUDIO: Check that the sample rate / bit depth combination is supported.");
-    }
-    pcmOK = false;
-  }
-  if (!pcmOK) LOG("AUDIO: engine failed to start..");
-  else LOG("AUDIO: engine started..");
-  this->pcm->setVolume(this->gainMax);
-
-  // Start PCM engine
-  this->engineOK = pcmOK;
+  this->initSoundcard();
 
   // Set Volume
   this->volume(100);
@@ -132,19 +94,13 @@ void K32_audio::setGainLimits(int min, int max) {
   xSemaphoreGive(this->lock);
 }
 
-
 void K32_audio::volume(int vol)
 {
-  if (!this->engineOK) return;
-
-  LOGF("AUDIO: gain = %i\n", vol);
   xSemaphoreTake(this->lock, portMAX_DELAY);
-  // vol = map(vol, 0, 100, this->gainMin, this->gainMax);
-  // this->pcm->setVolume(vol);
-  this->out->SetGain( vol/100.0 );
+  this->_volume = vol;
   xSemaphoreGive(this->lock);
+  this->applyVolume();
 }
-
 
 void K32_audio::loop(bool doLoop) {
   xSemaphoreTake(this->lock, portMAX_DELAY);
@@ -153,11 +109,12 @@ void K32_audio::loop(bool doLoop) {
 }
 
 
-bool K32_audio::play(String filePath) {
+bool K32_audio::play(String filePath, int velocity) {
   LOG(filePath);
   xSemaphoreTake(this->lock, portMAX_DELAY);
   this->errorPlayer = "";
   xSemaphoreGive(this->lock);
+
 
   if (!this->engineOK) {
     xSemaphoreTake(this->lock, portMAX_DELAY);
@@ -173,13 +130,19 @@ bool K32_audio::play(String filePath) {
   xSemaphoreTake(this->lock, portMAX_DELAY);
   delete this->gen;
   delete this->file;
+
   if (filePath.endsWith("wav") || filePath.endsWith("WAV")) this->gen = new AudioGeneratorWAV();
   else if (filePath.endsWith("mp3") || filePath.endsWith("MP3")) this->gen = new AudioGeneratorMP3();
   else if (filePath.endsWith("flac") || filePath.endsWith("FLAC")) this->gen = new AudioGeneratorFLAC();
   else if (filePath.endsWith("aac") || filePath.endsWith("AAC")) this->gen = new AudioGeneratorAAC();
   this->file = new AudioFileSourceSD(filePath.c_str());
-  bool isStarted = this->gen->begin(file, out);
+  bool isStarted = this->gen->begin(this->file, this->out);
+  this->_velocity = velocity;
   xSemaphoreGive(this->lock);
+
+  this->applyVolume();
+  
+  // this->engine->stm32->send(K32_stm32_api::SET_LOAD_SWITCH, 1); // TODO: DiRTY HACK !
 
   if (isStarted) {
     xSemaphoreTake(this->lock, portMAX_DELAY);
@@ -200,7 +163,7 @@ bool K32_audio::play(String filePath) {
 
 bool K32_audio::play() {
   if (this->currentFile != "") 
-    return this->play(this->currentFile);
+    return this->play(this->currentFile, this->_velocity);
   
   this->stop();
   return false;
@@ -209,6 +172,7 @@ bool K32_audio::play() {
 
 void K32_audio::stop() {
   if (!this->engineOK) return;
+  // this->engine->stm32->send(K32_stm32_api::SET_LOAD_SWITCH, 0); // TODO: DiRTY HACK !
 
   xSemaphoreTake(this->lock, portMAX_DELAY);
   this->currentFile = "";
@@ -254,6 +218,66 @@ String K32_audio::error() {
  *   PRIVATE
  */
 
+void K32_audio::applyVolume()
+{
+  if (!this->engineOK) return;
+
+  int vol = (this->_velocity * this->_volume) / 127;
+
+  LOGF("AUDIO: gain = %i\n", vol);
+  xSemaphoreTake(this->lock, portMAX_DELAY);
+  
+  // vol = map(vol, 0, 100, this->gainMin, this->gainMax);
+  // this->pcm->setVolume(vol);
+  this->out->SetGain( vol/100.0 );
+  xSemaphoreGive(this->lock);
+}
+
+void K32_audio::initSoundcard() {
+
+  // Start I2S output
+  this->out = new AudioOutputI2S(0, AudioOutputI2S::EXTERNAL_I2S, 8, AudioOutputI2S::APLL_ENABLE);
+  this->out->SetPinout(I2S_BCK_PIN, I2S_LRCK_PIN, I2S_DATA_PIN); 
+  this->out->SetBitsPerSample(16);
+  this->out->SetRate(44100);
+  this->out->SetGain( 1.0 );
+
+  // LOG("AUDIO: Waiting for 5V");
+  // delay(2000);
+
+  // Start PCM51xx
+  bool pcmOK = true;
+  Wire.begin(I2C_SDA_PIN, I2C_SCL_PIN); 
+  this->pcm = new PCM51xx(Wire);
+  if (this->pcm->begin(PCM51xx::SAMPLE_RATE_44_1K, PCM51xx::BITS_PER_SAMPLE_16))
+      LOG("AUDIO: PCM51xx initialized successfully.");
+  else
+  {
+    LOG("AUDIO: Failed to initialize PCM51xx.");
+    uint8_t powerState = this->pcm->getPowerState();
+    if (powerState == PCM51xx::POWER_STATE_I2C_FAILURE)
+    {
+      LOGINL("AUDIO: No answer on I2C bus at address ");
+      LOG(this->pcm->getI2CAddr());
+    }
+    else
+    {
+      LOGINL("AUDIO: Power state = ");
+      LOG(this->pcm->getPowerState());
+      LOG("AUDIO: I2S stream must be started before calling begin()");
+      LOG("AUDIO: Check that the sample rate / bit depth combination is supported.");
+    }
+    pcmOK = false;
+  }
+  if (!pcmOK) LOG("AUDIO: engine failed to start..");
+  else LOG("AUDIO: engine started..");
+  this->pcm->setVolume(this->gainMax);
+
+  // Start PCM engine
+  this->engineOK = pcmOK;
+
+}
+
 void K32_audio::task( void * parameter ) {
   K32_audio* that = (K32_audio*) parameter;
   // LOG("AUDIO: task started");
@@ -262,6 +286,7 @@ void K32_audio::task( void * parameter ) {
   while(true) {
 
     if (that->isPlaying()) {
+
       xSemaphoreTake(that->lock, portMAX_DELAY);
       RUN = that->gen->loop();
       xSemaphoreGive(that->lock);

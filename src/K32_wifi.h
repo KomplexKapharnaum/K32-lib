@@ -29,22 +29,23 @@ class K32_wifi {
     void staticIP(String ip);
 
     void connect(const char* ssid, const char* password);
-    void reconnect();
+    void connect();
     bool wait(int timeout_s);
+    bool ping();
 
-    bool isOK();
+    bool isConnected();
     long getRSSI();
     void getWiFiLevel(uint8_t (&led_display)[6]);
 
     IPAddress broadcastIP();
 
+    String nameDevice;
 
   private:
     SemaphoreHandle_t lock;
     static void task( void * parameter );
 
     byte otaEnable = true;
-    String nameDevice;
     K32* engine;
 
     static bool ok;
