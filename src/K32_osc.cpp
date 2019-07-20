@@ -64,7 +64,7 @@ K32_osc::K32_osc(oscconf conf, K32* engine) : conf(conf), engine(engine)
     // LOOP server
     xTaskCreate( this->server,          // function
                   "osc_server",         // server name
-                  5000,               // stack memory
+                  10000,               // stack memory
                   (void*)this,        // args
                   5,                  // priority
                   NULL);              // handler

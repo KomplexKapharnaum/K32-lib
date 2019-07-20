@@ -19,8 +19,9 @@
 // #define K32_VERSION 1.10     // mqtt audio
 // #define K32_VERSION 1.11     // fix
 // #define K32_VERSION 1.12     // mqtt ping before reconnect
-#define K32_VERSION 1.13     // mqtt fix reconnect
-#define K32_VERSION 1.15     // mqtt bank select
+// #define K32_VERSION 1.13     // mqtt fix reconnect
+// #define K32_VERSION 1.15     // mqtt bank select
+#define K32_VERSION 1.16     // mqtt / osc / esp-regie
 
 #include <Arduino.h>
 #include <WiFi.h>

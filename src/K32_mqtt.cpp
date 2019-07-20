@@ -213,7 +213,7 @@ void K32_mqtt::dispatch(char* topic, byte* payload, unsigned int length) {
       char velocity[5];
       splitString((char*)payload, "§", 2, velocity);
       if (strcmp(velocity, "") != 0)
-        this->engine->audio->volume( atoi(velocity) );
+        this->engine->audio->volume( atoi(velocity) ); 
 
       char loop[5];
       splitString((char*)payload, "§", 3, loop);
