@@ -6,13 +6,15 @@ Released under GPL v3.0
 #ifndef K32_power_h
 #define K32_power_h
 
-#define POWER_CHECK 500           // task loop in ms
+#define POWER_CHECK 20000           // task loop in ms
 
 
 #include "K32_log.h"
 #include "K32_stm32_api.h"
 #include "K32_stm32.h"
 #include "esp_task_wdt.h"
+
+#include "K32_epd.h"
 
 
 class K32_power {
@@ -25,6 +27,8 @@ class K32_power {
     int power();      // Get instant Load power consumption (W)
     int energy();      // Get Energy consummed since last reset (Wh)
     void reset();      // Reset energy time counter
+    bool charge ;
+    int SOC ;
 
 
   private:
@@ -36,6 +40,7 @@ class K32_power {
     long previousTime ; // time of previous measurement (ms)
     long actualTime ; // actual time (ms)
     TaskHandle_t t_handle = NULL;
+
 
     static void task(void * parameter);
 

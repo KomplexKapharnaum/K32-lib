@@ -14,9 +14,17 @@
  K32_power::K32_power(K32_stm32* stm32) {
    this->lock = xSemaphoreCreateMutex();
    this->_stm32 = stm32 ;
+   this->charge = true;
  };
 
+
  void K32_power::start() {
+/* EPD Init */
+// epd_init();
+// epd_wakeup();
+// epd_set_memory(MEM_TF);
+
+
    xTaskCreate( this->task,
                  "power_task",
                  1000,
@@ -39,6 +47,7 @@
  }
 
 
+
  /*
   *   PRIVATE
   */
@@ -46,12 +55,95 @@
   void K32_power::task(void * parameter) {
     K32_power* that = (K32_power*) parameter;
     TickType_t xFrequency = pdMS_TO_TICKS(POWER_CHECK);
+    bool Cell[40];
+    int randomValue;
+    that->SOC = 50;
+
+    /* Init Epd Cells and fill EPD screen */
+    // for (int i=0; i<40; i++)
+    // {
+    //   Cell[i]=1;
+    // }
+    // int numberOfIcon = (int)(that->SOC*4/10);
+    // FillScreen(numberOfIcon);
+    //epd_enter_stopmode();
+
+
+
     while(true) {
 
-      //that->_power = that->_stm32->voltage() * that->_stm32->current();
-      //LOGF("P : %d \n", that->_power);
-      //LOG("haha ! ");
-      // sleep
+      if (that->charge)
+      {
+        that->SOC += 5;
+        if (that->SOC > 100)
+        {
+          that->SOC =100 ;
+        }
+
+
+
+
+
+      } else
+      {
+        that->SOC -= 5 ;
+        if (that->SOC < 0) {
+          that->SOC = 0;
+        }
+      }
+
+
+      /* EPD Routine */
+      //numberOfIcon = (int)(that->_stm32->battery()*4/10);
+      // numberOfIcon = (int)(that->SOC*4/10);
+      // LOGF("Nb of icon : %d\n", numberOfIcon);
+      // FillScreen(numberOfIcon);
+      //epd_enter_stopmode();
+
+
+
+
+      // if ((int)(that->_stm32->battery()*4/10) > numberOfIcon)
+      // {
+      //   /* Add an icon to the big picture*/
+      //   do{randomValue=random(40);} while (Cell[randomValue]);
+      //   Cell[randomValue] = 1;
+      //    numberOfIcon ++;
+      //    DrawPic(random(1,7), randomValue);
+      //    LOGF("Add icon %d \n", randomValue);
+      //  }
+      //  else if ((int)(that->_stm32->battery()*4/10) < numberOfIcon)
+      //  {
+      //    /* Remove an icon */
+      //    do{randomValue=random(40);} while (!Cell[randomValue]);
+      //    Cell[randomValue] = 0;
+      //     numberOfIcon --;
+      //     LOGF("Remove icon %d \n", randomValue);
+      //     DrawPic(0, randomValue);
+      //  }
+      //  else
+      //  {
+      //    /* Add and remove an icon */
+      //    do{randomValue=random(40);} while (!Cell[randomValue]);
+      //    Cell[randomValue] = 0;
+      //     numberOfIcon --;
+      //     //LOGF("Remove icon %d \n", randomValue);
+      //     DrawPic(0, randomValue);
+      //     do{randomValue=random(40);} while (Cell[randomValue]);
+      //     Cell[randomValue] = 1;
+      //      numberOfIcon ++;
+      //      //LOGF("Add icon %d \n", randomValue);
+      //      DrawPic(random(1,7), randomValue);
+      //      LOGF("Nb of icon : %d\n", numberOfIcon);
+      //      // for (int i=0; i<40; i++)
+      //      // {
+      //      //   LOG(Cell[i])
+      //      /* Verify Nb of icon */
+      //
+      //      //LOGF("New nb of icon : %d\n", numberOfIcon);
+      //
+       //}
+
       vTaskDelay( xFrequency );
     }
   }

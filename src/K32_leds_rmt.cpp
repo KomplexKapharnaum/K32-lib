@@ -4,6 +4,16 @@
   Released under GPL v3.0
 */
 
+#if HW_REVISION == 1
+  #define LED1_PIN 21
+  #define LED2_PIN 22
+#elif HW_REVISION == 2
+  #define LED1_PIN 23
+  #define LED2_PIN 22
+#else
+  #error "HW_REVISION undefined or invalid. Should be 1 or 2"
+#endif
+
 #include "Arduino.h"
 #include "K32_leds_rmt.h"
 
@@ -13,7 +23,7 @@ K32_leds_rmt::K32_leds_rmt() {
   this->strands_lock = xSemaphoreCreateBinary();
   xSemaphoreGive(this->strands_lock);
 
-  int pins[LEDS_NUM_STRIPS] = {21, 22};
+  int pins[LEDS_NUM_STRIPS] = {LED1_PIN, LED2_PIN};
   for (int s = 0; s < LEDS_NUM_STRIPS; s++)
     // this->STRANDS[s] = {.rmtChannel = s, .gpioNum = pins[s], .ledType = LED_WS2812B_V1, .brightLimit = 255, .numPixels = LEDS_NUM_PIXEL, .pixels = nullptr, ._stateVars = nullptr};
     this->STRANDS[s] = {.rmtChannel = s, .gpioNum = pins[s], .ledType = LED_SK6812W_V1, .brightLimit = 255, .numPixels = LEDS_NUM_PIXEL, .pixels = nullptr, ._stateVars = nullptr};
@@ -48,7 +58,7 @@ void K32_leds_rmt::show() {
   // LOGINL(this->buffer[0][0].r); LOGINL(" ");
   // LOGINL(this->buffer[0][0].g); LOGINL(" ");
   // LOGINL(this->buffer[0][0].b); LOGINL(" / ");
-  
+
   // LOGINL(this->STRANDS[0].pixels[0].r); LOGINL(" ");
   // LOGINL(this->STRANDS[0].pixels[0].g); LOGINL(" ");
   // LOGINL(this->STRANDS[0].pixels[0].b); LOG("");
@@ -114,7 +124,7 @@ K32_leds_rmt* K32_leds_rmt::setPixel(int strip, int pixel, int red, int green, i
 
  void K32_leds_rmt::draw( void * parameter ) {
    K32_leds_rmt* that = (K32_leds_rmt*) parameter;
-  
+
    LOG("LEDS: engine started");
 
    while(true) {
@@ -136,4 +146,3 @@ K32_leds_rmt* K32_leds_rmt::setPixel(int strip, int pixel, int red, int green, i
 
    vTaskDelete(NULL);
  }
-

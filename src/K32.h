@@ -58,6 +58,7 @@ struct k32conf {
 #include "K32_samplermidi.h"
 #include "K32_osc.h"
 #include "K32_power.h"
+#include "K32_epd.h"
 
 class K32 {
   public:

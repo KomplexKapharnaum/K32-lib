@@ -23,6 +23,7 @@ class K32_osc {
     const char* chan_path();
 
     OSCMessage status();
+    OSCMessage power();
 
     void send(OSCMessage msg);
 
@@ -32,7 +33,7 @@ class K32_osc {
     static void beacon( void * parameter );
     static void beat( void * parameter );
 
-    WiFiUDP* udp;         // must be protected with lock 
+    WiFiUDP* udp;         // must be protected with lock
     WiFiUDP* sendSock;
     IPAddress linkedIP;
 
