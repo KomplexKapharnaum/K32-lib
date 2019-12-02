@@ -93,9 +93,10 @@ void K32_wifi::connect(const char* ssid, const char* password) {
 }
 
 void K32_wifi::connect() {
-  if (this->_ssid != "")
+  if (this->_ssid != "") {
     if (this->_password != "") this->connect(this->_ssid.c_str(), this->_password.c_str());
     else this->connect(this->_ssid.c_str(), NULL);
+  }
 }
 
 
