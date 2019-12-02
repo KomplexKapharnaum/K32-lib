@@ -27,7 +27,7 @@
  * THE SOFTWARE.
  */
 
-#include "esp32_digital_led_lib.h"
+#include "librmt_digital_led_lib.h"
 
 #ifdef __cplusplus
 extern "C" {
