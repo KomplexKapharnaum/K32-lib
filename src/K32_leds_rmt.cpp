@@ -18,10 +18,10 @@ K32_leds_rmt::K32_leds_rmt() {
     // this->STRANDS[s] = {.rmtChannel = s, .gpioNum = pins[s], .ledType = LED_WS2812B_V1, .brightLimit = 255, .numPixels = LEDS_NUM_PIXEL, .pixels = nullptr, ._stateVars = nullptr};
     this->STRANDS[s] = {.rmtChannel = s, .gpioNum = pins[s], .ledType = LED_SK6812W_V1, .brightLimit = 255, .numPixels = LEDS_NUM_PIXEL, .pixels = nullptr, ._stateVars = nullptr};
 
-  digitalLeds_initStrands( this->STRANDS, LEDS_NUM_STRIPS);
+  librmt_initStrands( this->STRANDS, LEDS_NUM_STRIPS);
 
   for (int s = 0; s < LEDS_NUM_STRIPS; s++) {
-    digitalLeds_resetPixels( &this->STRANDS[s] );
+    librmt_resetPixels( &this->STRANDS[s] );
   }
 
   // LOOP task
@@ -123,7 +123,7 @@ K32_leds_rmt* K32_leds_rmt::setPixel(int strip, int pixel, int red, int green, i
      xSemaphoreTake(that->dirty, portMAX_DELAY);
      // PUSH LEDS TO RMT
      for (int s = 0; s < LEDS_NUM_STRIPS; s++)
-      digitalLeds_updatePixels( &that->STRANDS[s] );
+      librmt_updatePixels( &that->STRANDS[s] );
 
     //  LOGINL("strands show ");
     //  LOGINL(that->STRANDS[0].pixels[0].r); LOGINL(" ");
