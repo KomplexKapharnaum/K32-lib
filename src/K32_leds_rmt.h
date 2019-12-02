@@ -11,7 +11,7 @@
 
 #include "Arduino.h"
 #include "K32_log.h"
-#include "librmt/librmt_digital_led_lib.h"
+#include "librmt/esp32_digital_led_lib.h"
 
 
 class K32_leds_rmt {

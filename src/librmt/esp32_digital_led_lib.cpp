@@ -27,7 +27,7 @@
  * THE SOFTWARE.
  */
 
-#include "librmt_digital_led_lib.h"
+#include "esp32_digital_led_lib.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -59,8 +59,8 @@ extern "C" {
 #endif
 
 #if DEBUG_ESP32_DIGITAL_LED_LIB
-extern char * librmt_debugBuffer;
-extern int librmt_debugBufferSz;
+extern char * digitalLeds_debugBuffer;
+extern int digitalLeds_debugBufferSz;
 #endif
 
 static DRAM_ATTR const uint16_t MAX_PULSES = 32;  // A channel has a 64 "pulse" buffer - we use half per pass
@@ -106,7 +106,7 @@ typedef struct {
   uint16_t buf_pos, buf_len, buf_half, buf_isDirty;
   xSemaphoreHandle sem;
   rmtPulsePair pulsePairMap[2];
-} librmt_stateData;
+} digitalLeds_stateData;
 
 static strand_t * localStrands;
 static int localStrandCnt = 0;
@@ -118,11 +118,11 @@ static void copyToRmtBlock_half(strand_t * pStrand);
 static void handleInterrupt(void *arg);
 
 
-int librmt_initStrands(strand_t strands [], int numStrands)
+int digitalLeds_initStrands(strand_t strands [], int numStrands)
 {
   #if DEBUG_ESP32_DIGITAL_LED_LIB
-    snprintf(librmt_debugBuffer, librmt_debugBufferSz,
-             "%slibrmt_init numStrands = %d\n", librmt_debugBuffer, numStrands);
+    snprintf(digitalLeds_debugBuffer, digitalLeds_debugBufferSz,
+             "%sdigitalLeds_init numStrands = %d\n", digitalLeds_debugBuffer, numStrands);
   #endif
 
   localStrands = strands;
@@ -147,11 +147,11 @@ int librmt_initStrands(strand_t strands [], int numStrands)
       return -1;
     }
 
-    pStrand->_stateVars = static_cast<librmt_stateData*>(malloc(sizeof(librmt_stateData)));
+    pStrand->_stateVars = static_cast<digitalLeds_stateData*>(malloc(sizeof(digitalLeds_stateData)));
     if (pStrand->_stateVars == nullptr) {
       return -1;
     }
-    librmt_stateData * pState = static_cast<librmt_stateData*>(pStrand->_stateVars);
+    digitalLeds_stateData * pState = static_cast<digitalLeds_stateData*>(pStrand->_stateVars);
 
     pState->buf_len = (pStrand->numPixels * ledParams.bytesPerPixel);
     pState->buf_data = static_cast<uint8_t*>(malloc(pState->buf_len));
@@ -199,21 +199,21 @@ int librmt_initStrands(strand_t strands [], int numStrands)
 
   for (int i = 0; i < localStrandCnt; i++) {
     strand_t * pStrand = &localStrands[i];
-    librmt_resetPixels(pStrand);
+    digitalLeds_resetPixels(pStrand);
   }
 
   return 0;
 }
 
-void librmt_resetPixels(strand_t * pStrand)
+void digitalLeds_resetPixels(strand_t * pStrand)
 {
   memset(pStrand->pixels, 0, pStrand->numPixels * sizeof(pixelColor_t));
-  librmt_updatePixels(pStrand);
+  digitalLeds_updatePixels(pStrand);
 }
 
-int IRAM_ATTR librmt_updatePixels(strand_t * pStrand)
+int IRAM_ATTR digitalLeds_updatePixels(strand_t * pStrand)
 {
-  librmt_stateData * pState = static_cast<librmt_stateData*>(pStrand->_stateVars);
+  digitalLeds_stateData * pState = static_cast<digitalLeds_stateData*>(pStrand->_stateVars);
   ledParams_t ledParams = ledParamsAll[pStrand->ledType];
 
   // Pack pixels into transmission buffer
@@ -246,8 +246,8 @@ int IRAM_ATTR librmt_updatePixels(strand_t * pStrand)
   if (pState->buf_pos < pState->buf_len) {
     // Fill the other half of the buffer block
     #if DEBUG_ESP32_DIGITAL_LED_LIB
-      snprintf(librmt_debugBuffer, librmt_debugBufferSz,
-               "%s# ", librmt_debugBuffer);
+      snprintf(digitalLeds_debugBuffer, digitalLeds_debugBufferSz,
+               "%s# ", digitalLeds_debugBuffer);
     #endif
     copyToRmtBlock_half(pStrand);
   }
@@ -269,7 +269,7 @@ static IRAM_ATTR void copyToRmtBlock_half(strand_t * pStrand)
   // This fills half an RMT block
   // When wraparound is happening, we want to keep the inactive half of the RMT block filled
 
-  librmt_stateData * pState = static_cast<librmt_stateData*>(pStrand->_stateVars);
+  digitalLeds_stateData * pState = static_cast<digitalLeds_stateData*>(pStrand->_stateVars);
   ledParams_t ledParams = ledParamsAll[pStrand->ledType];
 
   uint16_t i, j, offset, len, byteval;
@@ -298,8 +298,8 @@ static IRAM_ATTR void copyToRmtBlock_half(strand_t * pStrand)
     byteval = pState->buf_data[i + pState->buf_pos];
 
     #if DEBUG_ESP32_DIGITAL_LED_LIB
-      snprintf(librmt_debugBuffer, librmt_debugBufferSz,
-               "%s%d(", librmt_debugBuffer, byteval);
+      snprintf(digitalLeds_debugBuffer, digitalLeds_debugBufferSz,
+               "%s%d(", digitalLeds_debugBuffer, byteval);
     #endif
 
     // Shift bits out, MSB first, setting RMTMEM.chan[n].data32[x] to
@@ -309,13 +309,13 @@ static IRAM_ATTR void copyToRmtBlock_half(strand_t * pStrand)
       int data32_idx = i * 8 + offset + j;
       RMTMEM.chan[pStrand->rmtChannel].data32[data32_idx].val = pState->pulsePairMap[bitval].val;
       #if DEBUG_ESP32_DIGITAL_LED_LIB
-        snprintf(librmt_debugBuffer, librmt_debugBufferSz,
-                 "%s%d", librmt_debugBuffer, bitval);
+        snprintf(digitalLeds_debugBuffer, digitalLeds_debugBufferSz,
+                 "%s%d", digitalLeds_debugBuffer, bitval);
       #endif
     }
     #if DEBUG_ESP32_DIGITAL_LED_LIB
-      snprintf(librmt_debugBuffer, librmt_debugBufferSz,
-               "%s) ", librmt_debugBuffer);
+      snprintf(digitalLeds_debugBuffer, digitalLeds_debugBufferSz,
+               "%s) ", digitalLeds_debugBuffer);
     #endif
 
     // Handle the reset bit by stretching duration1 for the final bit in the stream
@@ -323,8 +323,8 @@ static IRAM_ATTR void copyToRmtBlock_half(strand_t * pStrand)
       RMTMEM.chan[pStrand->rmtChannel].data32[i * 8 + offset + 7].duration1 =
         ledParams.TRS / (RMT_DURATION_NS * DIVIDER);
       #if DEBUG_ESP32_DIGITAL_LED_LIB
-        snprintf(librmt_debugBuffer, librmt_debugBufferSz,
-                 "%sRESET ", librmt_debugBuffer);
+        snprintf(digitalLeds_debugBuffer, digitalLeds_debugBufferSz,
+                 "%sRESET ", digitalLeds_debugBuffer);
       #endif
     }
   }
@@ -337,8 +337,8 @@ static IRAM_ATTR void copyToRmtBlock_half(strand_t * pStrand)
   pState->buf_pos += len;
 
   #if DEBUG_ESP32_DIGITAL_LED_LIB
-    snprintf(librmt_debugBuffer, librmt_debugBufferSz,
-             "%s ", librmt_debugBuffer);
+    snprintf(digitalLeds_debugBuffer, digitalLeds_debugBufferSz,
+             "%s ", digitalLeds_debugBuffer);
   #endif
 
   return;
@@ -349,13 +349,13 @@ static IRAM_ATTR void handleInterrupt(void *arg)
   portBASE_TYPE xHigherPriorityTaskWoken = pdFALSE;
 
   #if DEBUG_ESP32_DIGITAL_LED_LIB
-    snprintf(librmt_debugBuffer, librmt_debugBufferSz,
-             "%sRMT.int_st.val = %08x\n", librmt_debugBuffer, RMT.int_st.val);
+    snprintf(digitalLeds_debugBuffer, digitalLeds_debugBufferSz,
+             "%sRMT.int_st.val = %08x\n", digitalLeds_debugBuffer, RMT.int_st.val);
   #endif
 
   for (int i = 0; i < localStrandCnt; i++) {
     strand_t * pStrand = &localStrands[i];
-    librmt_stateData * pState = static_cast<librmt_stateData*>(pStrand->_stateVars);
+    digitalLeds_stateData * pState = static_cast<digitalLeds_stateData*>(pStrand->_stateVars);
 
     if (RMT.int_st.val & tx_thr_event_offsets[pStrand->rmtChannel])
     {  // tests RMT.int_st.ch<n>_tx_thr_event
