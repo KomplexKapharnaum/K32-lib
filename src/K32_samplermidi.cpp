@@ -9,9 +9,6 @@
 #include "SD.h"
 #include "K32_samplermidi.h"
 
-#ifndef HW_REVISION
-#define HW_REVISION 2
-#endif
 
 #if HW_REVISION == 1
   const uint8_t I2C_SDA_PIN = 2;
@@ -72,9 +69,9 @@ String K32_samplermidi::path(int note, int bank) {
   String path = "/" + this->pad3(bank) + "/" + this->pad3(note);
   if (this->samples[bank][note][0] > 1) path += String(this->samples[bank][note]);
   xSemaphoreGive(this->lock);
-  if (SD.exists(path)) 
+  if (SD.exists(path))
     return path;
-  
+
   LOGF("SAMPLER: %s not found..\n", path.c_str());
   return "";
 }
