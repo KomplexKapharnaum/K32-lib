@@ -314,7 +314,7 @@ void K32_osc::server( void * parameter ) {
 
               }, offset);
 
-              // SAMPLER NOTEN
+              // SAMPLER NOTEON
               if (that->engine->sampler)
               msg.dispatch("/noteon", [](K32_osc* that, K32_oscmsg &msg){
 
@@ -331,6 +331,26 @@ void K32_osc::server( void * parameter ) {
                 }
 
               }, offset);
+
+              // LEGACY -> CHANGE IN MAX REGIE !!!!!!
+              // SAMPLER NOTEON
+              if (that->engine->sampler)
+              msg.dispatch("/sample", [](K32_osc* that, K32_oscmsg &msg){
+
+                if (msg.isInt(0) && msg.isInt(1)) {
+                  that->engine->sampler->bank( msg.getInt(0) );
+                  that->engine->audio->play( that->engine->sampler->path( msg.getInt(1) ) );
+                  LOGINL("OSC Sample: "); LOGINL(msg.getInt(0)); LOGINL(msg.getInt(1)); 
+                }
+
+                if (msg.isInt(2)) {
+                  that->engine->audio->volume( msg.getInt(2) );
+                  if (msg.isInt(3))
+                    that->engine->audio->loop( msg.getInt(3) > 0 );
+                }
+
+              }, offset);
+
 
               // SAMPLER NOTEOFF
               if (that->engine->sampler)

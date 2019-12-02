@@ -17,19 +17,23 @@ void setup() {
       .ip = NULL                    // static ip (NULL to use DHCP)
     },
     .osc  = {
-      .port_in  = 1818,             // osc port input (0 = disable)
-      .port_out = 1819,             // osc port output (0 = disable)
+      .port_in  = 1818,             // osc port input (0 = disable)  // 1818
+      .port_out = 1819,             // osc port output (0 = disable) // 1819
       .beatInterval     = 0,        // heartbeat interval milliseconds (0 = disable)
-      .beaconInterval   = 5000      // full beacon interval milliseconds (0 = disable)
+      .beaconInterval   = 3000      // full beacon interval milliseconds (0 = disable)
+    },
+    .mqtt = {
+      .broker = "2.0.0.1",      //"2.0.0.1"
+      .beatInterval = 0            // heartbeat interval milliseconds (0 = disable)
     }
   });
 
   // Settings SET
   #ifdef NODEID
     engine->settings->set("id", NODEID);
+    engine->settings->set("model", 2);   // 0: proto -- 1: big -- 2: small
     engine->settings->set("channel", 15);
   #endif
-    engine->settings->set("model", 2);   // 0: proto -- 1: big -- 2: small
 
 
 }

@@ -52,7 +52,7 @@ void K32_wifi::staticIP(String ip, String gateway, String mask) {
 }
 
 void K32_wifi::staticIP(String ip) {
-  this->staticIP(ip, "auto", "255.255.0.0");
+  this->staticIP(ip, "auto", "255.0.0.0");
 }
 
 
