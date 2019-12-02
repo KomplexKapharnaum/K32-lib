@@ -7,11 +7,9 @@
 #if HW_REVISION == 1
   #define LED1_PIN 21
   #define LED2_PIN 22
-#elif HW_REVISION == 2
+#else
   #define LED1_PIN 23
   #define LED2_PIN 22
-#else
-  #error "HW_REVISION undefined or invalid. Should be 1 or 2"
 #endif
 
 #include "Arduino.h"

@@ -25,8 +25,7 @@
   const uint8_t SD_DO_PIN = 19;
   const uint8_t SD_SCK_PIN = 18;
   const uint8_t SD_CS_PIN = 5;
-
-#elif HW_REVISION == 2
+#else
   const uint8_t I2C_SDA_PIN = 32;
   const uint8_t I2C_SCL_PIN = 33;
   const uint8_t I2S_LRCK_PIN = 25;
@@ -36,9 +35,6 @@
   const uint8_t SD_DO_PIN = 5;
   const uint8_t SD_SCK_PIN = 18;
   const uint8_t SD_CS_PIN = 21;
-
-#else
-  #error "HW_REVISION undefined or invalid. Should be 1 or 2"
 #endif
 
 
