@@ -14,10 +14,6 @@
 #include "AudioGeneratorFLAC.h"
 #include "AudioGeneratorAAC.h"
 
-#ifndef HW_REVISION
-#define HW_REVISION 1
-#warning "No revision specified, using HW_REVISION 1"
-#endif
 
 #if HW_REVISION == 1
   const uint8_t I2C_SDA_PIN = 2;
@@ -122,7 +118,7 @@ bool K32_audio::play(String filePath, int velocity) {
     xSemaphoreGive(this->lock);
     return false;
   }
-  
+
   this->stop();
 
   if (filePath == "") return false;
@@ -141,7 +137,7 @@ bool K32_audio::play(String filePath, int velocity) {
   xSemaphoreGive(this->lock);
 
   this->applyVolume();
-  
+
   // this->engine->stm32->send(K32_stm32_api::SET_LOAD_SWITCH, 1); // TODO: DiRTY HACK !
 
   if (isStarted) {
@@ -162,9 +158,9 @@ bool K32_audio::play(String filePath, int velocity) {
 }
 
 bool K32_audio::play() {
-  if (this->currentFile != "") 
+  if (this->currentFile != "")
     return this->play(this->currentFile, this->_velocity);
-  
+
   this->stop();
   return false;
 }
@@ -186,7 +182,7 @@ void K32_audio::stop() {
     this->file->close();
     xSemaphoreGive(this->lock);
   }
-    
+
 }
 
 
@@ -226,7 +222,7 @@ void K32_audio::applyVolume()
 
   LOGF("AUDIO: gain = %i\n", vol);
   xSemaphoreTake(this->lock, portMAX_DELAY);
-  
+
   // vol = map(vol, 0, 100, this->gainMin, this->gainMax);
   // this->pcm->setVolume(vol);
   this->out->SetGain( vol/100.0 );
@@ -237,7 +233,7 @@ void K32_audio::initSoundcard() {
 
   // Start I2S output
   this->out = new AudioOutputI2S(0, AudioOutputI2S::EXTERNAL_I2S, 8, AudioOutputI2S::APLL_ENABLE);
-  this->out->SetPinout(I2S_BCK_PIN, I2S_LRCK_PIN, I2S_DATA_PIN); 
+  this->out->SetPinout(I2S_BCK_PIN, I2S_LRCK_PIN, I2S_DATA_PIN);
   this->out->SetBitsPerSample(16);
   this->out->SetRate(44100);
   this->out->SetGain( 1.0 );
@@ -247,7 +243,7 @@ void K32_audio::initSoundcard() {
 
   // Start PCM51xx
   bool pcmOK = true;
-  Wire.begin(I2C_SDA_PIN, I2C_SCL_PIN); 
+  Wire.begin(I2C_SDA_PIN, I2C_SCL_PIN);
   this->pcm = new PCM51xx(Wire);
   if (this->pcm->begin(PCM51xx::SAMPLE_RATE_44_1K, PCM51xx::BITS_PER_SAMPLE_16))
       LOG("AUDIO: PCM51xx initialized successfully.");
@@ -290,10 +286,10 @@ void K32_audio::task( void * parameter ) {
       xSemaphoreTake(that->lock, portMAX_DELAY);
       RUN = that->gen->loop();
       xSemaphoreGive(that->lock);
-      
+
       // end of file
       if (RUN) vTaskDelay(1);
-      else {     
+      else {
         if (that->doLoop && that->currentFile != "") {
           LOG("AUDIO: loop");
           that->play();
@@ -303,10 +299,10 @@ void K32_audio::task( void * parameter ) {
           that->stop();
         }
       }
-    } 
-    else vTaskDelay(10);  
+    }
+    else vTaskDelay(10);
 
-  }  
+  }
 
   vTaskDelete(NULL);
 };
