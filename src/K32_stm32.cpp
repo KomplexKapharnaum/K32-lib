@@ -16,6 +16,8 @@ K32_stm32::K32_stm32() {
   Serial.begin(115200, SERIAL_8N1);
   Serial.setTimeout(10);
   this->running = true;
+
+  this->listen(true, true);
 };
 
 void K32_stm32::listen() {

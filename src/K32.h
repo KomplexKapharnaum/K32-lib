@@ -6,7 +6,7 @@
 #ifndef K32_h
 #define K32_h
 
-// #define K32_VERSION 1.00  
+// #define K32_VERSION 1.00
 // #define K32_VERSION 1.01  // audio forced kill to avoid deadlock
 // #define K32_VERSION 1.02  // audio keep task active
 // #define K32_VERSION 1.03  // fixed audio memory leak
@@ -24,78 +24,107 @@
 // #define K32_VERSION 1.16     // mqtt / osc / esp-regie
 // #define K32_VERSION 1.17     // memory osc bug
 // #define K32_VERSION 1.18        // disable onclick (buggy !)
-#define K32_VERSION 1.19        // deprecated /audio/sample (keep max compat)
+// #define K32_VERSION 1.19        // deprecated /audio/sample (keep max compat)
+#define K32_VERSION 2.00 // inter modules communication refactoring (modular / lazy includes)
 
 #include <Arduino.h>
-#include <WiFi.h>
 
-// ESP
-#include <HTTPClient.h>
-#include <SPIFFS.h>
-#include <FS.h>
-
-// prevent cicular include error
-class K32;
-
-struct mqttconf {
-   const char* broker;
-   int beatInterval;
-};
-
-struct oscconf {
-   int port_in;
-   int port_out;
-   int beatInterval;
-   int beaconInterval;
-};
-
-struct wificonf {
-   const char* ssid;
-   const char* password;
-   const char* ip;
-};
-
-struct k32conf {
-  bool stm32;
-  bool leds;
-  bool audio;
-  bool sampler;
-  wificonf wifi;
-  oscconf osc;
-  mqttconf mqtt;
-};
-
-// K32 components
 #include "K32_log.h"
 #include "K32_settings.h"
 #include "K32_stm32.h"
 #include "K32_wifi.h"
-#include "K32_leds.h"
 #include "K32_audio.h"
 #include "K32_samplermidi.h"
-#include "K32_osc.h"
-#include "K32_mqtt.h"
-
-class K32 {
-  public:
-    K32(k32conf conf);
-
-    K32_settings* settings = NULL;
-    K32_stm32* stm32 = NULL;
-    K32_wifi* wifi = NULL;
-    K32_osc* osc = NULL;
-    K32_mqtt* mqtt = NULL;
-    K32_leds* leds = NULL;
-    K32_audio* audio = NULL;
-    K32_samplermidi* sampler = NULL;
-
-  private:
+#include "K32_light.h"
 
 
+byte LEDS_PIN[2][2] = {
+  {21, 22},   // HW_REVISION 1
+  {23, 22}    // HW_REVISION 2
+};
+
+byte AUDIO_PIN[2][2] = {
+  {21, 22},   // HW_REVISION 1
+  {23, 22}    // HW_REVISION 2
 };
 
 
 
+class K32
+{
+public:
+  K32()
+  {
 
+    // Settings config
+    settings = new K32_settings();
+
+    // Settings SET
+#ifdef K32_SET_NODEID
+    settings->id(K32_SET_NODEID);
+    settings->channel(15);
+#endif
+#ifdef K32_SET_HWREVISION
+    settings->hw(K32_SET_HWREVISION);
+#endif
+
+#ifdef K32_ENABLE_STM32
+    // STM32
+    stm32 = new K32_stm32();
+#else
+    LOGSETUP();
+#endif
+
+#ifdef K32_ENABLE_AUDIO
+    // AUDIO  (Note: Audio must be started before LEDS !!)
+    if (settings->hw() == 1 || settings->hw() == 2) {
+      audio = new K32_audio();
+      // SAMPLER MIDI
+      sampler = new K32_samplermidi();
+    }
+    else LOG("LIGHT: Error HWREVISION not valid please define K32_SET_HWREVISION");
+#endif
+
+#ifdef K32_ENABLE_LIGHT
+    // LEDS
+    if (settings->hw() == 1 || settings->hw() == 2) {
+      light = new K32_light();
+      light->leds()->attach(LEDS_PIN[settings->hw()-1][0], 120, LED_SK6812W_V1);
+      light->leds()->attach(LEDS_PIN[settings->hw()-1][1], 120, LED_SK6812W_V1);
+      light->start();
+    }
+    else LOG("LIGHT: Error HWREVISION not valid please define K32_SET_HWREVISION");
+#endif
+
+#ifdef K32_ENABLE_WIFI
+    // WIFI init
+    btStop();
+    wifi = new K32_wifi(settings->name());
+
+    //   if (conf.wifi.ip)
+    //     wifi->staticIP(conf.wifi.ip);
+    //   wifi->connect(conf.wifi.ssid, conf.wifi.password);
+    // }
+#endif
+  }
+
+  void reset()
+  {
+    if (stm32)
+      stm32->reset();
+    else
+      while (true)
+        ;
+  }
+
+  K32_settings *settings = NULL;
+  K32_stm32 *stm32 = NULL;
+  K32_wifi *wifi = NULL;
+  K32_audio *audio = NULL;
+  K32_samplermidi *sampler = NULL;
+  K32_light *light = NULL;
+
+private:
+};
 
 #endif

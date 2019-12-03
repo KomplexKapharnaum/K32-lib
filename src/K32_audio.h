@@ -6,9 +6,6 @@
 #ifndef K32_audio_h
 #define K32_audio_h
 
-class K32_audio;      // prevent cicular include error
-#include "K32.h"
-
 #include "Arduino.h"
 #include "K32_log.h"
 
@@ -25,7 +22,7 @@ class K32_audio;      // prevent cicular include error
 
 class K32_audio {
   public:
-    K32_audio(K32* engine);
+    K32_audio();
 
     bool isEngineOK();
     bool isSdOK();
@@ -48,8 +45,6 @@ class K32_audio {
     SemaphoreHandle_t lock;
     SemaphoreHandle_t runflag;
     static void task( void * parameter );
-
-    K32* engine;
 
     void applyVolume();
     void initSoundcard();

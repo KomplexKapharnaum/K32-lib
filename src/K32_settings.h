@@ -6,53 +6,68 @@
 #ifndef K32_settings_h
 #define K32_settings_h
 
-#include "Arduino.h"
-#include <EEPROM.h>
+#include <Preferences.h>
 
 class K32_settings {
   public:
-    K32_settings(const char* keys[16]) {
+    K32_settings() {
       this->lock = xSemaphoreCreateMutex();
 
       xSemaphoreTake(this->lock, portMAX_DELAY);
-      for (byte k=0; k<16; k++) this->keys[k] = keys[k];
-      EEPROM.begin(16);
-      for (byte k=0; k<16; k++) this->values[k] = EEPROM.read(k);
-      EEPROM.end();
+      preferences.begin("k32-app", false);
       xSemaphoreGive(this->lock);
     };
 
-    void set(const char* key, byte value) {
+    int id() {
+      int id;
       xSemaphoreTake(this->lock, portMAX_DELAY);
-      for (byte k=0; k<16; k++)
-        if (this->keys[k] == key) {
-          EEPROM.begin(16);
-          EEPROM.write(k, value);
-          EEPROM.end();
-          this->values[k] = value;
-          xSemaphoreGive(this->lock);
-          return;
-        }
-       xSemaphoreGive(this->lock);
-    }
-
-    byte get(const char* key) {
-      xSemaphoreTake(this->lock, portMAX_DELAY);
-      for (byte k=0; k<16; k++)
-        if (this->keys[k] == key) {
-          byte value = this->values[k];
-          xSemaphoreGive(this->lock);
-          return value;
-        }
+      id = preferences.getUInt("id", 0);
       xSemaphoreGive(this->lock);
-      return 0;
+      return id; 
     }
 
+    void id(int id) {
+      xSemaphoreTake(this->lock, portMAX_DELAY);
+      preferences.putUInt("id", id);
+      xSemaphoreGive(this->lock);
+    }
+
+    int channel() {
+      int chan;
+      xSemaphoreTake(this->lock, portMAX_DELAY);
+      chan = preferences.getUInt("channel", 15);
+      xSemaphoreGive(this->lock);
+      return chan;
+    }
+
+    void channel(int channel) {
+      xSemaphoreTake(this->lock, portMAX_DELAY);
+      preferences.putUInt("channel", channel);
+      xSemaphoreGive(this->lock);
+    }
+
+    int hw() {
+      int chan;
+      xSemaphoreTake(this->lock, portMAX_DELAY);
+      chan = preferences.getUInt("hw", 0);
+      xSemaphoreGive(this->lock);
+      return chan;
+    }
+
+    void hw(int hwrevision) {
+      xSemaphoreTake(this->lock, portMAX_DELAY);
+      preferences.putUInt("hw", hwrevision);
+      xSemaphoreGive(this->lock);
+    }
+
+    String name() {
+      String name = "esp-" + String(this->id());
+      return name;
+    }
 
   private:
     SemaphoreHandle_t lock;
-    const char* keys[16];
-    byte values[16];
+    Preferences preferences;
 };
 
 #endif

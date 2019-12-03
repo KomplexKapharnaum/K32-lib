@@ -7,6 +7,7 @@
 #include "Arduino.h"
 #include "Wire.h"
 #include "SD.h"
+#include <SPIFFS.h>
 #include "K32_audio.h"
 
 #include "AudioGeneratorWAV.h"
@@ -38,7 +39,7 @@
 #endif
 
 
-K32_audio::K32_audio(K32* engine) : engine(engine) {
+K32_audio::K32_audio() {
   LOG("AUDIO: init");
 
   this->lock = xSemaphoreCreateMutex();
@@ -66,6 +67,11 @@ K32_audio::K32_audio(K32* engine) : engine(engine) {
       (void*)this,        // args
       20,                 // priority
       NULL);              // handler
+
+  if(!this->isEngineOK()) {
+    LOG("Audio engine failed to start..");
+    // stm32->reset();
+  }
 
 };
 
