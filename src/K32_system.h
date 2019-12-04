@@ -48,11 +48,11 @@ class K32_system {
     }
 
     int hw() {
-      int chan;
+      int hw;
       xSemaphoreTake(this->lock, portMAX_DELAY);
-      chan = preferences.getUInt("hw", 0);
+      hw = preferences.getUInt("hw", 0);
       xSemaphoreGive(this->lock);
-      return chan;
+      return hw;
     }
 
     void hw(int hwrevision) {
@@ -82,7 +82,7 @@ class K32_system {
     }
 
     int ledpin(int i) {
-      return LEDS_PIN[hw()][i];
+      return LEDS_PIN[hw()-1][i];
     }
 
     K32_stm32 *stm32 = NULL;
