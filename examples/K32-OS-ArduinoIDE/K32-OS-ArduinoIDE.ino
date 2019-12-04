@@ -1,6 +1,5 @@
-
-#define K32_SET_NODEID        1   // board unique id    (necessary one time only)
-#define K32_SET_HWREVISION    1   // board HW revision  (necessary one time only)
+// #define K32_SET_NODEID        1   // board unique id    (necessary one time only)
+// #define K32_SET_HWREVISION    2   // board HW revision  (necessary one time only)
 
 
 #include "K32.h"
@@ -12,11 +11,11 @@ void setup() {
   k32 = new K32();
 
   k32->init_stm32();
-  k32->init_audio();
-  k32->init_light();
+  // k32->init_audio();
+  // k32->init_light();
 
   // WIFI
-  k32->init_wifi(/*custom name*/);
+  k32->init_wifi(/* custom name */);
   // k32->wifi->staticIP("2.0.0.100", "2.0.0.1", "255.0.0.0");
   k32->wifi->connect("kxkm-wifi", "KOMPLEXKAPHARNAUM");
   // k32->wifi->add("ReMoTe");

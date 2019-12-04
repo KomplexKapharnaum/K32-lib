@@ -137,7 +137,7 @@ OSCMessage K32_osc::status() {
     }
 
     // sampler
-    if (audio->sampler) msg.add(audio->sampler->bank());
+    if (audio && audio->sampler) msg.add(audio->sampler->bank());
     else msg.add(0);
 
     // filesync 

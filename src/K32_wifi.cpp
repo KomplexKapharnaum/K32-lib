@@ -231,12 +231,12 @@ void K32_wifi::task(void *parameter)
   {
 
     // PING to confirm
-    if (K32_wifi::ok && !that->ping())
-    {
-      LOG("WIFI: PING failed.. disconnecting ");
-      K32_wifi::didDisconnect = true;
-      K32_wifi::ok = false;
-    }
+    // if (K32_wifi::ok && !that->ping())
+    // {
+    //   LOG("WIFI: PING failed.. disconnecting ");
+    //   K32_wifi::didDisconnect = true;
+    //   K32_wifi::ok = false;
+    // }
 
     // DISCONNECTED
     if (K32_wifi::didDisconnect)
