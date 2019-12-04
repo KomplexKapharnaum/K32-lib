@@ -1,28 +1,28 @@
 /*
-  K32_leds_anims.h
+  K32_light_anims.h
   Created by Thomas BOHL, february 2019.
   Released under GPL v3.0
 */
-#ifndef K32_leds_anims_h
-#define K32_leds_anims_h
+#ifndef K32_light_anims_h
+#define K32_light_anims_h
 
 #define LEDS_ANIMS_SLOTS  16
 #define LEDS_PARAM_SLOTS  16
 
-#include "K32_leds_rmt.h"
+#include "K32_leds.h"
 
 //
 // NOTE: WHEN ADDING A NEW ANIM, REGISTER IT IN THE ANIMATOR DOWN THERE !
 //
 
-class K32_leds_anim {
+class K32_light_anim {
   public:
-    K32_leds_anim() {
+    K32_light_anim() {
       this->critical = xSemaphoreCreateMutex();
     }
 
     virtual String name () { return ""; };
-    virtual bool loop ( K32_leds_rmt* leds ) { return false; };
+    virtual bool loop ( K32_leds* leds ) { return false; };
     
     void init() { this->startTime = millis(); }
     void setParam(int k, int value) { if (k < LEDS_PARAM_SLOTS) this->params[k] = value; } 
@@ -40,9 +40,9 @@ class K32_leds_anim {
 //
 // TEST
 //
-class K32_leds_anim_test : public K32_leds_anim {
+class K32_light_anim_test : public K32_light_anim {
   public:
-    K32_leds_anim_test() {
+    K32_light_anim_test() {
       this->params[0] = 150;    // intensity
       this->params[1] = 2000;   // initial delay
       this->params[2] = 200;    // step duration
@@ -52,12 +52,12 @@ class K32_leds_anim_test : public K32_leds_anim {
     
     void init() {}
 
-    bool loop ( K32_leds_rmt* leds ){
+    bool loop ( K32_leds* leds ){
     
       int wait = this->params[2];
 
       delay(this->params[1]);
-      LOG("LEDS: test");
+      LOG("LEDS: testing..");
 
       this->lock();
       leds->blackout();
@@ -108,9 +108,9 @@ class K32_leds_anim_test : public K32_leds_anim {
 //
 // SINUS
 //
-class K32_leds_anim_sinus : public K32_leds_anim {
+class K32_light_anim_sinus : public K32_light_anim {
   public:
-    K32_leds_anim_sinus() {
+    K32_light_anim_sinus() {
       this->params[0] = 2000; // period
       this->params[1] = 255;  // intensity max
       this->params[2] = 0;    // intensity min
@@ -123,7 +123,7 @@ class K32_leds_anim_sinus : public K32_leds_anim {
 
     String name () { return "sinus"; }
     
-    bool loop ( K32_leds_rmt* leds ){
+    bool loop ( K32_leds* leds ){
 
       float factor = 0;
       unsigned long start = millis();
@@ -162,16 +162,16 @@ class K32_leds_anim_sinus : public K32_leds_anim {
 //
 // STROBE
 //
-class K32_leds_anim_strobe : public K32_leds_anim {
+class K32_light_anim_strobe : public K32_light_anim {
   public:
-    K32_leds_anim_strobe() {
+    K32_light_anim_strobe() {
       this->params[0] = 2000; // period
       this->params[1] = 50;   // % ON
     }
 
     String name () { return "strobe"; }
     
-    bool loop ( K32_leds_rmt* leds ){
+    bool loop ( K32_leds* leds ){
         
       int intensity = 255;
       TickType_t xOn = max(1, (int)pdMS_TO_TICKS( (this->params[0]*this->params[1]/100) ));
@@ -198,9 +198,9 @@ class K32_leds_anim_strobe : public K32_leds_anim {
 //
 // HARDSTROBE
 //
-class K32_leds_anim_hardstrobe : public K32_leds_anim {
+class K32_light_anim_hardstrobe : public K32_light_anim {
   public:
-    K32_leds_anim_hardstrobe() {
+    K32_light_anim_hardstrobe() {
       this->params[0] = 2000; // period
       this->params[1] = 50;   // % ON
 
@@ -210,7 +210,7 @@ class K32_leds_anim_hardstrobe : public K32_leds_anim {
 
     String name () { return "hardstrobe"; }
     
-    bool loop ( K32_leds_rmt* leds ){
+    bool loop ( K32_leds* leds ){
       
       int intensity = 255;
       // LOGINL(millis()); LOGINL(" // "); LOG(this->nextEvent);  
@@ -246,36 +246,36 @@ class K32_leds_anim_hardstrobe : public K32_leds_anim {
 //
 // ANIMATOR BOOK
 //
-class K32_leds_animbook {
+class K32_light_animbook {
   public:
-    K32_leds_animbook() {
+    K32_light_animbook() {
 
       //
       // REGISTER AVAILABLE ANIMS !
       //
-      this->add( new K32_leds_anim_test() );
-      this->add( new K32_leds_anim_sinus() );
-      this->add( new K32_leds_anim_strobe() );
-      this->add( new K32_leds_anim_hardstrobe() );
+      this->add( new K32_light_anim_test() );
+      this->add( new K32_light_anim_sinus() );
+      this->add( new K32_light_anim_strobe() );
+      this->add( new K32_light_anim_hardstrobe() );
 
     }
 
-    K32_leds_anim* get( String name ) {
+    K32_light_anim* get( String name ) {
       for (int k=0; k<this->counter; k++)
         if (this->anims[k]->name() == name) {
-          LOGINL("LEDS: "); LOG(name);
+          // LOGINL("LEDS: "); LOG(name);
           return this->anims[k];
         }
       LOGINL("ANIM: not found "); LOG(name);
-      return new K32_leds_anim();
+      return new K32_light_anim();
     }
 
 
   private:
-    K32_leds_anim* anims[LEDS_ANIMS_SLOTS];
+    K32_light_anim* anims[LEDS_ANIMS_SLOTS];
     int counter = 0;
 
-    void add(K32_leds_anim* anim) {
+    void add(K32_light_anim* anim) {
       if (this->counter >= LEDS_ANIMS_SLOTS) {
         LOG("ERROR: no more slot available to register new animation");
         return;

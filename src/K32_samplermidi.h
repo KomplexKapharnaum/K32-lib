@@ -15,7 +15,7 @@
 
 class K32_samplermidi {
   public:
-    K32_samplermidi();
+    K32_samplermidi(const int SD_PIN[4]);
 
     void scan();
 

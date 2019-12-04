@@ -6,35 +6,46 @@
 #ifndef K32_leds_h
 #define K32_leds_h
 
-#include "Arduino.h"
-#include "K32_leds_rmt.h"
-#include "K32_leds_anims.h"
+#define LEDS_MAXSTRIPS 2
+#define LEDS_MAXPIXEL 180
 
+#include "Arduino.h"
+#include "K32_log.h"
+#include "librmt/esp32_digital_led_lib.h"
 
 
 class K32_leds {
   public:
     K32_leds();
+    void attach(const int PIN, int NPIXEL, led_types LEDTYPE);
+    void start();
 
-    K32_leds_rmt* leds();
-    K32_leds_anim* anim( String animName);
+    void show();
 
-    void play( K32_leds_anim* anim );
-    void play( String animName );
-    void stop();
+    K32_leds* blackout();
 
-    bool isPlaying();
+    K32_leds* setAll(int red, int green, int blue, int white);
+    K32_leds* setAll(int red, int green, int blue);
+
+    K32_leds* setStrip(int strip, int red, int green, int blue, int white);
+    K32_leds* setStrip(int strip, int red, int green, int blue);
+
+    K32_leds* setPixel(int strip, int pixel, int red, int green, int blue);
+    K32_leds* setPixel(int strip, int pixel, int red, int green, int blue, int white);
+
 
   private:
-    K32_leds_rmt* _leds;
-    K32_leds_animbook* _book;
+    SemaphoreHandle_t buffer_lock;
+    SemaphoreHandle_t strands_lock;
+    SemaphoreHandle_t dirty;
 
-    TaskHandle_t animateHandle = NULL;
-    K32_leds_anim* activeAnim;
-    SemaphoreHandle_t stop_lock;
+    pixelColor_t buffer[LEDS_MAXSTRIPS][LEDS_MAXPIXEL];
+    strand_t STRANDS[LEDS_MAXSTRIPS];
 
-    static void animate( void * parameter );
-    static void async_stop( void * parameter );
+    static int LEDS_NSTRIPS;
+    int LEDS_NPIXEL[LEDS_MAXSTRIPS];
+
+    static void draw( void * parameter );
 };
 
 

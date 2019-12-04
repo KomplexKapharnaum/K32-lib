@@ -6,8 +6,10 @@
 #ifndef K32_osc_h
 #define K32_osc_h
 
-class K32_osc;      // prevent cicular include error
-#include "K32.h"
+#include "K32_system.h"
+#include "K32_wifi.h"
+#include "K32_audio.h"
+#include "K32_light.h"
 
 #include <WiFi.h>
 #include <WiFiUdp.h>
@@ -16,9 +18,20 @@ class K32_osc;      // prevent cicular include error
 #include <OSCBundle.h>
 #include <OSCData.h>
 
+struct oscconf
+{
+  int port_in;
+  int port_out;
+  int beatInterval;
+  int beaconInterval;
+};
+
 class K32_osc {
   public:
-    K32_osc(oscconf conf, K32* engine);
+    K32_osc(K32_system *system, K32_wifi *wifi, K32_audio *audio, K32_light *light);
+
+    void start(oscconf conf);
+
     const char* id_path();
     const char* chan_path();
 
@@ -37,7 +50,11 @@ class K32_osc {
     IPAddress linkedIP;
 
     oscconf conf;
-    K32* engine;
+
+    K32_system *system;
+    K32_wifi *wifi;
+    K32_audio *audio;
+    K32_light *light;
 };
 
 // OSCMessage overload
@@ -49,8 +66,7 @@ class K32_oscmsg : public OSCMessage {
     bool route(const char * pattern, void (*callback)(K32_osc* env, K32_oscmsg &, int), int = 0);
     String getStr(int position);
 
-    K32_osc* env;;
-
+    K32_osc* env;
 };
 
 #endif

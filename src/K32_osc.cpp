@@ -5,8 +5,8 @@
 */
 
 #include "Arduino.h"
+#include "K32_version.h"
 #include "K32_osc.h"
-#include "K32_leds_rmt.h"
 
 #include <ESPmDNS.h>
 #include <ArduinoOTA.h>
@@ -51,8 +51,13 @@ String K32_oscmsg::getStr(int position) {
  *   PUBLIC
  */
 
-K32_osc::K32_osc(oscconf conf, K32* engine) : conf(conf), engine(engine)
+K32_osc::K32_osc(K32_system *system, K32_wifi *wifi, K32_audio *audio, K32_light *light) 
+                                : system(system), wifi(wifi), audio(audio), light(light) {}
+
+
+void K32_osc::start(oscconf conf)
 { 
+  this->conf = conf;
   this->lock = xSemaphoreCreateMutex();
   this->udp = new WiFiUDP();
   this->sendSock = new WiFiUDP();
@@ -101,8 +106,8 @@ OSCMessage K32_osc::status() {
     OSCMessage msg("/status");
 
     // identity
-    msg.add(this->engine->settings->get("id"));
-    msg.add(this->engine->settings->get("channel"));
+    msg.add(system->id());
+    msg.add(system->channel());
     msg.add(K32_VERSION);
 
     // wifi 
@@ -116,13 +121,14 @@ OSCMessage K32_osc::status() {
     (this->linkedIP) ? msg.add(true) : msg.add(false);
     
     // energy 
-    msg.add(this->engine->stm32->battery());
+    if (system->stm32) msg.add(system->stm32->battery());
+    else msg.add(0);
 
     // audio 
-    if (this->engine->audio) {
-      msg.add(this->engine->audio->isSdOK());
-      (this->engine->audio->media() != "") ? msg.add(this->engine->audio->media().c_str()) : msg.add("stop");
-      msg.add(this->engine->audio->error().c_str());
+    if (audio) {
+      msg.add(audio->isSdOK());
+      (audio->media() != "") ? msg.add(audio->media().c_str()) : msg.add("stop");
+      msg.add(audio->error().c_str());
     }
     else {
       msg.add(false);   /// TODO : SD check without audio engine
@@ -131,7 +137,7 @@ OSCMessage K32_osc::status() {
     }
 
     // sampler
-    if (this->engine->sampler) msg.add(this->engine->sampler->bank());
+    if (audio->sampler) msg.add(audio->sampler->bank());
     else msg.add(0);
 
     // filesync 
@@ -144,9 +150,9 @@ OSCMessage K32_osc::status() {
 }
 
 void K32_osc::send( OSCMessage msg ) {
-  if (this->engine->wifi->isConnected() && this->conf.port_out > 0) { 
+  if (wifi->isConnected() && this->conf.port_out > 0) { 
     xSemaphoreTake(this->lock, portMAX_DELAY);
-    IPAddress dest = (this->linkedIP) ? this->linkedIP : this->engine->wifi->broadcastIP();
+    IPAddress dest = (this->linkedIP) ? this->linkedIP : wifi->broadcastIP();
     this->sendSock->beginPacket( dest, this->conf.port_out);
     msg.send(*this->sendSock);
     this->sendSock->endPacket();
@@ -183,10 +189,10 @@ void K32_osc::beacon( void * parameter ) {
 
     while(true) 
     {
-      if (that->engine->wifi->isConnected()) { 
+      if (that->wifi->isConnected()) { 
         // send
         xSemaphoreTake(that->lock, portMAX_DELAY);
-        IPAddress dest = (that->linkedIP) ? that->linkedIP : that->engine->wifi->broadcastIP();
+        IPAddress dest = (that->linkedIP) ? that->linkedIP : that->wifi->broadcastIP();
         sock.beginPacket( dest, that->conf.port_out);
         that->status().send(sock);
         sock.endPacket();
@@ -212,10 +218,10 @@ void K32_osc::server( void * parameter ) {
    LOGF("OSC: listening on port %d\n", that->conf.port_in);
 
    char idpath[8];
-   sprintf(idpath, "/e%u", that->engine->settings->get("id"));
+   sprintf(idpath, "/%u", that->system->id()); 
 
    char chpath[8];
-   sprintf(chpath, "/c%u", that->engine->settings->get("channel"));
+   sprintf(chpath, "/c%u", that->system->channel());
 
    while(true) {
      
@@ -273,14 +279,14 @@ void K32_osc::server( void * parameter ) {
             // RESET
             //
             msg.dispatch("/reset", [](K32_osc* that, K32_oscmsg &msg){
-              that->engine->stm32->reset();
+              that->system->reset();
             }, offset);
 
             //
             // SHUTDOWN
             //
             msg.dispatch("/shutdown", [](K32_osc* that, K32_oscmsg &msg){
-              that->engine->stm32->shutdown();
+              that->system->shutdown();
             }, offset);
 
             //
@@ -288,94 +294,94 @@ void K32_osc::server( void * parameter ) {
             //
             msg.dispatch("/channel", [](K32_osc* that, K32_oscmsg &msg){
               if (msg.isInt(0)) {
-                that->engine->settings->set("channel", msg.getInt(0));
+                that->system->channel(msg.getInt(0));
                 delay(100);
-                that->engine->stm32->reset();
+                that->system->reset();
               }
             }, offset);
 
             //
             // AUDIO
             //
-            if (that->engine->audio)
+            if (that->audio)
             msg.route("/audio", [](K32_osc* that, K32_oscmsg &msg, int offset){
 
               // PLAY
               msg.dispatch("/play", [](K32_osc* that, K32_oscmsg &msg){
 
                 if (!msg.isString(0)) return;
-                that->engine->audio->play( msg.getStr(0) );
+                that->audio->play( msg.getStr(0) );
 
                 if (msg.isInt(1)) {
-                  that->engine->audio->volume( msg.getInt(1) );
+                  that->audio->volume( msg.getInt(1) );
                   if (msg.isInt(2))
-                    that->engine->audio->loop( msg.getInt(2) > 0 );
+                    that->audio->loop( msg.getInt(2) > 0 );
                 }
 
               }, offset);
 
               // SAMPLER NOTEON
-              if (that->engine->sampler)
+              if (that->audio->sampler)
               msg.dispatch("/noteon", [](K32_osc* that, K32_oscmsg &msg){
 
                 if (msg.isInt(0) && msg.isInt(1)) {
-                  that->engine->sampler->bank( msg.getInt(0) );
-                  that->engine->audio->play( that->engine->sampler->path( msg.getInt(1) ) );
+                  that->audio->sampler->bank( msg.getInt(0) );
+                  that->audio->play( that->audio->sampler->path( msg.getInt(1) ) );
                   LOGINL("OSC Sample: "); LOGINL(msg.getInt(0)); LOGINL(msg.getInt(1)); 
                 }
 
                 if (msg.isInt(2)) {
-                  that->engine->audio->volume( msg.getInt(2) );
+                  that->audio->volume( msg.getInt(2) );
                   if (msg.isInt(3))
-                    that->engine->audio->loop( msg.getInt(3) > 0 );
+                    that->audio->loop( msg.getInt(3) > 0 );
                 }
 
               }, offset);
 
               // LEGACY -> CHANGE IN MAX REGIE !!!!!!
               // SAMPLER NOTEON
-              if (that->engine->sampler)
+              if (that->audio->sampler)
               msg.dispatch("/sample", [](K32_osc* that, K32_oscmsg &msg){
 
                 if (msg.isInt(0) && msg.isInt(1)) {
-                  that->engine->sampler->bank( msg.getInt(0) );
-                  that->engine->audio->play( that->engine->sampler->path( msg.getInt(1) ) );
+                  that->audio->sampler->bank( msg.getInt(0) );
+                  that->audio->play( that->audio->sampler->path( msg.getInt(1) ) );
                   LOGINL("OSC Sample: "); LOGINL(msg.getInt(0)); LOGINL(msg.getInt(1)); 
                 }
 
                 if (msg.isInt(2)) {
-                  that->engine->audio->volume( msg.getInt(2) );
+                  that->audio->volume( msg.getInt(2) );
                   if (msg.isInt(3))
-                    that->engine->audio->loop( msg.getInt(3) > 0 );
+                    that->audio->loop( msg.getInt(3) > 0 );
                 }
 
               }, offset);
 
 
               // SAMPLER NOTEOFF
-              if (that->engine->sampler)
+              if (that->audio->sampler)
               msg.dispatch("/noteoff", [](K32_osc* that, K32_oscmsg &msg){
                 
                 if (msg.isInt(0)) 
-                  if (that->engine->audio->media() == that->engine->sampler->path( msg.getInt(0) ))
-                    that->engine->audio->stop();
+                  if (that->audio->media() == that->audio->sampler->path( msg.getInt(0) ))
+                    that->audio->stop();
 
               }, offset);
 
               // STOP
               msg.dispatch("/stop", [](K32_osc* that, K32_oscmsg &msg){
-                that->engine->audio->stop();
+                that->audio->stop();
               }, offset);
 
               // VOLUME
               msg.dispatch("/volume", [](K32_osc* that, K32_oscmsg &msg){
-                if (msg.isInt(0)) that->engine->audio->volume( msg.getInt(0) );
+                if (msg.isInt(0)) that->audio->volume( msg.getInt(0) );
               }, offset);
 
               // LOOP
               msg.dispatch("/loop", [](K32_osc* that, K32_oscmsg &msg){
-                if (msg.isInt(0)) that->engine->audio->loop( msg.getInt(0) > 0 );
-                else LOG('invalid arg');
+                if (msg.isInt(0)) that->audio->loop( msg.getInt(0) > 0 );
+                else LOG("invalid arg");
               }, offset);
 
             }, offset);
@@ -383,7 +389,7 @@ void K32_osc::server( void * parameter ) {
             //
             // LEDS
             //
-            if (that->engine->leds)
+            if (that->light)
             msg.route("/leds", [](K32_osc* that, K32_oscmsg &msg, int offset){
 
               // SET ALL
@@ -400,7 +406,7 @@ void K32_osc::server( void * parameter ) {
                 }
                 else { green = red; blue = red; white = red; }
 
-                that->engine->leds->leds()->setAll( red, green, blue, white )->show();
+                that->light->leds()->setAll( red, green, blue, white )->show();
 
               }, offset);
 
@@ -419,7 +425,7 @@ void K32_osc::server( void * parameter ) {
                 }
                 else { green = red; blue = red; white = red; }
 
-                that->engine->leds->leds()->setStrip( strip, red, green, blue, white )->show();
+                that->light->leds()->setStrip( strip, red, green, blue, white )->show();
 
               }, offset);
 
@@ -439,25 +445,25 @@ void K32_osc::server( void * parameter ) {
                 }
                 else { green = red; blue = red; white = red; }
 
-                that->engine->leds->leds()->setPixel( strip, pixel, red, green, blue, white )->show();
+                that->light->leds()->setPixel( strip, pixel, red, green, blue, white )->show();
 
               }, offset);
 
               // BLACKOUT
               msg.dispatch("/blackout", [](K32_osc* that, K32_oscmsg &msg){
-                that->engine->leds->stop();
+                that->light->stop();
               }, offset);
 
               // STOP
               msg.dispatch("/stop", [](K32_osc* that, K32_oscmsg &msg){
-                that->engine->leds->stop();
+                that->light->stop();
               }, offset);
 
               // ANIMATION
               msg.dispatch("/play", [](K32_osc* that, K32_oscmsg &msg){
                 
                 if (!msg.isString(0)) return;
-                K32_leds_anim* anim = that->engine->leds->anim( msg.getStr(0) );
+                K32_light_anim* anim = that->light->anim( msg.getStr(0) );
                 LOGINL("LEDS: play "); LOGINL(msg.getStr(0));
 
                 for (int k=0; k<LEDS_PARAM_SLOTS; k++) 
@@ -467,7 +473,7 @@ void K32_osc::server( void * parameter ) {
                   }
                 LOG("");
 
-                that->engine->leds->play( anim );
+                that->light->play( anim );
 
               }, offset);
 

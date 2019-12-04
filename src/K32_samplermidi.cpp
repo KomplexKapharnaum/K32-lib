@@ -10,36 +10,13 @@
 #include "K32_samplermidi.h"
 
 
-#if HW_REVISION == 1
-  const uint8_t I2C_SDA_PIN = 2;
-  const uint8_t I2C_SCL_PIN = 4;
-  const uint8_t I2S_LRCK_PIN = 27;
-  const uint8_t I2S_DATA_PIN = 26;
-  const uint8_t I2S_BCK_PIN = 25;
-  const uint8_t SD_DI_PIN = 23;
-  const uint8_t SD_DO_PIN = 19;
-  const uint8_t SD_SCK_PIN = 18;
-  const uint8_t SD_CS_PIN = 5;
-#else
-  const uint8_t I2C_SDA_PIN = 32;
-  const uint8_t I2C_SCL_PIN = 33;
-  const uint8_t I2S_LRCK_PIN = 25;
-  const uint8_t I2S_DATA_PIN = 26;
-  const uint8_t I2S_BCK_PIN = 27;
-  const uint8_t SD_DI_PIN = 19;
-  const uint8_t SD_DO_PIN = 5;
-  const uint8_t SD_SCK_PIN = 18;
-  const uint8_t SD_CS_PIN = 21;
-#endif
-
-
-K32_samplermidi::K32_samplermidi() {
+K32_samplermidi::K32_samplermidi(const int SD_PIN[4]) {
   this->lock = xSemaphoreCreateMutex();
 
   // Start SD
   if (!SD.exists("/")) {
-    SPI.begin(SD_SCK_PIN, SD_DO_PIN, SD_DI_PIN);
-    if (SD.begin(SD_CS_PIN)) LOG("SD card OK");
+    SPI.begin(SD_PIN[2], SD_PIN[1], SD_PIN[0]);
+    if (SD.begin(SD_PIN[3])) LOG("SD card OK");
     else LOG("SD card ERROR");
   }
 

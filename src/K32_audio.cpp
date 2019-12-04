@@ -7,6 +7,7 @@
 #include "Arduino.h"
 #include "Wire.h"
 #include "SD.h"
+#include <SPIFFS.h>
 #include "K32_audio.h"
 
 #include "AudioGeneratorWAV.h"
@@ -15,30 +16,7 @@
 #include "AudioGeneratorAAC.h"
 
 
-#if HW_REVISION == 1
-  const uint8_t I2C_SDA_PIN = 2;
-  const uint8_t I2C_SCL_PIN = 4;
-  const uint8_t I2S_LRCK_PIN = 27;
-  const uint8_t I2S_DATA_PIN = 26;
-  const uint8_t I2S_BCK_PIN = 25;
-  const uint8_t SD_DI_PIN = 23;
-  const uint8_t SD_DO_PIN = 19;
-  const uint8_t SD_SCK_PIN = 18;
-  const uint8_t SD_CS_PIN = 5;
-#else
-  const uint8_t I2C_SDA_PIN = 32;
-  const uint8_t I2C_SCL_PIN = 33;
-  const uint8_t I2S_LRCK_PIN = 25;
-  const uint8_t I2S_DATA_PIN = 26;
-  const uint8_t I2S_BCK_PIN = 27;
-  const uint8_t SD_DI_PIN = 19;
-  const uint8_t SD_DO_PIN = 5;
-  const uint8_t SD_SCK_PIN = 18;
-  const uint8_t SD_CS_PIN = 21;
-#endif
-
-
-K32_audio::K32_audio(K32* engine) : engine(engine) {
+K32_audio::K32_audio(const int AUDIO_PIN[5], const int SD_PIN[4]) {
   LOG("AUDIO: init");
 
   this->lock = xSemaphoreCreateMutex();
@@ -47,12 +25,12 @@ K32_audio::K32_audio(K32* engine) : engine(engine) {
 
   // Start SD
   LOG("AUDIO: attaching SD");
-  SPI.begin(SD_SCK_PIN, SD_DO_PIN, SD_DI_PIN);
-  this->sdOK = SD.begin(SD_CS_PIN);
+  SPI.begin(SD_PIN[2], SD_PIN[1], SD_PIN[0]);
+  this->sdOK = SD.begin(SD_PIN[3]);
   if (this->sdOK) LOG("AUDIO: sd card OK");
   else LOG("AUDIO: sd card ERROR");
-
-  this->initSoundcard();
+  
+  this->initSoundcard(AUDIO_PIN);
 
   // Set Volume
   this->volume(100);
@@ -67,8 +45,15 @@ K32_audio::K32_audio(K32* engine) : engine(engine) {
       20,                 // priority
       NULL);              // handler
 
-};
+  if(!this->isEngineOK()) {
+    LOG("Audio engine failed to start..");
+    // stm32->reset();
+  }
 
+  // Init sampler
+  sampler = new K32_samplermidi(SD_PIN);
+
+};
 
 bool K32_audio::isEngineOK() {
   return this->engineOK;
@@ -225,11 +210,11 @@ void K32_audio::applyVolume()
   xSemaphoreGive(this->lock);
 }
 
-void K32_audio::initSoundcard() {
+void K32_audio::initSoundcard(const int AUDIO_PIN[5]) {
 
   // Start I2S output
   this->out = new AudioOutputI2S(0, AudioOutputI2S::EXTERNAL_I2S, 8, AudioOutputI2S::APLL_ENABLE);
-  this->out->SetPinout(I2S_BCK_PIN, I2S_LRCK_PIN, I2S_DATA_PIN);
+  this->out->SetPinout(AUDIO_PIN[4], AUDIO_PIN[2], AUDIO_PIN[3]);
   this->out->SetBitsPerSample(16);
   this->out->SetRate(44100);
   this->out->SetGain( 1.0 );
@@ -239,7 +224,7 @@ void K32_audio::initSoundcard() {
 
   // Start PCM51xx
   bool pcmOK = true;
-  Wire.begin(I2C_SDA_PIN, I2C_SCL_PIN);
+  Wire.begin(AUDIO_PIN[0], AUDIO_PIN[1]);
   this->pcm = new PCM51xx(Wire);
   if (this->pcm->begin(PCM51xx::SAMPLE_RATE_44_1K, PCM51xx::BITS_PER_SAMPLE_16))
       LOG("AUDIO: PCM51xx initialized successfully.");

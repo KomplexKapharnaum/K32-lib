@@ -112,8 +112,8 @@ void K32_mqtt::loop(void * parameter) {
 }
 
 void K32_mqtt::beat( void * parameter ) {
-    K32_mqtt* that = (K32_mqtt*) parameter;
-    TickType_t xFrequency = pdMS_TO_TICKS(that->conf.beatInterval);
+    // K32_mqtt* that = (K32_mqtt*) parameter;
+    // TickType_t xFrequency = pdMS_TO_TICKS(that->conf.beatInterval);
 
     // PUBLISH NOT WORKING !!!!!!!
     // while(true) { 
@@ -126,7 +126,7 @@ void K32_mqtt::beat( void * parameter ) {
     vTaskDelete(NULL);
 }
 
-void splitString(char* data, char* separator, int index, char* result)
+void splitString(char* data, const char* separator, int index, char* result)
 {   
     char input[strlen(data)];
     strcpy(input, data);

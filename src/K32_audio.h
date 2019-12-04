@@ -6,18 +6,16 @@
 #ifndef K32_audio_h
 #define K32_audio_h
 
-class K32_audio;      // prevent cicular include error
-#include "K32.h"
-
 #include "Arduino.h"
 #include "K32_log.h"
+#include "K32_samplermidi.h"
+
 
 //https://github.com/earlephilhower/ESP8266Audio
 //https://github.com/Gianbacchio/ESP8266_Spiram
 #include "AudioGenerator.h"
 #include "AudioFileSourceSD.h"
 #include "AudioOutputI2S.h"
-// #include "AudioFileSourceBuffer.h"
 
 //https://github.com/tommag/PCM51xx_Arduino
 #include "PCM51xx.h"
@@ -25,7 +23,7 @@ class K32_audio;      // prevent cicular include error
 
 class K32_audio {
   public:
-    K32_audio(K32* engine);
+    K32_audio(const int AUDIO_PIN[5], const int SD_PIN[4]);
 
     bool isEngineOK();
     bool isSdOK();
@@ -34,7 +32,7 @@ class K32_audio {
     void volume(int vol);
     void loop(bool doLoop);
 
-    bool play(String filePath, int velocity = 127);
+    virtual bool play(String filePath, int velocity = 127);
     bool play();
     void stop();
 
@@ -44,15 +42,15 @@ class K32_audio {
 
     PCM51xx* pcm;
 
+    K32_samplermidi *sampler = NULL;
+
   private:
     SemaphoreHandle_t lock;
     SemaphoreHandle_t runflag;
     static void task( void * parameter );
 
-    K32* engine;
-
     void applyVolume();
-    void initSoundcard();
+    void initSoundcard(const int AUDIO_PIN[5]);
 
     AudioOutputI2S *out;
     AudioGenerator* gen;
