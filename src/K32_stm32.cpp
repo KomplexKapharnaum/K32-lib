@@ -26,7 +26,7 @@ void K32_stm32::listen() {
                 "stm32_task",
                 1000,
                 (void*)this,
-                1,              // priority
+                0,              // priority
                 NULL);
 }
 

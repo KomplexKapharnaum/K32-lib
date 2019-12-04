@@ -26,21 +26,23 @@ K32_mqtt::K32_mqtt(mqttconf conf, K32* engine) : conf(conf), engine(engine)
 
 
   // LOOP client
-  xTaskCreate( this->loop,          // function
+  xTaskCreatePinnedToCore( this->loop,          // function
                 "mqtt_client",      // name
                 10000,               // stack memory
                 (void*)this,        // args
                 5,                  // priority
-                NULL);              // handler
+                NULL,              // handler
+                  0);                // core 
 
   // BEAT 
   if (this->conf.beatInterval > 0)
-      xTaskCreate( this->beat,          // function
+      xTaskCreatePinnedToCore( this->beat,          // function
                   "mqtt_beat",         // server name
                   2000,               // stack memory
                   (void*)this,        // args
                   1,                  // priority
-                  NULL);              // handler
+                  NULL,              // handler
+                  0);                // core 
   
 };
 

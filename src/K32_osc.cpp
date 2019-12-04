@@ -67,12 +67,13 @@ void K32_osc::start(oscconf conf)
     this->udp->begin(this->conf.port_in);
 
     // LOOP server
-    xTaskCreate( this->server,          // function
+    xTaskCreatePinnedToCore( this->server,          // function
                   "osc_server",         // server name
                   10000,               // stack memory
                   (void*)this,        // args
                   5,                  // priority
-                  NULL);              // handler
+                  NULL,              // handler
+                  0);                // core 
   }
 
   // OSC OUTPUT
@@ -80,21 +81,23 @@ void K32_osc::start(oscconf conf)
     
     // LOOP beat
     if (this->conf.beatInterval > 0)
-      xTaskCreate( this->beat,          // function
+      xTaskCreatePinnedToCore( this->beat,          // function
                   "osc_beat",         // server name
                   2000,              // stack memory
                   (void*)this,        // args
                   1,                  // priority
-                  NULL);              // handler
+                  NULL,              // handler
+                  0);                // core 
 
     // LOOP beacon
     if (this->conf.beaconInterval > 0)
-      xTaskCreate( this->beacon,          // function
+      xTaskCreatePinnedToCore( this->beacon,          // function
                   "osc_beacon",         // server name
                   2000,              // stack memory
                   (void*)this,        // args
                   2,                  // priority
-                  NULL);              // handler
+                  NULL,              // handler
+                  0);                // core 
   }
 
   

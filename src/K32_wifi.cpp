@@ -31,12 +31,13 @@ K32_wifi::K32_wifi(String nameDevice) : nameDevice(nameDevice)
   this->_password = "";
 
   // LOOP task
-  xTaskCreate(this->task,   // function
+  xTaskCreatePinnedToCore(this->task,   // function
               "wifi_task",  // task name
               2000,         // stack memory
               (void *)this, // args
               1,            // priority
-              NULL);        // handler
+              NULL,              // handler
+              0);                // core
 };
 
 void K32_wifi::ota(bool enable)
