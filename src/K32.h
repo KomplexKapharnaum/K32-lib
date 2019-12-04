@@ -53,8 +53,8 @@ public:
 
     void init_audio()
     {
-        if (system->hw() == 1 || system->hw() == 2)
-            audio = new K32_audio(AUDIO_PIN[system->hw() - 1], SD_PIN[system->hw() - 1]);
+        if (system->hw() >= 0 && system->hw() <= 2)
+            audio = new K32_audio(AUDIO_PIN[system->hw()], SD_PIN[system->hw()]);
         else
             LOG("AUDIO: Error HWREVISION not valid please define K32_SET_HWREVISION");
 
@@ -64,11 +64,11 @@ public:
 
     void init_light()
     {
-        if (system->hw() == 1 || system->hw() == 2)
+        if (system->hw() >= 0 && system->hw() <= 2)
         {
             light = new K32_light();
-            light->leds()->attach(LEDS_PIN[system->hw() - 1][0], 120, LED_SK6812W_V1);
-            light->leds()->attach(LEDS_PIN[system->hw() - 1][1], 120, LED_SK6812W_V1);
+            light->leds()->attach(LEDS_PIN[system->hw()][0], 120, LED_SK6812W_V1);
+            light->leds()->attach(LEDS_PIN[system->hw()][1], 120, LED_SK6812W_V1);
             light->start();
         }
         else

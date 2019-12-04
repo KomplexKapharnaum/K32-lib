@@ -82,7 +82,7 @@ class K32_system {
     }
 
     int ledpin(int i) {
-      return LEDS_PIN[hw()-1][i];
+      return LEDS_PIN[hw()][i];
     }
 
     K32_stm32 *stm32 = NULL;

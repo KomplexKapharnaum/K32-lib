@@ -30,7 +30,8 @@
 // LEDS PINS ON K32-BOARD
 // {LED_PIN0, LED_PIN1}
 //
-const int LEDS_PIN[2][2] = {
+const int LEDS_PIN[3][2] = {
+  {21, 22},               // HW_REVISION 0
   {21, 22},               // HW_REVISION 1
   {23, 22}                // HW_REVISION 2
 };
@@ -38,7 +39,8 @@ const int LEDS_PIN[2][2] = {
 // AUDIO PINS ON K32-BOARD
 // {I2C_SDA_PIN, I2C_SCL_PIN, I2S_LRCK_PIN, I2S_DATA_PIN, I2S_BCK_PIN}
 //
-const int AUDIO_PIN[2][5] = {
+const int AUDIO_PIN[3][5] = {
+  {2, 4, 27, 26, 25},     // HW_REVISION 0
   {2, 4, 27, 26, 25},     // HW_REVISION 1
   {32, 33, 25, 26, 27}    // HW_REVISION 2
 };
@@ -46,7 +48,8 @@ const int AUDIO_PIN[2][5] = {
 // SD PINS ON K32-BOARD
 // {SD_DI_PIN, SD_DO_PIN, SD_SCK_PIN, SD_CS_PIN}
 //
-const int SD_PIN[2][4] = {
+const int SD_PIN[3][4] = {
+  {23, 19, 18, 5},        // HW_REVISION 0
   {23, 19, 18, 5},        // HW_REVISION 1
   {19, 5, 18, 21}         // HW_REVISION 2
 };
