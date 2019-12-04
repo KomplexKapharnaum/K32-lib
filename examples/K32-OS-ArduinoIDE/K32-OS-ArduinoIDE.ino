@@ -16,9 +16,9 @@ void setup() {
   k32->init_light();
 
   // WIFI
-  k32->init_wifi();
-  k32->wifi->staticIP("2.0.0.100", "2.0.0.1", "255.0.0.0");
-  k32->wifi->connect("kxkm24lulu", NULL);
+  k32->init_wifi(/*custom name*/);
+  // k32->wifi->staticIP("2.0.0.100", "2.0.0.1", "255.0.0.0");
+  k32->wifi->connect("kxkm-wifi", "KOMPLEXKAPHARNAUM");
   // k32->wifi->add("ReMoTe");
   // k32->wifi->add("kxkm24lulu", NULL, "2.0.0."+String(k32->settings->id()+100), "255.0.0.0", "2.0.0.1");
   // k32->wifi->add("interweb", "superspeed37");

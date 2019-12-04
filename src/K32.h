@@ -75,14 +75,13 @@ public:
             LOG("LIGHT: Error HWREVISION not valid please define K32_SET_HWREVISION");
     }
 
-    void init_wifi() {
+    void init_wifi(String name) {
         btStop();
-        wifi = new K32_wifi(system->name());
+        wifi = new K32_wifi(name);
     }
 
-    void init_wifi(const char* ssid, const char* password) {
-        init_wifi();
-        wifi->connect(ssid, password);
+    void init_wifi() {
+        init_wifi(system->name());
     }
 
     void init_osc(oscconf conf) {
