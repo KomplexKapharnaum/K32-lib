@@ -31,86 +31,94 @@
 #define ESP32_DIGITAL_LED_LIB_H
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
 #include <stdint.h>
 
 #define DEBUG_ESP32_DIGITAL_LED_LIB 0
 
-typedef union {
-  struct __attribute__ ((packed)) {
-    uint8_t r, g, b, w;
+  typedef union {
+    struct __attribute__((packed))
+    {
+      uint8_t r, g, b, w;
+    };
+    uint32_t num;
+  } pixelColor_t;
+
+  inline pixelColor_t pixelFromRGB(uint8_t r, uint8_t g, uint8_t b)
+  {
+    pixelColor_t v;
+    v.r = (static_cast<int>(r) * static_cast<int>(r)) >> 8;
+    v.g = (static_cast<int>(g) * static_cast<int>(g)) >> 8;
+    v.b = (static_cast<int>(b) * static_cast<int>(b)) >> 8;
+    v.w = 0;
+    return v;
+  }
+
+  inline pixelColor_t pixelFromRGBW(uint8_t r, uint8_t g, uint8_t b, uint8_t w)
+  {
+    pixelColor_t v;
+    v.r = (static_cast<int>(r) * static_cast<int>(r)) >> 8;
+    v.g = (static_cast<int>(g) * static_cast<int>(g)) >> 8;
+    v.b = (static_cast<int>(b) * static_cast<int>(b)) >> 8;
+    v.w = (static_cast<int>(w) * static_cast<int>(w)) >> 8;
+    return v;
+  }
+
+  typedef struct
+  {
+    int rmtChannel;
+    int gpioNum;
+    int ledType;
+    int brightLimit;
+    int numPixels;
+    pixelColor_t *pixels;
+    void *_stateVars;
+  } strand_t;
+
+  typedef struct
+  {
+    int bytesPerPixel;
+    uint32_t T0H;
+    uint32_t T1H;
+    uint32_t T0L;
+    uint32_t T1L;
+    uint32_t TRS;
+  } ledParams_t;
+
+  enum led_types
+  {
+    LED_WS2812_V1,
+    LED_WS2812B_V1,
+    LED_WS2812B_V2,
+    LED_WS2812B_V3,
+    LED_WS2813_V1,
+    LED_WS2813_V2,
+    LED_WS2813_V3,
+    LED_WS2813_V4,
+    LED_SK6812_V1,
+    LED_SK6812W_V1,
   };
-  uint32_t num;
-} pixelColor_t;
 
-inline pixelColor_t pixelFromRGB(uint8_t r, uint8_t g, uint8_t b)
-{
-  pixelColor_t v;
-  v.r = ( static_cast< int >( r ) * static_cast< int >( r ) ) >> 8;
-  v.g = ( static_cast< int >( g ) * static_cast< int >( g ) ) >> 8;
-  v.b = ( static_cast< int >( b ) * static_cast< int >( b ) ) >> 8;
-  v.w = 0;
-  return v;
-}
+  const ledParams_t ledParamsAll[] = {
+      // Still must match order of `led_types`
+      [LED_WS2812_V1] = {.bytesPerPixel = 3, .T0H = 350, .T1H = 700, .T0L = 800, .T1L = 600, .TRS = 50000},
+      [LED_WS2812B_V1] = {.bytesPerPixel = 3, .T0H = 350, .T1H = 900, .T0L = 900, .T1L = 350, .TRS = 50000}, // Older datasheet
+      [LED_WS2812B_V2] = {.bytesPerPixel = 3, .T0H = 400, .T1H = 850, .T0L = 850, .T1L = 400, .TRS = 50000}, // 2016 datasheet
+      [LED_WS2812B_V3] = {.bytesPerPixel = 3, .T0H = 450, .T1H = 850, .T0L = 850, .T1L = 450, .TRS = 50000}, // cplcpu test
+      [LED_WS2813_V1] = {.bytesPerPixel = 3, .T0H = 350, .T1H = 800, .T0L = 350, .T1L = 350, .TRS = 300000}, // Older datasheet
+      [LED_WS2813_V2] = {.bytesPerPixel = 3, .T0H = 270, .T1H = 800, .T0L = 800, .T1L = 270, .TRS = 300000}, // 2016 datasheet
+      [LED_WS2813_V3] = {.bytesPerPixel = 3, .T0H = 270, .T1H = 630, .T0L = 630, .T1L = 270, .TRS = 300000}, // 2017-05 WS datasheet
+      [LED_WS2813_V4] = {.bytesPerPixel = 3, .T0H = 220, .T1H = 580, .T0L = 580, .T1L = 220, .TRS = 300000}, // 2018-12 WS datasheet
+      [LED_SK6812_V1] = {.bytesPerPixel = 3, .T0H = 300, .T1H = 600, .T0L = 900, .T1L = 600, .TRS = 80000},  // R V B
+      [LED_SK6812W_V1] = {.bytesPerPixel = 4, .T0H = 300, .T1H = 600, .T0L = 900, .T1L = 600, .TRS = 80000}, // R V B W
+  };
 
-inline pixelColor_t pixelFromRGBW(uint8_t r, uint8_t g, uint8_t b, uint8_t w)
-{
-  pixelColor_t v;
-  v.r = ( static_cast< int >( r ) * static_cast< int >( r ) ) >> 8;
-  v.g = ( static_cast< int >( g ) * static_cast< int >( g ) ) >> 8;
-  v.b = ( static_cast< int >( b ) * static_cast< int >( b ) ) >> 8;
-  v.w = ( static_cast< int >( w ) * static_cast< int >( w ) ) >> 8;
-  return v;
-}
-
-typedef struct {
-  int rmtChannel;
-  int gpioNum;
-  int ledType;
-  int brightLimit;
-  int numPixels;
-  pixelColor_t * pixels;
-  void * _stateVars;
-} strand_t;
-
-typedef struct {
-  int bytesPerPixel;
-  uint32_t T0H;
-  uint32_t T1H;
-  uint32_t T0L;
-  uint32_t T1L;
-  uint32_t TRS;
-} ledParams_t;
-
-enum led_types {
-  LED_WS2812_V1,
-  LED_WS2812B_V1,
-  LED_WS2812B_V2,
-  LED_WS2812B_V3,
-  LED_WS2813_V1,
-  LED_WS2813_V2,
-  LED_WS2813_V3,
-  LED_SK6812_V1,
-  LED_SK6812W_V1,
-};
-
-const ledParams_t ledParamsAll[] = {  // Still must match order of `led_types`
-  [LED_WS2812_V1]  = { .bytesPerPixel = 3, .T0H = 350, .T1H = 700, .T0L = 800, .T1L = 600, .TRS =  50000},
-  [LED_WS2812B_V1] = { .bytesPerPixel = 3, .T0H = 350, .T1H = 900, .T0L = 900, .T1L = 350, .TRS =  50000}, // Older datasheet
-  [LED_WS2812B_V2] = { .bytesPerPixel = 3, .T0H = 400, .T1H = 850, .T0L = 850, .T1L = 400, .TRS =  50000}, // 2016 datasheet
-  [LED_WS2812B_V3] = { .bytesPerPixel = 3, .T0H = 450, .T1H = 850, .T0L = 850, .T1L = 450, .TRS =  50000}, // cplcpu test
-  [LED_WS2813_V1]  = { .bytesPerPixel = 3, .T0H = 350, .T1H = 800, .T0L = 350, .T1L = 350, .TRS = 300000}, // Older datasheet
-  [LED_WS2813_V2]  = { .bytesPerPixel = 3, .T0H = 270, .T1H = 800, .T0L = 800, .T1L = 270, .TRS = 300000}, // 2016 datasheet
-  [LED_WS2813_V3]  = { .bytesPerPixel = 3, .T0H = 270, .T1H = 630, .T0L = 630, .T1L = 270, .TRS = 300000}, // 2017-05 WS datasheet
-  [LED_SK6812_V1]  = { .bytesPerPixel = 3, .T0H = 300, .T1H = 600, .T0L = 900, .T1L = 600, .TRS =  80000},
-  [LED_SK6812W_V1] = { .bytesPerPixel = 4, .T0H = 300, .T1H = 600, .T0L = 900, .T1L = 600, .TRS =  80000},
-};
-
-extern int digitalLeds_initStrands(strand_t strands [], int numStrands);
-extern int digitalLeds_updatePixels(strand_t * strand);
-extern void digitalLeds_resetPixels(strand_t * pStrand);
+  extern int digitalLeds_initStrands(strand_t strands[], int numStrands);
+  extern int digitalLeds_updatePixels(strand_t *strand);
+  extern void digitalLeds_resetPixels(strand_t *pStrand);
 
 #ifdef __cplusplus
 }
