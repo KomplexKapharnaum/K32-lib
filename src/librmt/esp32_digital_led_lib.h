@@ -97,7 +97,7 @@ extern "C"
     LED_WS2813_V1,
     LED_WS2813_V2,
     LED_WS2813_V3,
-    LED_WS2812B_V4,
+    LED_WS2813_V4,
     LED_SK6812_V1,
     LED_SK6812W_V1,
   };
