@@ -17,7 +17,7 @@
 class K32_leds {
   public:
     K32_leds();
-    void attach(int PIN, int NPIXEL, led_types LEDTYPE);
+    void attach(const int PIN, int NPIXEL, led_types LEDTYPE);
     void start();
 
     void show();

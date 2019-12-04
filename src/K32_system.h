@@ -1,16 +1,17 @@
 /*
-  K32_settings.h
+  K32_system.h
   Created by Thomas BOHL, february 2019.
   Released under GPL v3.0
 */
-#ifndef K32_settings_h
-#define K32_settings_h
+#ifndef K32_system_h
+#define K32_system_h
 
 #include <Preferences.h>
+#include "K32_stm32.h"
 
-class K32_settings {
+class K32_system {
   public:
-    K32_settings() {
+    K32_system() {
       this->lock = xSemaphoreCreateMutex();
 
       xSemaphoreTake(this->lock, portMAX_DELAY);
@@ -65,9 +66,27 @@ class K32_settings {
       return name;
     }
 
+    void reset() {
+      xSemaphoreTake(this->lock, portMAX_DELAY);
+      preferences.end();
+      xSemaphoreGive(this->lock);
+      if (stm32) stm32->reset();
+      while (true);
+    }
+
+    void shutdown() {
+      xSemaphoreTake(this->lock, portMAX_DELAY);
+      preferences.end();
+      xSemaphoreGive(this->lock);
+      if (stm32) stm32->shutdown();
+    }
+
+    K32_stm32 *stm32 = NULL;
+  
   private:
     SemaphoreHandle_t lock;
     Preferences preferences;
+
 };
 
 #endif

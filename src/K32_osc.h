@@ -6,6 +6,11 @@
 #ifndef K32_osc_h
 #define K32_osc_h
 
+#include "K32_system.h"
+#include "K32_wifi.h"
+#include "K32_audio.h"
+#include "K32_light.h"
+
 #include <WiFi.h>
 #include <WiFiUdp.h>
 
@@ -23,7 +28,10 @@ struct oscconf
 
 class K32_osc {
   public:
-    K32_osc(oscconf conf, K32* engine);
+    K32_osc(K32_system *system, K32_wifi *wifi, K32_audio *audio, K32_light *light);
+
+    void start(oscconf conf);
+
     const char* id_path();
     const char* chan_path();
 
@@ -42,7 +50,11 @@ class K32_osc {
     IPAddress linkedIP;
 
     oscconf conf;
-    K32* engine;
+
+    K32_system *system;
+    K32_wifi *wifi;
+    K32_audio *audio;
+    K32_light *light;
 };
 
 // OSCMessage overload

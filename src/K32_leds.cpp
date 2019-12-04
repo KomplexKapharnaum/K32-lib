@@ -15,7 +15,7 @@ K32_leds::K32_leds()
   xSemaphoreGive(this->strands_lock);
 };
 
-void K32_leds::attach(int PIN, int NPIXEL, led_types LEDTYPE)
+void K32_leds::attach(const int PIN, int NPIXEL, led_types LEDTYPE)
 {
   if (LEDS_NSTRIPS >= LEDS_MAXSTRIPS)
   {
