@@ -20,6 +20,7 @@ K32_wifi::K32_wifi(String nameDevice) : nameDevice(nameDevice)
   btStop();
 
   this->lock = xSemaphoreCreateMutex();
+
   ArduinoOTA.setHostname(this->nameDevice.c_str());
   this->_broadcastIP = IPAddress(255, 255, 255, 255);
 
@@ -145,7 +146,7 @@ bool K32_wifi::ping()
 
 bool K32_wifi::isConnected()
 {
-  return WiFi.isConnected();
+  return (WiFi.isConnected() && K32_wifi::ok);
 }
 
 long K32_wifi::getRSSI()
@@ -218,7 +219,7 @@ void K32_wifi::event(WiFiEvent_t event)
   {
     if (K32_wifi::ok)
       return;
-    K32_wifi::ok = true;
+    // K32_wifi::ok = true;
     K32_wifi::didConnect = true;
   }
 }
@@ -267,9 +268,6 @@ void K32_wifi::task(void *parameter)
     // CONNECTED
     if (K32_wifi::didConnect)
     {
-
-      K32_wifi::ok = true;
-      K32_wifi::didConnect = false;
       that->engageConnection = 0;
       that->retry = 0;
 
@@ -278,11 +276,12 @@ void K32_wifi::task(void *parameter)
       LOG(WiFi.localIP());
 
       // OTA
-      if (!that->otaEnable || !that->ok)
-        return;
-      ArduinoOTA.begin();
-      LOGINL("OTA: started = ");
-      LOG(that->nameDevice);
+      if (that->otaEnable) {
+        ArduinoOTA.begin();
+        LOGINL("OTA: started = ");
+        LOG(that->nameDevice);
+      }
+      else MDNS.begin(that->nameDevice.c_str());
 
       // BROADCAST
       IPAddress myIP = WiFi.localIP();
@@ -293,6 +292,9 @@ void K32_wifi::task(void *parameter)
       that->_broadcastIP[2] = myIP[2] | (~mask[2]);
       that->_broadcastIP[3] = myIP[3] | (~mask[3]);
       xSemaphoreGive(that->lock);
+
+      K32_wifi::didConnect = false;
+      K32_wifi::ok = true;
     }
 
     // OTA Loop

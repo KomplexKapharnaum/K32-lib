@@ -75,13 +75,10 @@ public:
             LOG("LIGHT: Error HWREVISION not valid please define K32_SET_HWREVISION");
     }
 
-    void init_wifi(String nameAlias) {
+    void init_wifi(String nameAlias = "") {
         btStop();
-        wifi = new K32_wifi(system->name()+"-"+nameAlias);
-    }
-
-    void init_wifi() {
-        init_wifi(system->name());
+        if (nameAlias != "") nameAlias = "-"+nameAlias;
+        wifi = new K32_wifi(system->name()+nameAlias);
     }
 
     void init_osc(oscconf conf) {

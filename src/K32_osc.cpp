@@ -218,6 +218,11 @@ void K32_osc::server( void * parameter ) {
    K32_oscmsg msg(that);
    IPAddress remoteIP;
 
+   // Wait for WIFI to first connect
+   while(!that->wifi->isConnected()) delay( 300 );
+   
+   MDNS.addService("_osc", "udp", that->conf.port_in);
+
    LOGF("OSC: listening on port %d\n", that->conf.port_in);
 
    char idpath[8];
