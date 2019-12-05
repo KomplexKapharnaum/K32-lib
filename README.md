@@ -11,7 +11,7 @@
     /all        = all device receiving the message
     /c[chan]    = all device in [chan]
     /d[addr]    = all device in dmx [addr]
-    /[id]       = specific device with [id]
+    /e[id]       = specific device with [id]
 
 
 ### MQTT
@@ -21,7 +21,7 @@
     k32/all      = all device
     k32/c[chan]  = all device in [chan]
     k32/d[addr]  = all device in dmx [addr]
-    k32/[id]     = specific device with [id]
+    k32/e[id]     = specific device with [id]
 
 **Engine/Action:**
 

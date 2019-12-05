@@ -7,6 +7,8 @@
 #define K32_system_h
 
 #include <Preferences.h>
+
+#include "K32_version.h"
 #include "K32_stm32.h"
 
 class K32_system {

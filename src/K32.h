@@ -17,6 +17,7 @@
 #include "K32_light.h"
 
 #include "K32_osc.h"
+#include "K32_mqtt.h"
 
 class K32
 {
@@ -45,6 +46,7 @@ public:
     K32_audio *audio = NULL;
     K32_light *light = NULL;
     K32_osc *osc = NULL;
+    K32_mqtt *mqtt = NULL;
 
     void init_stm32()
     {
@@ -87,6 +89,14 @@ public:
 
         if (!wifi)
             LOG("OSC: Warning WIFI should be initialized BEFORE osc");
+    }
+
+    void init_mqtt(mqttconf conf) {
+        mqtt = new K32_mqtt(system, wifi, audio, light);
+        mqtt->start(conf);
+
+        if (!wifi)
+            LOG("MQTT: Warning WIFI should be initialized BEFORE mqtt");
     }
 
 private:

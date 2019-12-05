@@ -85,7 +85,7 @@ void K32_osc::start(oscconf conf)
                   "osc_beat",         // server name
                   2000,              // stack memory
                   (void*)this,        // args
-                  1,                  // priority
+                  0,                  // priority
                   NULL,              // handler
                   0);                // core 
 
@@ -95,7 +95,7 @@ void K32_osc::start(oscconf conf)
                   "osc_beacon",         // server name
                   2000,              // stack memory
                   (void*)this,        // args
-                  2,                  // priority
+                  1,                  // priority
                   NULL,              // handler
                   0);                // core 
   }
