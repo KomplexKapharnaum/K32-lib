@@ -41,6 +41,8 @@ class K32_wifi {
     long getRSSI();
     void getWiFiLevel(uint8_t (&led_display)[6]);
 
+    bool find(String ssid);
+
     IPAddress broadcastIP();
 
     String nameDevice;

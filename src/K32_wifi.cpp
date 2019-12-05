@@ -188,6 +188,13 @@ void K32_wifi::getWiFiLevel(uint8_t (&led_display)[6])
   }
 }
 
+bool K32_wifi::find(String ssid) {
+  int n = WiFi.scanNetworks();
+  for (int i = 0; i < n; ++i) 
+    if (WiFi.SSID(i) == ssid) return true;
+  return false;
+}
+
 IPAddress K32_wifi::broadcastIP()
 {
   IPAddress b;
