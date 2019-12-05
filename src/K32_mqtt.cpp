@@ -6,6 +6,7 @@
 
 #include "Arduino.h"
 #include "K32_mqtt.h"
+#include <ESPmDNS.h>
 
 
 /*
@@ -39,6 +40,8 @@ void K32_mqtt::start(mqttconf conf)
 
     this->mqttClient->subscribe("k32/all/#", 1);
     LOG("MQTT: subscribed to k32/all/#");
+
+    MDNS.addService("_mqttc", "tcp", 1883);
   });
 
   mqttClient->onDisconnect([this](AsyncMqttClientDisconnectReason reason){
