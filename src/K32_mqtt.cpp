@@ -41,7 +41,9 @@ void K32_mqtt::start(mqttconf conf)
     this->mqttClient->subscribe("k32/all/#", 1);
     LOG("MQTT: subscribed to k32/all/#");
 
-    MDNS.addService("_mqttc", "tcp", 1883);
+    MDNS.addService("_mqttc", "_tcp", 1883);
+    mdns_service_instance_name_set("_mqttc", "_tcp", ("MQTTc._"+this->system->name()).c_str());
+    
   });
 
   mqttClient->onDisconnect([this](AsyncMqttClientDisconnectReason reason){

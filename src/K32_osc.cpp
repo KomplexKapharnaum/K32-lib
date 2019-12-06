@@ -221,7 +221,8 @@ void K32_osc::server( void * parameter ) {
    // Wait for WIFI to first connect
    while(!that->wifi->isConnected()) delay( 300 );
    
-   MDNS.addService("_osc", "udp", that->conf.port_in);
+   MDNS.addService("_osc", "_udp", that->conf.port_in);
+   mdns_service_instance_name_set("_osc", "_udp", ("OSC._"+that->system->name()).c_str());
 
    LOGF("OSC: listening on port %d\n", that->conf.port_in);
 
