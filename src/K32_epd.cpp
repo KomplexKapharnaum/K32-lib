@@ -17,8 +17,8 @@
 
 
 
-const int wake_up = 12;
-const int reset = 14;
+const int wake_up = 0;
+const int reset =0;
 
 
 /*
@@ -100,9 +100,9 @@ static unsigned char _verify(const void * ptr, int n)
 void epd_init(void)
 {
 	//pinMode(epd_on, HIGH);
-	Serial2.begin(115200, SERIAL_8N1, 16, 17);
-	pinMode(wake_up, HIGH);
-	pinMode(reset, HIGH);
+	Serial2.begin(115200, SERIAL_8N1, 4, 17);
+	 //pinMode(wake_up, HIGH);
+	// pinMode(reset, HIGH);
 }
 /*******************************************************************************
 * Function Name  : void epd_reset(void)

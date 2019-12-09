@@ -19,10 +19,7 @@
 
 
  void K32_power::start() {
-/* EPD Init */
-// epd_init();
-// epd_wakeup();
-// epd_set_memory(MEM_TF);
+
 
 
    xTaskCreate( this->task,
@@ -55,8 +52,8 @@
   void K32_power::task(void * parameter) {
     K32_power* that = (K32_power*) parameter;
     TickType_t xFrequency = pdMS_TO_TICKS(POWER_CHECK);
-    bool Cell[40];
-    int randomValue;
+    // bool Cell[40];
+    // int randomValue;
     that->SOC = 50;
 
     /* Init Epd Cells and fill EPD screen */
@@ -64,8 +61,14 @@
     // {
     //   Cell[i]=1;
     // }
-    // int numberOfIcon = (int)(that->SOC*4/10);
-    // FillScreen(numberOfIcon);
+    int numberOfIcon = (int)(that->SOC*4/10);
+
+    /* EPD Init */
+    xSemaphoreTake(that->lock, portMAX_DELAY);
+    epd_init();
+    epd_set_memory(MEM_TF);
+    FillScreen(numberOfIcon);
+    xSemaphoreTake(that->lock, portMAX_DELAY);
     //epd_enter_stopmode();
 
 
@@ -94,10 +97,12 @@
 
 
       /* EPD Routine */
-      //numberOfIcon = (int)(that->_stm32->battery()*4/10);
-      // numberOfIcon = (int)(that->SOC*4/10);
-      // LOGF("Nb of icon : %d\n", numberOfIcon);
-      // FillScreen(numberOfIcon);
+      numberOfIcon = (int)(that->_stm32->battery()*4/10);
+      numberOfIcon = (int)(that->SOC*4/10);
+      LOGF("Nb of icon : %d\n", numberOfIcon);
+      xSemaphoreTake(that->lock, portMAX_DELAY);
+      FillScreen(numberOfIcon);
+      xSemaphoreTake(that->lock, portMAX_DELAY);
       //epd_enter_stopmode();
 
 
