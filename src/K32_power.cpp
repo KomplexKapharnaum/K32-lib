@@ -14,7 +14,7 @@
  K32_power::K32_power(K32_stm32* stm32) {
    this->lock = xSemaphoreCreateMutex();
    this->_stm32 = stm32 ;
-   this->charge = true;
+   this->charge = false;
  };
 
 
@@ -54,7 +54,7 @@
     TickType_t xFrequency = pdMS_TO_TICKS(POWER_CHECK);
     // bool Cell[40];
     // int randomValue;
-    that->SOC = 50;
+    that->SOC = that->_stm32->battery();
 
     /* Init Epd Cells and fill EPD screen */
     // for (int i=0; i<40; i++)
@@ -75,25 +75,16 @@
 
     while(true) {
 
-      if (that->charge)
+      if (that->SOC<that->_stm32->battery())
       {
-        that->SOC += 5;
-        if (that->SOC > 100)
-        {
-          that->SOC =100 ;
-        }
-
-
-
-
-
-      } else
+        that->charge = true;
+      }else if(that->SOC>that->_stm32->battery())
       {
-        that->SOC -= 5 ;
-        if (that->SOC < 0) {
-          that->SOC = 0;
-        }
+        that->charge = false;
       }
+      that->SOC = that->_stm32->battery();
+      LOGF("SOC : %d \n", that->SOC);
+    
 
 
       /* EPD Routine */
