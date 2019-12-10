@@ -89,9 +89,10 @@ class K32_system {
 
     K32_stm32 *stm32 = NULL;
   
+    Preferences preferences;
+    
   private:
     SemaphoreHandle_t lock;
-    Preferences preferences;
 
 };
 
