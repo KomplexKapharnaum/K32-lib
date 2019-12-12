@@ -7,6 +7,7 @@
 #include "Arduino.h"
 #include "K32_power.h"
 
+
 /*
  *   PUBLIC
  */
@@ -52,24 +53,8 @@
   void K32_power::task(void * parameter) {
     K32_power* that = (K32_power*) parameter;
     TickType_t xFrequency = pdMS_TO_TICKS(POWER_CHECK);
-    // bool Cell[40];
-    // int randomValue;
+
     that->SOC = that->_stm32->battery();
-
-    /* Init Epd Cells and fill EPD screen */
-    // for (int i=0; i<40; i++)
-    // {
-    //   Cell[i]=1;
-    // }
-    int numberOfIcon = (int)(that->SOC*4/10);
-
-    /* EPD Init */
-    xSemaphoreTake(that->lock, portMAX_DELAY);
-    epd_init();
-    epd_set_memory(MEM_TF);
-    FillScreen(numberOfIcon);
-    xSemaphoreTake(that->lock, portMAX_DELAY);
-    //epd_enter_stopmode();
 
 
 
@@ -82,63 +67,11 @@
       {
         that->charge = false;
       }
+
       that->SOC = that->_stm32->battery();
+
       LOGF("SOC : %d \n", that->SOC);
-    
 
-
-      /* EPD Routine */
-      numberOfIcon = (int)(that->_stm32->battery()*4/10);
-      numberOfIcon = (int)(that->SOC*4/10);
-      LOGF("Nb of icon : %d\n", numberOfIcon);
-      xSemaphoreTake(that->lock, portMAX_DELAY);
-      FillScreen(numberOfIcon);
-      xSemaphoreTake(that->lock, portMAX_DELAY);
-      //epd_enter_stopmode();
-
-
-
-
-      // if ((int)(that->_stm32->battery()*4/10) > numberOfIcon)
-      // {
-      //   /* Add an icon to the big picture*/
-      //   do{randomValue=random(40);} while (Cell[randomValue]);
-      //   Cell[randomValue] = 1;
-      //    numberOfIcon ++;
-      //    DrawPic(random(1,7), randomValue);
-      //    LOGF("Add icon %d \n", randomValue);
-      //  }
-      //  else if ((int)(that->_stm32->battery()*4/10) < numberOfIcon)
-      //  {
-      //    /* Remove an icon */
-      //    do{randomValue=random(40);} while (!Cell[randomValue]);
-      //    Cell[randomValue] = 0;
-      //     numberOfIcon --;
-      //     LOGF("Remove icon %d \n", randomValue);
-      //     DrawPic(0, randomValue);
-      //  }
-      //  else
-      //  {
-      //    /* Add and remove an icon */
-      //    do{randomValue=random(40);} while (!Cell[randomValue]);
-      //    Cell[randomValue] = 0;
-      //     numberOfIcon --;
-      //     //LOGF("Remove icon %d \n", randomValue);
-      //     DrawPic(0, randomValue);
-      //     do{randomValue=random(40);} while (Cell[randomValue]);
-      //     Cell[randomValue] = 1;
-      //      numberOfIcon ++;
-      //      //LOGF("Add icon %d \n", randomValue);
-      //      DrawPic(random(1,7), randomValue);
-      //      LOGF("Nb of icon : %d\n", numberOfIcon);
-      //      // for (int i=0; i<40; i++)
-      //      // {
-      //      //   LOG(Cell[i])
-      //      /* Verify Nb of icon */
-      //
-      //      //LOGF("New nb of icon : %d\n", numberOfIcon);
-      //
-       //}
 
       vTaskDelay( xFrequency );
     }

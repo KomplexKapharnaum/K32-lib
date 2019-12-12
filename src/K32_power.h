@@ -6,7 +6,7 @@ Released under GPL v3.0
 #ifndef K32_power_h
 #define K32_power_h
 
-#define POWER_CHECK 20000           // task loop in ms
+#define POWER_CHECK 5000           // task loop in ms
 
 
 #include "K32_log.h"

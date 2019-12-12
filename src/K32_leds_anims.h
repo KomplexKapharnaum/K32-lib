@@ -23,12 +23,12 @@ class K32_leds_anim {
 
     virtual String name () { return ""; };
     virtual bool loop ( K32_leds_rmt* leds ) { return false; };
-    
+
     void init() { this->startTime = millis(); }
-    void setParam(int k, int value) { if (k < LEDS_PARAM_SLOTS) this->params[k] = value; } 
+    void setParam(int k, int value) { if (k < LEDS_PARAM_SLOTS) this->params[k] = value; }
     void lock() { xSemaphoreTake(this->critical, portMAX_DELAY); }
     void unlock() { xSemaphoreGive(this->critical); }
-    
+
     int params[LEDS_PARAM_SLOTS];
     SemaphoreHandle_t critical;
 
@@ -47,13 +47,13 @@ class K32_leds_anim_test : public K32_leds_anim {
       this->params[1] = 2000;   // initial delay
       this->params[2] = 200;    // step duration
     }
-    
+
     String name () { return "test"; }
-    
+
     void init() {}
 
     bool loop ( K32_leds_rmt* leds ){
-    
+
       int wait = this->params[2];
 
       delay(this->params[1]);
@@ -111,18 +111,19 @@ class K32_leds_anim_test : public K32_leds_anim {
 class K32_leds_anim_sinus : public K32_leds_anim {
   public:
     K32_leds_anim_sinus() {
-      this->params[0] = 2000; // period
-      this->params[1] = 255;  // intensity max
+      this->params[0] = 1000; // period
+      this->params[1] = 150;  // intensity max
       this->params[2] = 0;    // intensity min
-      this->params[3] = 255;  // red
-      this->params[4] = 255;  // green
-      this->params[5] = 255;  // blue
-      this->params[6] = 255;  // white
+      this->params[3] = 100;  // red
+      this->params[4] = 0;  // green
+      this->params[5] = 0;  // blue
+      this->params[6] = 0;  // white
       this->params[7] = 0;    // duration (seconds) 0 = infinite
+      this->params[11] = 50; // SOC
     }
 
     String name () { return "sinus"; }
-    
+
     bool loop ( K32_leds_rmt* leds ){
 
       float factor = 0;
@@ -136,7 +137,19 @@ class K32_leds_anim_sinus : public K32_leds_anim {
         factor = ((0.5f + 0.5f * sin( 2 * PI * progress / this->params[0] - 0.5f * PI ) ) * (this->params[1]-this->params[2]) + this->params[2]) / 255;
 
         this->lock();
-        leds->setAll( (int)(this->params[3]*factor),  (int)(this->params[4]*factor),  (int)(this->params[5]*factor),  (int)(this->params[6]*factor));
+        for (int i=0; i<50; i ++)
+        {
+          /* First color below SOC */
+          if(i<params[11]/4)
+          {
+            leds->setPixel(0,i, (int)(this->params[3]*factor),  (int)(this->params[4]*factor),  (int)(this->params[5]*factor),  (int)(this->params[6]*factor));
+            leds->setPixel(1,i,  (int)(this->params[3]*factor),  (int)(this->params[4]*factor),  (int)(this->params[5]*factor),  (int)(this->params[6]*factor));
+          } else
+          {
+            leds->setPixel(0,i,0,0,0,0);
+            leds->setPixel(1,i, 0,0,0,0);
+          }
+        }
         leds->show();
         this->unlock();
 
@@ -158,6 +171,198 @@ class K32_leds_anim_sinus : public K32_leds_anim {
     };
 };
 
+//
+// CHARGE
+//
+class K32_leds_anim_decharge : public K32_leds_anim {
+  public:
+    K32_leds_anim_decharge() {
+      this->params[0] = 1000; // period
+      this->params[1] = 100;  // intensity max
+      this->params[2] = 0;    // intensity min
+      this->params[3] = 0;  // red1
+      this->params[4] = 100;  // green1
+      this->params[5] = 0;  // blue1
+      this->params[6] = 0;  // white1
+      this->params[7] = 255;  // red2
+      this->params[8] = 165;  // green2
+      this->params[9] = 0;  // blue2
+      this->params[10] = 0;  // white2
+      this->params[11] = 50;    // State of charge
+    }
+
+    String name () { return "decharge"; }
+
+    bool loop ( K32_leds_rmt* leds ){
+
+      unsigned long start = millis();
+      unsigned long progress = 0;
+
+      // LOG("LEDS sinus");
+
+      while (progress <= this->params[0]) {
+
+
+        this->lock();
+        for (int i=0; i<50; i ++)
+        {
+          /* First color below SOC */
+          if(i<params[11]/4)
+          {
+            leds->setPixel(0,i,params[3],params[4],params[5],params[6]);
+            leds->setPixel(1,i,params[3],params[4],params[5],params[6]);
+          } else if (i>=50-params[11]/4)
+          {
+            leds->setPixel(0,i,params[3],params[4],params[5],params[6]);
+            leds->setPixel(1,i,params[3],params[4],params[5],params[6]);
+          } else /* Second color */
+          {
+            leds->setPixel( 0,i, 0, 0,0,0);
+            leds->setPixel( 1,i, 0,0,0,0);
+          }
+
+        }
+
+/* Blinking */
+        leds->setPixel( 0,params[11]/4-1,params[7],params[8],params[9],params[10]);
+        leds->setPixel( 1,params[11]/4-1,params[7],params[8],params[9],params[10]);
+        leds->setPixel( 0,50 - params[11]/4,params[7],params[8],params[9],params[10]);
+        leds->setPixel( 1,50 - params[11]/4,params[7],params[8],params[9],params[10]);
+        leds->show();
+        this->unlock();
+
+        vTaskDelay(pdMS_TO_TICKS(500));
+
+        this->lock();
+        leds->setPixel( 0,params[11]/4-2,params[7],params[8],params[9],params[10]);
+        leds->setPixel( 1,params[11]/4-2,params[7],params[8],params[9],params[10]);
+        leds->setPixel( 0,51 - params[11]/4,params[7],params[8],params[9],params[10]);
+        leds->setPixel( 1,51 - params[11]/4,params[7],params[8],params[9],params[10]);
+        leds->show();
+        this->unlock();
+
+        vTaskDelay(pdMS_TO_TICKS(500));
+
+        this->lock();
+        leds->setPixel( 0,params[11]/4-3,params[7],params[8],params[9],params[10]);
+        leds->setPixel( 1,params[11]/4-3,params[7],params[8],params[9],params[10]);
+        leds->setPixel( 0,52 - params[11]/4,params[7],params[8],params[9],params[10]);
+        leds->setPixel( 1,52 - params[11]/4,params[7],params[8],params[9],params[10]);
+        leds->show();
+        this->unlock();
+
+        vTaskDelay(pdMS_TO_TICKS(500));
+
+        this->lock();
+        leds->setPixel( 0,params[11]/4-1,params[3],params[4],params[5],params[6]);
+        leds->setPixel( 1,params[11]/4-1,params[3],params[4],params[5],params[6]);
+        leds->setPixel( 0,params[11]/4-2,params[3],params[4],params[5],params[6]);
+        leds->setPixel( 1,params[11]/4-2,params[3],params[4],params[5],params[6]);
+        leds->setPixel( 0,params[11]/4-3,params[3],params[4],params[5],params[6]);
+        leds->setPixel( 1,params[11]/4-3,params[3],params[4],params[5],params[6]);
+        leds->setPixel( 0,50 - params[11]/4,params[3],params[4],params[5],params[6]);
+        leds->setPixel( 1,50 - params[11]/4,params[3],params[4],params[5],params[6]);
+        leds->setPixel( 0,51 - params[11]/4,params[3],params[4],params[5],params[6]);
+        leds->setPixel( 1,51 - params[11]/4,params[3],params[4],params[5],params[6]);
+        leds->setPixel( 0,52 - params[11]/4,params[3],params[4],params[5],params[6]);
+        leds->setPixel( 1,52 - params[11]/4,params[3],params[4],params[5],params[6]);
+        leds->show();
+        this->unlock();
+
+        vTaskDelay(pdMS_TO_TICKS(this->params[0]));
+        progress = millis() - start;
+      }
+
+      // ANIMATION Timeout
+      if (this->params[7] > 0)
+        if (millis() > (this->startTime+this->params[7]*1000)) {
+          this->lock();
+          leds->blackout();
+          this->unlock();
+          return false;
+        }
+
+      return true;    // LOOP !
+
+    };
+};
+
+
+//
+// CHARGE
+//
+class K32_leds_anim_charge : public K32_leds_anim {
+  public:
+    K32_leds_anim_charge() {
+      this->params[0] = 2000; // period
+      this->params[1] = 100;  // intensity max
+      this->params[2] = 0;    // intensity min
+      this->params[3] = 0;  // red1
+      this->params[4] = 100;  // green1
+      this->params[5] = 0;  // blue1
+      this->params[6] = 0;  // white1
+      this->params[7] = 255;  // red2
+      this->params[8] = 165;  // green2
+      this->params[9] = 0;  // blue2
+      this->params[10] = 0;  // white2
+      this->params[11] = 50;    // State of charge
+    }
+
+    String name () { return "charge"; }
+
+    bool loop ( K32_leds_rmt* leds ){
+
+      float factor = 0;
+      unsigned long start = millis();
+      unsigned long progress = 0;
+
+      // LOG("LEDS sinus");
+
+      while (progress <= this->params[0]) {
+
+        factor = ((0.5f + 0.5f * sin( 2 * PI * progress / this->params[0] - 0.5f * PI ) ) * (this->params[1]-this->params[2]) + this->params[2]) / 255;
+
+        this->lock();
+        for (int i=0; i<50; i ++)
+        {
+          /* First color below SOC */
+          if(i<params[11]/4)
+          {
+            leds->setPixel(0,i,params[3],params[4],params[5],params[6]);
+            leds->setPixel(1,i,params[3],params[4],params[5],params[6]);
+          } else if (i>=50-params[11]/4)
+          {
+            leds->setPixel(0,i,params[3],params[4],params[5],params[6]);
+            leds->setPixel(1,i,params[3],params[4],params[5],params[6]);
+          } else
+          {
+            leds->setPixel( 0,i, (int)(this->params[7]*factor),  (int)(this->params[8]*factor),  (int)(this->params[9]*factor),  (int)(this->params[10]*factor));
+            leds->setPixel( 1,i, (int)(this->params[7]*factor),  (int)(this->params[8]*factor),  (int)(this->params[9]*factor),  (int)(this->params[10]*factor));
+          }
+
+        }
+
+
+        leds->show();
+        this->unlock();
+
+        vTaskDelay(pdMS_TO_TICKS(1));
+        progress = millis() - start;
+      }
+
+      // ANIMATION Timeout
+      if (this->params[7] > 0)
+        if (millis() > (this->startTime+this->params[7]*1000)) {
+          this->lock();
+          leds->blackout();
+          this->unlock();
+          return false;
+        }
+
+      return true;    // LOOP !
+
+    };
+};
 
 //
 // STROBE
@@ -170,13 +375,13 @@ class K32_leds_anim_strobe : public K32_leds_anim {
     }
 
     String name () { return "strobe"; }
-    
+
     bool loop ( K32_leds_rmt* leds ){
-        
+
       int intensity = 255;
       TickType_t xOn = max(1, (int)pdMS_TO_TICKS( (this->params[0]*this->params[1]/100) ));
       TickType_t xOff = max(1, (int)pdMS_TO_TICKS( this->params[0] - (this->params[0]*this->params[1]/100) ));
-      
+
       this->lock();
       leds->setAll(intensity, intensity, intensity, intensity)->show();
       this->unlock();
@@ -209,11 +414,11 @@ class K32_leds_anim_hardstrobe : public K32_leds_anim {
     }
 
     String name () { return "hardstrobe"; }
-    
+
     bool loop ( K32_leds_rmt* leds ){
-      
+
       int intensity = 255;
-      // LOGINL(millis()); LOGINL(" // "); LOG(this->nextEvent);  
+      // LOGINL(millis()); LOGINL(" // "); LOG(this->nextEvent);
       if (millis() > this->nextEvent) {
         // OFF -> ON
         if(!state) {
@@ -226,7 +431,7 @@ class K32_leds_anim_hardstrobe : public K32_leds_anim {
         // ON -> OFF
         else {
           this->nextEvent = millis() + this->params[0] - (this->params[0]*this->params[1]/100);
-          
+
           this->lock();
           leds->blackout();
           this->unlock();
@@ -237,7 +442,7 @@ class K32_leds_anim_hardstrobe : public K32_leds_anim {
       return true;    // LOOP !
 
     };
-    
+
     long nextEvent;
     bool state;
 };
@@ -255,6 +460,8 @@ class K32_leds_animbook {
       //
       this->add( new K32_leds_anim_test() );
       this->add( new K32_leds_anim_sinus() );
+      this->add(new K32_leds_anim_charge());
+      this->add(new K32_leds_anim_decharge());
       this->add( new K32_leds_anim_strobe() );
       this->add( new K32_leds_anim_hardstrobe() );
 
@@ -283,7 +490,7 @@ class K32_leds_animbook {
       this->anims[ this->counter ] = anim;
       this->counter++;
     };
-    
+
 };
 
 
