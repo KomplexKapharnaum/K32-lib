@@ -34,9 +34,13 @@ public:
     #ifdef K32_SET_NODEID
         system->id(K32_SET_NODEID);
         system->channel(15);
+        LOGINL("Set id: "); 
+        LOG(K32_SET_NODEID);
     #endif
     #ifdef K32_SET_HWREVISION
         system->hw(K32_SET_HWREVISION);
+        LOGINL("Set HW rev: "); 
+        LOG(K32_SET_HWREVISION);
     #endif
 
     }

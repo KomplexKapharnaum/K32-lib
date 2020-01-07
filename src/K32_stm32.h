@@ -6,7 +6,7 @@
 #ifndef K32_stm32_h
 #define K32_stm32_h
 
-#define STM32_CHECK 300           // task loop in ms
+#define STM32_CHECK 200           // task loop in ms
 #define STM32_CHECK_BATT 5000     // check battery in ms
 
 #include "Arduino.h"
