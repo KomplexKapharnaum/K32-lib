@@ -3,13 +3,14 @@
 ## INSTALL
 
 ### Dependencies
--CNMAT/OSC:                      [https://github.com/CNMAT/OSC]
--me-no-dev/AsyncTCP:             [https://github.com/me-no-dev/AsyncTCP]
--marvinroger/AsyncMQTTClient:    [https://github.com/marvinroger/async-mqtt-client]
--me-no-dev/ESPAsyncWebServer:    [https://github.com/me-no-dev/ESPAsyncWebServer]
--tommag/PCM51xx_Arduino:         [https://github.com/tommag/PCM51xx_Arduino]
--Gianbacchio/ESP8266_Spiram:     [https://github.com/Gianbacchio/ESP8266_Spiram]
--earlephilhower/ESP8266Audio:    [https://github.com/earlephilhower/ESP8266Audio]
+-CNMAT/OSC:                      https://github.com/CNMAT/OSC  
+-me-no-dev/AsyncTCP:             https://github.com/me-no-dev/AsyncTCP  
+-marvinroger/AsyncMQTTClient:    https://github.com/marvinroger/async-mqtt-client  
+-me-no-dev/ESPAsyncWebServer:    https://github.com/me-no-dev/ESPAsyncWebServer  
+-tommag/PCM51xx_Arduino:         https://github.com/tommag/PCM51xx_Arduino  
+-Gianbacchio/ESP8266_Spiram:     https://github.com/Gianbacchio/ESP8266_Spiram  
+-earlephilhower/ESP8266Audio:    https://github.com/earlephilhower/ESP8266Audio  
+-marian-craciunescu/ESP32Ping:   https://github.com/marian-craciunescu/ESP32Ping
 
 
 ## MESSAGING protocol
@@ -23,7 +24,7 @@
     k32/all      = all device
     k32/c[chan]  = all device in [chan]
     k32/d[addr]  = all device in dmx [addr]
-    k32/e[id]     = specific device with [id]
+    k32/e[id]    = specific device with [id]
 
 ### OSC:
     
@@ -32,7 +33,7 @@
     /all        = all device receiving the message
     /c[chan]    = all device in [chan]
     /d[addr]    = all device in dmx [addr]
-    /e[id]       = specific device with [id]
+    /e[id]      = specific device with [id]
 
 ### Common
 
