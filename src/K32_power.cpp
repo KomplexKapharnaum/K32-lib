@@ -41,7 +41,16 @@
  }
 
  int K32_power::power() {
-   return 3;
+   this-> _power = this->_current * this->_stm32->voltage() / 1000;  // Power in mW
+   return this->_power;
+ }
+
+ int K32_power::energy() {
+   return this->_energy;
+ }
+
+ int K32_power::current() {
+   return this->_current;
  }
 
 
@@ -53,12 +62,40 @@
   void K32_power::task(void * parameter) {
     K32_power* that = (K32_power*) parameter;
     TickType_t xFrequency = pdMS_TO_TICKS(POWER_CHECK);
+    int current_factor = 0 ;
 
     that->SOC = that->_stm32->battery();
+    if (CURRENT_SENSOR_TYPE == 10) {
+      current_factor = 60 ;
+    } else if (CURRENT_SENSOR_TYPE == 25)
+    {
+      current_factor = 24;
+    }
 
 
 
     while(true) {
+
+      /* Check Current Value */
+      xSemaphoreTake(that->lock, portMAX_DELAY);
+      that->_current = 0 ;
+      for (int i = 0; i < 50 ; i ++) // Averaging on 50 values
+      {
+        that->_current = that->_current + analogRead(CURRENT_SENSOR_PORT) ;
+      }
+      that->_current = that->_current / 50 ;
+      that-> _current = (that->_current - 1935) *1000 / current_factor ; // Curent in mA
+      xSemaphoreGive(that->lock);
+
+      // if (that->_current > 400)
+      // {
+      //   that->charge = true;
+      // } else if (that->_current < -400)
+      // {
+      //   that->charge = false;
+      // }
+
+
 
       if (that->SOC<that->_stm32->battery())
       {
@@ -70,7 +107,6 @@
 
       that->SOC = that->_stm32->battery();
 
-      LOGF("SOC : %d \n", that->SOC);
 
 
       vTaskDelay( xFrequency );
