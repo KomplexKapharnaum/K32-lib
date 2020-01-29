@@ -22,11 +22,15 @@ class K32_system {
     };
 
     int id() {
-      int id;
-      xSemaphoreTake(this->lock, portMAX_DELAY);
-      id = preferences.getUInt("id", 0);
-      xSemaphoreGive(this->lock);
-      return id; 
+      #ifdef K32_SET_NODEID
+        return K32_SET_NODEID
+      #else
+        int id;
+        xSemaphoreTake(this->lock, portMAX_DELAY);
+        id = preferences.getUInt("id", 0);
+        xSemaphoreGive(this->lock);
+        return id; 
+      #endif
     }
 
     void id(int id) {
@@ -50,11 +54,15 @@ class K32_system {
     }
 
     int hw() {
-      int hw;
-      xSemaphoreTake(this->lock, portMAX_DELAY);
-      hw = preferences.getUInt("hw", 0);
-      xSemaphoreGive(this->lock);
-      return hw;
+      #ifdef K32_SET_HWREVISION
+        return K32_SET_HWREVISION
+      #else
+        int hw;
+        xSemaphoreTake(this->lock, portMAX_DELAY);
+        hw = preferences.getUInt("hw", 0);
+        xSemaphoreGive(this->lock);
+        return hw;
+      #endif
     }
 
     void hw(int hwrevision) {
