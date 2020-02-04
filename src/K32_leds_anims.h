@@ -239,30 +239,30 @@ class K32_leds_anim_decharge : public K32_leds_anim {
       this->params[9] = 0;  // blue2
       this->params[10] = 0;  // white2
       this->params[11] = 50;    // State of charge
+      this -> params[12] = 0; // Power consumption (0 - 300)
     }
 
     String name () { return "decharge"; }
 
     bool loop ( K32_leds_rmt* leds ){
 
-      unsigned long start = millis();
-      unsigned long progress = 0;
+
       int length = LEDS_NUM_PIXEL ;
 
 
         this->lock();
-        for (int i=0; i<100; i ++)
+        for (int i=0; i<length; i ++)
         {
           /* First color below SOC */
-          if(i<params[11]/4)
+          if(i<((params[11]*length/100)/4))
           {
             leds->setPixel(0,i,params[3],params[4],params[5],params[6]);
             leds->setPixel(1,i,params[3],params[4],params[5],params[6]);
-          } else if ((i>=50-params[11]/4)&&(i<50 + params[11]/4))
+          } else if ((i>=length/2-(params[11]*length/100)/4)&&(i<length/2 + (params[11]*length/100)/4))
           {
             leds->setPixel(0,i,params[3],params[4],params[5],params[6]);
             leds->setPixel(1,i,params[3],params[4],params[5],params[6]);
-          } else if (i>=100-params[11]/4)
+          } else if (i>=length-(params[11]*length/100)/4)
           {
             leds->setPixel(0,i,params[3],params[4],params[5],params[6]);
             leds->setPixel(1,i,params[3],params[4],params[5],params[6]);
@@ -274,60 +274,31 @@ class K32_leds_anim_decharge : public K32_leds_anim {
         }
         leds->show();
         this->unlock();
-        vTaskDelay(pdMS_TO_TICKS(500));
+        vTaskDelay(pdMS_TO_TICKS(1000 - params[12]*2 ));
 
-        this->lock();
 
         /* Blinking */
-          leds->setPixel( 0,params[11]/4-1,params[7],params[8],params[9],params[10]);
-          leds->setPixel( 1,params[11]/4-1,params[7],params[8],params[9],params[10]);
-
-          leds->setPixel( 0,length/2-params[11]/4 ,params[7],params[8],params[9],params[10]);
-          leds->setPixel( 1,length/2-params[11]/4 ,params[7],params[8],params[9],params[10]);
-
-          leds->setPixel( 0,length/2 + params[11]/4-1,params[7],params[8],params[9],params[10]);
-          leds->setPixel( 1,length/2 + params[11]/4-1,params[7],params[8],params[9],params[10]);
-
-          leds->setPixel( 0,length - params[11]/4,params[7],params[8],params[9],params[10]);
-          leds->setPixel( 1,length - params[11]/4,params[7],params[8],params[9],params[10]);
-          leds->show();
-          this->unlock();
-
-          vTaskDelay(pdMS_TO_TICKS(500));
-
+        for (int i=0; i<=params[12]/100; i ++)
+        {
           this->lock();
-          leds->setPixel( 0,params[11]/4-2,params[7],params[8],params[9],params[10]);
-          leds->setPixel( 1,params[11]/4-2,params[7],params[8],params[9],params[10]);
+          leds->setPixel( 0,(params[11]*length/100)/4-1 - i ,params[7],params[8],params[9],params[10]);
+          leds->setPixel( 1,(params[11]*length/100)/4-1 - i ,params[7],params[8],params[9],params[10]);
 
-          leds->setPixel( 0,length/2-params[11]/4 + 1,params[7],params[8],params[9],params[10]);
-          leds->setPixel( 1,length/2-params[11]/4 + 1,params[7],params[8],params[9],params[10]);
+          leds->setPixel( 0,length/2-(params[11]*length/100)/4 + i,params[7],params[8],params[9],params[10]);
+          leds->setPixel( 1,length/2-(params[11]*length/100)/4 + i ,params[7],params[8],params[9],params[10]);
 
-          leds->setPixel( 0,length/2 + params[11]/4-2,params[7],params[8],params[9],params[10]);
-          leds->setPixel( 1,length/2 + params[11]/4-2,params[7],params[8],params[9],params[10]);
+          leds->setPixel( 0,length/2 + (params[11]*length/100)/4-1-i,params[7],params[8],params[9],params[10]);
+          leds->setPixel( 1,length/2 + (params[11]*length/100)/4-1-i,params[7],params[8],params[9],params[10]);
 
-          leds->setPixel( 0,length - params[11]/4 +1,params[7],params[8],params[9],params[10]);
-          leds->setPixel( 1,length - params[11]/4 +1,params[7],params[8],params[9],params[10]);
+          leds->setPixel( 0,length - (params[11]*length/100)/4+i,params[7],params[8],params[9],params[10]);
+          leds->setPixel( 1,length - (params[11]*length/100)/4+i,params[7],params[8],params[9],params[10]);
           leds->show();
           this->unlock();
 
-          vTaskDelay(pdMS_TO_TICKS(500));
+          vTaskDelay(pdMS_TO_TICKS(1000 - params[12]*2 ));
 
-          this->lock();
-          leds->setPixel( 0,params[11]/4-3,params[7],params[8],params[9],params[10]);
-          leds->setPixel( 1,params[11]/4-3,params[7],params[8],params[9],params[10]);
 
-          leds->setPixel( 0,length/2-params[11]/4 + 2,params[7],params[8],params[9],params[10]);
-          leds->setPixel( 1,length/2-params[11]/4 + 2,params[7],params[8],params[9],params[10]);
-
-          leds->setPixel( 0,length/2 + params[11]/4-3,params[7],params[8],params[9],params[10]);
-          leds->setPixel( 1,length/2 + params[11]/4-3,params[7],params[8],params[9],params[10]);
-
-          leds->setPixel( 0,length - params[11]/4 +2,params[7],params[8],params[9],params[10]);
-          leds->setPixel( 1,length - params[11]/4 +2,params[7],params[8],params[9],params[10]);
-          leds->show();
-          this->unlock();
-
-          vTaskDelay(pdMS_TO_TICKS(500));
+        }
 
           /* Leds OFFs */
           if (this->params[0] > 0)
@@ -365,6 +336,7 @@ class K32_leds_anim_charge : public K32_leds_anim {
       this->params[9] = 0;  // blue2
       this->params[10] = 0;  // white2
       this->params[11] = 50;    // State of charge
+      this->params[12] = 0; // Power value (0 - 300)
     }
 
     String name () { return "charge"; }
@@ -378,15 +350,15 @@ class K32_leds_anim_charge : public K32_leds_anim {
         for (int i=0; i<length; i ++)
         {
           /* First color below SOC */
-          if(i<params[11]/4)
+          if(i<(params[11]*length/100)/4)
           {
             leds->setPixel(0,i,params[3],params[4],params[5],params[6]);
             leds->setPixel(1,i,params[3],params[4],params[5],params[6]);
-          } else if ((i>=length/2-params[11]/4)&&(i<length/2 + params[11]/4))
+          } else if ((i>=length/2-(params[11]*length/100)/4)&&(i<length/2 + (params[11]*length/100)/4))
           {
             leds->setPixel(0,i,params[3],params[4],params[5],params[6]);
             leds->setPixel(1,i,params[3],params[4],params[5],params[6]);
-          } else if (i>=length-params[11]/4)
+          } else if (i>=length-(params[11]*length/100)/4)
           {
             leds->setPixel(0,i,params[3],params[4],params[5],params[6]);
             leds->setPixel(1,i,params[3],params[4],params[5],params[6]);
@@ -398,59 +370,29 @@ class K32_leds_anim_charge : public K32_leds_anim {
         }
         leds->show();
         this->unlock();
-        vTaskDelay(pdMS_TO_TICKS(500));
+        vTaskDelay(pdMS_TO_TICKS(1000 - params[12]*2 ));
 
-        this->lock();
       /* Blinking */
-        leds->setPixel( 0,params[11]/4,params[3],params[4],params[5],params[6]);
-        leds->setPixel( 1,params[11]/4,params[3],params[4],params[5],params[6]);
+      for (int i=0; i<=params[12]/100; i ++)
+      {
+        leds->setPixel( 0,(params[11]*length/100)/4 + i,params[3],params[4],params[5],params[6]);
+        leds->setPixel( 1,(params[11]*length/100)/4 + i,params[3],params[4],params[5],params[6]);
 
-        leds->setPixel( 0,length/2-params[11]/4 - 1,params[3],params[4],params[5],params[6]);
-        leds->setPixel( 1,length/2-params[11]/4 -1,params[3],params[4],params[5],params[6]);
+        leds->setPixel( 0,length/2-(params[11]*length/100)/4 - 1 - i,params[3],params[4],params[5],params[6]);
+        leds->setPixel( 1,length/2-(params[11]*length/100)/4 -1 - i,params[3],params[4],params[5],params[6]);
 
-        leds->setPixel( 0,length/2 + params[11]/4,params[3],params[4],params[5],params[6]);
-        leds->setPixel( 1,length/2 + params[11]/4,params[3],params[4],params[5],params[6]);
+        leds->setPixel( 0,length/2 + (params[11]*length/100)/4 + i,params[3],params[4],params[5],params[6]);
+        leds->setPixel( 1,length/2 + (params[11]*length/100)/4 + i,params[3],params[4],params[5],params[6]);
 
-        leds->setPixel( 0,length - params[11]/4 -1,params[3],params[4],params[5],params[6]);
-        leds->setPixel( 1,length - params[11]/4 -1,params[3],params[4],params[5],params[6]);
+        leds->setPixel( 0,length - (params[11]*length/100)/4 -1 - i,params[3],params[4],params[5],params[6]);
+        leds->setPixel( 1,length - (params[11]*length/100)/4 -1 - i,params[3],params[4],params[5],params[6]);
         leds->show();
         this->unlock();
 
-        vTaskDelay(pdMS_TO_TICKS(500));
+        vTaskDelay(pdMS_TO_TICKS(1000 - params[12]*2 ));
+      }
 
-        this->lock();
-        leds->setPixel( 0,params[11]/4+1,params[3],params[4],params[5],params[6]);
-        leds->setPixel( 1,params[11]/4+1,params[3],params[4],params[5],params[6]);
 
-        leds->setPixel( 0,length/2-params[11]/4-2,params[3],params[4],params[5],params[6]);
-        leds->setPixel( 1,length/2-params[11]/4-2,params[3],params[4],params[5],params[6]);
-
-        leds->setPixel( 0,length/2 + params[11]/4+1,params[3],params[4],params[5],params[6]);
-        leds->setPixel( 1,length/2 + params[11]/4+1,params[3],params[4],params[5],params[6]);
-
-        leds->setPixel( 0,length - params[11]/4-2,params[3],params[4],params[5],params[6]);
-        leds->setPixel( 1,length - params[11]/4-2,params[3],params[4],params[5],params[6]);
-        leds->show();
-        this->unlock();
-
-        vTaskDelay(pdMS_TO_TICKS(500));
-
-        this->lock();
-        leds->setPixel( 0,params[11]/4+2,params[3],params[4],params[5],params[6]);
-        leds->setPixel( 1,params[11]/4+2,params[3],params[4],params[5],params[6]);
-
-        leds->setPixel( 0,length/2-params[11]/4-3,params[3],params[4],params[5],params[6]);
-        leds->setPixel( 1,length/2-params[11]/4-3,params[3],params[4],params[5],params[6]);
-
-        leds->setPixel( 0,length/2 + params[11]/4+2,params[3],params[4],params[5],params[6]);
-        leds->setPixel( 1,length/2 + params[11]/4+2,params[3],params[4],params[5],params[6]);
-
-        leds->setPixel( 0,length - params[11]/4-3,params[3],params[4],params[5],params[6]);
-        leds->setPixel( 1,length - params[11]/4-3,params[3],params[4],params[5],params[6]);
-        leds->show();
-        this->unlock();
-
-        vTaskDelay(pdMS_TO_TICKS(500));
 
         /* Leds OFFs */
         if (this->params[0] > 0)
@@ -699,11 +641,11 @@ class K32_leds_anim_double : public K32_leds_anim {
         {
           leds->setPixel(0,i,params[1],params[2],params[3],params[4]);
           leds->setPixel(1,i,params[1],params[2],params[3],params[4]);
-        } else if ((i>=50-params[10]/4)&&(i<50 + params[10]/4))
+        } else if ((i>=length/2-params[10]/4)&&(i<length/2 + params[10]/4))
         {
           leds->setPixel(0,i,params[1],params[2],params[3],params[4]);
           leds->setPixel(1,i,params[1],params[2],params[3],params[4]);
-        } else if (i>=100-params[10]/4)
+        } else if (i>=length-params[10]/4)
         {
           leds->setPixel(0,i,params[1],params[2],params[3],params[4]);
           leds->setPixel(1,i,params[1],params[2],params[3],params[4]);

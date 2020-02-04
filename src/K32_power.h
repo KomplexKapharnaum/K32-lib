@@ -7,7 +7,7 @@ Released under GPL v3.0
 #define K32_power_h
 
 #define POWER_CHECK 100           // task loop in ms
-#define CURRENT_SENSOR_TYPE 25    // Current sensor type : 0 = no sensor ; 10 = HO10-P/SP33 ; 25 = HO10-P/SP33
+#define CURRENT_SENSOR_TYPE 0    // Current sensor type : 0 = no sensor ; 10 = HO10-P/SP33 ; 11 = H010 ; 25 = HO10-P/SP33
 #define CURRENT_SENSOR_PORT 35    // Current Sensor GPIO num
 
 
@@ -32,12 +32,14 @@ class K32_power {
     void reset();      // Reset energy time counter
     bool charge ;
     int SOC ;
+    void set_demo();
 
 
   private:
     SemaphoreHandle_t lock;
     K32_stm32* _stm32;
     bool running = false;
+    bool demo = false;
     int _power = 0;
     int _energy = 0;
     int _current = 0;

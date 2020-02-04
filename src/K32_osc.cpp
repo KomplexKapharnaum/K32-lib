@@ -144,8 +144,9 @@ OSCMessage K32_osc::power() {
     // identity
     msg.add(this->engine->settings->get("id"));
     msg.add(this->engine->stm32->voltage());
-    msg.add(this->engine->stm32->current());
+    msg.add(this->engine->power->current());
     msg.add(this->engine->stm32->battery());
+    msg.add(this->engine->power->power());
     return msg;
 }
 

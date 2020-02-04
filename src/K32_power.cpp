@@ -53,6 +53,15 @@
    return this->_current;
  }
 
+ void K32_power::set_demo() {
+   if (this->demo)
+   {
+     this->demo = false;
+   } else {
+     this->demo = true ;
+   }
+ }
+
 
 
  /*
@@ -63,6 +72,8 @@
     K32_power* that = (K32_power*) parameter;
     TickType_t xFrequency = pdMS_TO_TICKS(POWER_CHECK);
     int current_factor = 0 ;
+    unsigned long currentTime=millis();
+
 
     that->SOC = that->_stm32->battery();
     if (CURRENT_SENSOR_TYPE == 10) {
@@ -70,6 +81,9 @@
     } else if (CURRENT_SENSOR_TYPE == 25)
     {
       current_factor = 24;
+    } else if (CURRENT_SENSOR_TYPE == 11)
+    {
+      current_factor = 110 ;
     }
 
 
@@ -84,7 +98,8 @@
         that->_current = that->_current + analogRead(CURRENT_SENSOR_PORT) ;
       }
       that->_current = that->_current / 50 ;
-      that-> _current = (that->_current - 1935) *1000 / current_factor ; // Curent in mA
+      that-> _current = (that->_current - 2962) *1000 / current_factor ; // Curent in mA
+      if (CURRENT_SENSOR_TYPE == 0 ) that->_current = 15000;
       xSemaphoreGive(that->lock);
 
       // if (that->_current > 400)
@@ -95,17 +110,41 @@
       //   that->charge = false;
       // }
 
-
-
-      if (that->SOC<that->_stm32->battery())
+      if (!that->demo)
       {
-        that->charge = true;
-      }else if(that->SOC>that->_stm32->battery())
+        if (that->SOC<that->_stm32->battery())
+        {
+          that->charge = true;
+        }else if(that->SOC>that->_stm32->battery())
+        {
+          that->charge = false;
+        }
+
+        that->SOC = that->_stm32->battery();
+      } else
       {
-        that->charge = false;
+        if(millis() - currentTime > 500)
+        {
+          if (that->charge)
+          {
+            that->SOC ++;
+            if (that->SOC >= 100)
+            {
+              that-> charge = false;
+            }
+          } else
+          {
+            that->SOC -- ;
+            if (that->SOC <= 0)
+            {
+              that-> charge = true;
+            }
+          }
+          currentTime=millis();
+        }
       }
 
-      that->SOC = that->_stm32->battery();
+
 
 
 
