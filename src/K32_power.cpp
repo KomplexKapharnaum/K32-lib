@@ -41,7 +41,13 @@
  }
 
  int K32_power::power() {
-   this-> _power = this->_current * this->_stm32->voltage() / 1000;  // Power in mW
+   if (CURRENT_SENSOR_TYPE != 0)
+   {
+     this-> _power = this->_current * this->_stm32->voltage() / 1000;  // Power in mW
+   } else
+   {
+     /* Do nothing */
+   }
    return this->_power;
  }
 
@@ -52,6 +58,14 @@
  int K32_power::current() {
    return this->_current;
  }
+
+ void K32_power::set_power(int current, int battery, int power) {
+   this->charge = false;  // Gauge inside the installation
+   this->SOC = battery ;
+   this->_current = current ;
+   this->_power = power ;
+ }
+
 
  void K32_power::set_demo() {
    if (this->demo)
@@ -92,14 +106,23 @@
 
       /* Check Current Value */
       xSemaphoreTake(that->lock, portMAX_DELAY);
-      that->_current = 0 ;
-      for (int i = 0; i < 50 ; i ++) // Averaging on 50 values
+      if (CURRENT_SENSOR_TYPE != 0 )
       {
-        that->_current = that->_current + analogRead(CURRENT_SENSOR_PORT) ;
+        that->_current = 0 ;
+        for (int i = 0; i < 50 ; i ++) // Averaging on 50 values
+        {
+          that->_current = that->_current + analogRead(CURRENT_SENSOR_PORT) ;
+        }
+        that->_current = that->_current / 50 ;
+        that-> _current = (that->_current - CURRENT_CALIB ) *1000 / current_factor ; // Curent in mA
+
+
+
+      } else
+      {
+        /* Do nothing... */
       }
-      that->_current = that->_current / 50 ;
-      that-> _current = (that->_current - 2962) *1000 / current_factor ; // Curent in mA
-      if (CURRENT_SENSOR_TYPE == 0 ) that->_current = 15000;
+
       xSemaphoreGive(that->lock);
 
       // if (that->_current > 400)
@@ -110,17 +133,29 @@
       //   that->charge = false;
       // }
 
-      if (!that->demo)
+      if ((!that->demo) && (CURRENT_SENSOR_TYPE != 0))
       {
-        if (that->SOC<that->_stm32->battery())
+        if(that->_current > -100)
         {
           that->charge = true;
-        }else if(that->SOC>that->_stm32->battery())
+        } else if (that->_current < -200)
         {
           that->charge = false;
         }
 
+        //that->charge = true;
+        // if (that->SOC<that->_stm32->battery())
+        // {
+        //   that->charge = true;
+        // }else if(that->SOC>that->_stm32->battery())
+        // {
+        //   that->charge = false;
+        // }
+
         that->SOC = that->_stm32->battery();
+      } else if (CURRENT_SENSOR_TYPE == 0)
+      {
+        /* Do nothing */
       } else
       {
         if(millis() - currentTime > 500)

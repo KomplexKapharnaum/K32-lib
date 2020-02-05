@@ -145,7 +145,7 @@ OSCMessage K32_osc::power() {
     msg.add(this->engine->settings->get("id"));
     msg.add(this->engine->stm32->voltage());
     msg.add(this->engine->power->current());
-    msg.add(this->engine->stm32->battery());
+    msg.add(this->engine->power->SOC);
     msg.add(this->engine->power->power());
     return msg;
 }
@@ -276,6 +276,21 @@ void K32_osc::server( void * parameter ) {
               that->udp->beginPacket(that->udp->remoteIP(), that->conf.port_out);
               that->status().send(*that->udp);
               that->udp->endPacket();
+            }
+          });
+
+          //
+          // POWER
+          //
+          msg.dispatch("/power", [](K32_osc* that, K32_oscmsg &msg){
+            LOGINL("OSC: /power RECV from " );
+            LOG(that->udp->remoteIP());
+
+            if (that->conf.port_out > 0) {
+              if(msg.getInt(2)<-1000)
+              {
+                that->engine->power->set_power(msg.getInt(2), msg.getInt(3) ,msg.getInt(4));
+              }
             }
           });
 
