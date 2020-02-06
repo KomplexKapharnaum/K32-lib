@@ -7,7 +7,7 @@
 #define K32_leds_rmt_h
 
 #define LEDS_NUM_STRIPS 2
-#define LEDS_NUM_PIXEL 100
+#define LEDS_NUM_PIXEL 108
 
 #include "Arduino.h"
 #include "K32_log.h"

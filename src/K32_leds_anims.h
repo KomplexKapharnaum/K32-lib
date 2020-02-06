@@ -390,10 +390,10 @@ class K32_leds_anim_charge : public K32_leds_anim {
 
         leds->show();
         this->unlock();
-        vTaskDelay(pdMS_TO_TICKS(max(400 - params[12]*2,50) ));
+        vTaskDelay(pdMS_TO_TICKS(max(800 - params[12]*2,50) ));
 
       /* Blinking */
-      for (int i=0; i<=params[12]/100+3; i ++)
+      for (int i=0; i<=params[12]/100+1; i ++)
       {
         /* Normal mode */
         // leds->setPixel( 0,(params[11]*length/100)/4 + i,params[3],params[4],params[5],params[6]);
@@ -417,7 +417,7 @@ class K32_leds_anim_charge : public K32_leds_anim {
         leds->show();
         this->unlock();
 
-        vTaskDelay(pdMS_TO_TICKS(max(400 - params[12]*2,50)));
+        vTaskDelay(pdMS_TO_TICKS(max(800 - params[12]*2,50)));
       }
 
 

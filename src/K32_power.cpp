@@ -98,6 +98,9 @@
     } else if (CURRENT_SENSOR_TYPE == 11)
     {
       current_factor = 110 ;
+    } else if (CURRENT_SENSOR_TYPE == 1) // Model
+    {
+      current_factor = 100 ;
     }
 
 
@@ -116,6 +119,7 @@
         that->_current = that->_current / 50 ;
         that-> _current = (that->_current - CURRENT_CALIB ) *1000 / current_factor ; // Curent in mA
 
+        //that->_current = analogRead(CURRENT_SENSOR_PORT)-*20 ;
 
 
       } else
@@ -143,6 +147,34 @@
           that->charge = false;
         }
 
+        if (CURRENT_SENSOR_TYPE == 1) {
+            if(millis() - currentTime > 50000)
+            {
+
+              that->SOC ++;
+              if (that->SOC>100)
+              {
+                that->SOC = 45 ;
+              }
+              currentTime=millis();
+            }
+        }
+
+        // if (MODEL_VERSION) {
+        //   if(millis() - currentTime > 5000)
+        //   {
+        //
+        //     that->SOC ++;
+        //     if (that->SOC>100)
+        //     {
+        //       that->SOC = 45 ;
+        //     }
+        //     currentTime=millis();
+        //   }
+        //
+        //
+        // }
+
         //that->charge = true;
         // if (that->SOC<that->_stm32->battery())
         // {
@@ -152,11 +184,11 @@
         //   that->charge = false;
         // }
 
-        that->SOC = that->_stm32->battery();
+        //that->SOC = that->_stm32->battery();
       } else if (CURRENT_SENSOR_TYPE == 0)
       {
         /* Do nothing */
-      } else
+      }else
       {
         if(millis() - currentTime > 500)
         {
