@@ -87,6 +87,8 @@
     TickType_t xFrequency = pdMS_TO_TICKS(POWER_CHECK);
     int current_factor = 0 ;
     unsigned long currentTime=millis();
+    int counter = 0;
+    int current_meas = 0;
 
 
     that->SOC = that->_stm32->battery();
@@ -108,15 +110,22 @@
       xSemaphoreTake(that->lock, portMAX_DELAY);
       if (CURRENT_SENSOR_TYPE != 0 )
       {
-        that->_current = 0 ;
-        for (int i = 0; i < 50 ; i ++) // Averaging on 50 values
+        // that->_current = 0 ;
+        // for (int i = 0; i < 50 ; i ++) // Averaging on 50 values
+        // {
+        //   that->_current = that->_current + analogRead(CURRENT_SENSOR_PORT) ;
+        // }
+        // that->_current = that->_current / 50 ;
+
+        if (counter == 50)
         {
-          that->_current = that->_current + analogRead(CURRENT_SENSOR_PORT) ;
+          that-> _current = current_meas / 50;
+          that-> _current = (that->_current - CURRENT_CALIB ) *1000 / current_factor ; // Curent in mA
+          counter = 0;
+          current_meas = 0;
         }
-        that->_current = that->_current / 50 ;
-        that-> _current = (that->_current - CURRENT_CALIB ) *1000 / current_factor ; // Curent in mA
-
-
+        current_meas = current_meas + analogRead(CURRENT_SENSOR_PORT) ;
+        counter ++;
 
       } else
       {
@@ -135,10 +144,10 @@
 
       if ((!that->demo) && (CURRENT_SENSOR_TYPE != 0))
       {
-        if(that->_current > -100)
+        if(that->_current > 0)
         {
           that->charge = true;
-        } else if (that->_current < -200)
+        } else if (that->_current < -100)
         {
           that->charge = false;
         }

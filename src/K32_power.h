@@ -9,7 +9,7 @@ Released under GPL v3.0
 #define POWER_CHECK 100           // task loop in ms
 #define CURRENT_SENSOR_TYPE 25    // Current sensor type : 0 = no sensor (info given by OSC) ; 10 = HO10-P/SP33 ; 11 = H010 ; 25 = HO10-P/SP33
 #define CURRENT_SENSOR_PORT 35    // Current Sensor GPIO num
-#define CURRENT_CALIB 1819    // Calibration of current sensor
+#define CURRENT_CALIB 1813    // Calibration of current sensor
 #define MODEL_VERSION true  // code for ESP used in model
 
 
