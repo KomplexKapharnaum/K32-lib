@@ -6,7 +6,7 @@
 #ifndef K32_h
 #define K32_h
 
-// #define K32_VERSION 1.00  
+// #define K32_VERSION 1.00
 // #define K32_VERSION 1.01  // audio forced kill to avoid deadlock
 // #define K32_VERSION 1.02  // audio keep task active
 // #define K32_VERSION 1.03  // fixed audio memory leak
@@ -58,6 +58,7 @@ struct wificonf {
 struct k32conf {
   bool stm32;
   bool leds;
+  bool remote;
   bool audio;
   bool sampler;
   wificonf wifi;
@@ -71,6 +72,7 @@ struct k32conf {
 #include "K32_stm32.h"
 #include "K32_wifi.h"
 #include "K32_leds.h"
+#include "K32_remote.h"
 #include "K32_audio.h"
 #include "K32_samplermidi.h"
 #include "K32_osc.h"
@@ -86,6 +88,7 @@ class K32 {
     K32_osc* osc = NULL;
     K32_mqtt* mqtt = NULL;
     K32_leds* leds = NULL;
+    K32_remote* remote = NULL;
     K32_audio* audio = NULL;
     K32_samplermidi* sampler = NULL;
 

@@ -8,7 +8,7 @@
 
 
 K32::K32(k32conf conf) {
- 
+
   // Settings config
   const char* keys[16] = {"id", "channel", "model"};
   settings = new K32_settings(keys);
@@ -29,11 +29,16 @@ K32::K32(k32conf conf) {
 
   // SAMPLER MIDI
   if (conf.sampler) sampler = new K32_samplermidi();
-  
+
   // LEDS
   if (conf.leds) {
     leds = new K32_leds();
     leds->play( "test" );
+  }
+
+  // Remote control init
+  if (conf.remote) {
+    remote = new K32_remote();
   }
 
   // WIFI init
@@ -43,16 +48,15 @@ K32::K32(k32conf conf) {
     wifi = new K32_wifi( "esp-" + String(settings->get("id")) + "-v" + String(K32_VERSION, 2) + "-c" + String(settings->get("channel")), this );
     if (conf.wifi.ip) wifi->staticIP(conf.wifi.ip);
     wifi->connect(conf.wifi.ssid, conf.wifi.password);
-  
+
     // OSC init
     osc = new K32_osc(conf.osc, this);
 
     // MQTT init
     mqtt = new K32_mqtt(conf.mqtt, this);
-    
+
   }
   else WiFi.mode(WIFI_OFF);
 
-  
 
 };
