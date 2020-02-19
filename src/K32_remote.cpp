@@ -6,14 +6,22 @@
 
 #include "Arduino.h"
 #include "K32_remote.h"
+#include "Adafruit_MCP23017.h"
+#include <Wire.h>
 
-
+/*
+ *   PUBLIC
+ */
 
 K32_remote::K32_remote(const int BTN_PIN[NB_BTN]) {
   LOG("REMOTE: init");
 
   this->lock = xSemaphoreCreateMutex();
-  /* Init Buttons pins */
+  /* Init I2C and Buttons pins */
+ // Adafruit_MCP23017 mcp;
+ //
+ //  mcp.begin();
+
   for (int i = 0 ; i < NB_BTN; i++)
   {
     this->buttons[i].pin = BTN_PIN[i];
@@ -40,8 +48,30 @@ xTaskCreate( this->read_btn_state,          // function
 
 void K32_remote::setMacroNb(int macroNb)
 {
-  this->macroNb = macroNb;
+  this->_macroNb = macroNb;
 }
+
+void K32_remote::setAuto()
+{
+
+}
+
+remoteState K32_remote::getState()
+{
+  return this->_state;
+}
+
+
+int K32_remote::getActiveMacro()
+{
+  return this->_activeMacro;
+}
+
+int K32_remote::getPreviewMacro()
+{
+  return this->_previewMacro;
+}
+
 
 /*
  *   PRIVATE
@@ -57,26 +87,55 @@ void K32_remote::setMacroNb(int macroNb)
    while(true) {
      /* Main loop */
 
-     /* Check Prev and Fwd button */
-     if (  that->buttons[0].flag == 1)
-     {
-       that->macroIndex --;
-       LOG("REMOTE: Short push on button 0");
-     } else if ( that->buttons[0].flag == 2) {
-       LOG("REMOTE: Long push on button 0");
+     /* Check flogs for each button */
 
-     }
-     that->buttons[0].flag = 0;
-     if (  that->buttons[1].flag == 1)
+     for (int i=0; i<NB_BTN; i++)
      {
-       that->macroIndex ++;
-       LOG("REMOTE: Short push on button 1");
+       if (  that->buttons[i].flag == 1)
+       {
+         LOGF("REMOTE: Short push on button %d\n",i);
 
-     } else if ( that->buttons[1].flag == 2)
-     {
-     LOG("REMOTE: Long push on button 1");
+         /* Instructions for the different buttons */
+         switch (i)
+         {
+           case 0 :                           // Button 1 : BlackOut
+            break;
+           case 1 :                          // Button 2 : Previous
+            that->_previewMacro --;
+            if (that->_previewMacro < 0 ) that->_previewMacro = that->_macroNb - 1 ;
+            LOG("Preview --");
+            break;
+          case 2 :                          // Button 3 : Forward
+            that->_previewMacro ++;
+            if (that->_previewMacro >= that->_macroNb ) that->_previewMacro = 0 ;
+            LOG("Preview ++");
+            break;
+          case 3 :                         // Button 4 : Go
+            break;
+
+         }
+       } else if ( that->buttons[i].flag == 2) {
+         LOGF("REMOTE: Long push on button %d\n",i);
+
+         /* Instructions for the different buttons */
+         switch (i)
+         {
+           case 0 :                           // Button 1 : BlackOut
+            break;
+           case 1 :                          // Button 2 : Previous
+            break;
+          case 2 :                          // Button 3 : Forward
+            break;
+          case 3 :                         // Button 4 : Go
+            break;
+
+         }
+
+       }
+       that->buttons[i].flag = 0;
      }
-     that->buttons[1].flag = 0;
+
+
 
 
 
@@ -113,10 +172,10 @@ void K32_remote::setMacroNb(int macroNb)
            that->buttons[i].lastPushTime = millis(); // Record time of pushing button
          } else
          {
-           if (millis()-that->buttons[i].lastPushTime>longPushDelay)
+           if ((millis()-that->buttons[i].lastPushTime>longPushDelay)&&(that->buttons[i].lastPushTime!=0))
            {
              that->buttons[i].flag = 2; // Long push
-             that->buttons[i].lastPushTime = millis(); // Reset counter
+             that->buttons[i].lastPushTime = 0; // Reset counter
            }
          }
        } else
@@ -124,7 +183,7 @@ void K32_remote::setMacroNb(int macroNb)
          if (that->buttons[i].state == LOW)
          {
            that->buttons[i].state = HIGH ;
-           if (millis()-that->buttons[i].lastPushTime>debounceDelay)
+           if ((millis()-that->buttons[i].lastPushTime>debounceDelay)&&(that->buttons[i].lastPushTime!=0))
            {
              that->buttons[i].flag = 1; // short push
            }

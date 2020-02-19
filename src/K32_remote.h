@@ -32,14 +32,19 @@ class K32_remote {
   public:
     K32_remote(const int BTN_PIN[NB_BTN]);
     void setMacroNb(int macroNb) ;
+    void setAuto();
 
-
+    remoteState getState();
+    int getActiveMacro();
+    int getPreviewMacro();
 
   private:
     SemaphoreHandle_t lock;
     digitalbtn buttons[NB_BTN] ;
-    int macroNb = 0;
-    int macroIndex = 0;
+    remoteState _state = REMOTE_AUTO;
+    int _macroNb = 0;
+    int _activeMacro = 0;
+    int _previewMacro = 0;
 
     static void task(void * parameter);
     static void read_btn_state(void * parameter);
