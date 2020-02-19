@@ -10,12 +10,11 @@
 
 #include "K32_version.h"
 #include "K32_log.h"
-
 #include "K32_system.h"
 #include "K32_wifi.h"
 #include "K32_audio.h"
 #include "K32_light.h"
-
+#include "K32_remote.h"
 #include "K32_osc.h"
 #include "K32_mqtt.h"
 
@@ -34,12 +33,12 @@ public:
     #ifdef K32_SET_NODEID
         system->id(K32_SET_NODEID);
         system->channel(15);
-        LOGINL("Set id: "); 
+        LOGINL("Set id: ");
         LOG(K32_SET_NODEID);
     #endif
     #ifdef K32_SET_HWREVISION
         system->hw(K32_SET_HWREVISION);
-        LOGINL("Set HW rev: "); 
+        LOGINL("Set HW rev: ");
         LOG(K32_SET_HWREVISION);
     #endif
 
@@ -49,6 +48,7 @@ public:
     K32_wifi *wifi = NULL;
     K32_audio *audio = NULL;
     K32_light *light = NULL;
+    K32_remote *remote = NULL;
     K32_osc *osc = NULL;
     K32_mqtt *mqtt = NULL;
 
@@ -79,6 +79,24 @@ public:
         }
         else
             LOG("LIGHT: Error HWREVISION not valid please define K32_SET_HWREVISION");
+    }
+
+    void init_remote(int nbOfMacro)
+    {
+      if (system->hw() >= 0 && system->hw() <= 2)
+      {
+        remote = new K32_remote(BTN_PIN[system->hw()]);
+        if(nbOfMacro > 0)
+        {
+          remote->setMacroNb(nbOfMacro);
+        } else
+        {
+          LOG("REMOTE: Error Number of Macro must be positive");
+        }
+      } else
+      {
+        LOG("REMOTE: Error HWREVISION not valid please define K32_SET_HWREVISION");
+      }
     }
 
     void init_wifi(String nameAlias = "") {

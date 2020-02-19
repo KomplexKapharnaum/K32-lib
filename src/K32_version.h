@@ -25,7 +25,9 @@
 // #define K32_VERSION 1.17     // memory osc bug
 // #define K32_VERSION 1.18        // disable onclick (buggy !)
 // #define K32_VERSION 1.19        // deprecated /audio/sample (keep max compat)
-#define K32_VERSION 2.00 // inter modules communication refactoring (modular / lazy includes)
+#define K32_VERSION 2.00 // inter modules communication refactoring (modular / lazy includes
+
+#define NB_BTN 2 // Number of buttons on K32-BOARD for remote control
 
 // LEDS PINS ON K32-BOARD
 // {LED_PIN0, LED_PIN1}
@@ -52,6 +54,15 @@ const int SD_PIN[3][4] = {
   {23, 19, 18, 5},        // HW_REVISION 0
   {23, 19, 18, 5},        // HW_REVISION 1
   {19, 5, 18, 21}         // HW_REVISION 2
+};
+
+// Buttons PINS on K32-BOARD
+// NB_BTN = Number of buttons ; then address of each button pin
+//
+const int BTN_PIN[3][NB_BTN] = {
+  {32, 33},        // HW_REVISION 0
+  {32, 33},        // HW_REVISION 1
+  {32, 33}         // HW_REVISION 2
 };
 
 #endif
