@@ -19,5 +19,47 @@
     "frameworks": "Arduino",
     "examples": [
         "examples/*/*.ino"
+    ],
+    "dependencies": [
+        {
+            "platforms": "espressif32",
+            "name": "OSC",
+            "version": "https://github.com/CNMAT/OSC.git"
+        },
+        {
+            "platforms": "espressif32",
+            "name": "AsyncTCP",
+            "version": "https://github.com/me-no-dev/AsyncTCP.git"
+        },
+        {
+            "platforms": "espressif32",
+            "name": "AsyncMqttClient",
+            "version": "https://github.com/marvinroger/async-mqtt-client.git"
+        },
+        {
+            "platforms": "espressif32",
+            "name": "ESPAsyncWebServer",
+            "version": "https://github.com/me-no-dev/ESPAsyncWebServer.git"
+        },
+        {
+            "platforms": "espressif32",
+            "name": "PCM51xx_Arduino",
+            "version": "https://github.com/tommag/PCM51xx_Arduino"
+        },
+        {
+            "platforms": "espressif32",
+            "name": "ESP8266_Spiram",
+            "version": "https://github.com/Gianbacchio/ESP8266_Spiram"
+        },
+        {
+            "platforms": "espressif32",
+            "name": "ESP8266Audio",
+            "version": "https://github.com/earlephilhower/ESP8266Audio"
+        },
+        {
+            "platforms": "espressif32",
+            "name": "ESP32Ping",
+            "version": "https://github.com/marian-craciunescu/ESP32Ping"
+        }
     ]
 }

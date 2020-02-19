@@ -23,7 +23,7 @@ class K32_system {
 
     int id() {
       #ifdef K32_SET_NODEID
-        return K32_SET_NODEID
+        return K32_SET_NODEID;
       #else
         int id;
         xSemaphoreTake(this->lock, portMAX_DELAY);
@@ -55,7 +55,7 @@ class K32_system {
 
     int hw() {
       #ifdef K32_SET_HWREVISION
-        return K32_SET_HWREVISION
+        return K32_SET_HWREVISION;
       #else
         int hw;
         xSemaphoreTake(this->lock, portMAX_DELAY);
