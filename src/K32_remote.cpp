@@ -19,33 +19,6 @@ K32_remote::K32_remote(const int BTN_PIN[NB_BTN]) {
 
   /* Init I2C and Buttons pins */
   Wire.begin(BTN_PIN[0], BTN_PIN[1]);   // i2c pins
-
-  byte error, address, nDevices;
-  nDevices = 0;
-  for(address = 1; address < 127; address++ )
-  {
-    Wire.beginTransmission(address);
-    error = Wire.endTransmission();
-    if (error == 0)
-    {
-      LOGINL("I2C device found at address 0x");
-      if (address<16) LOGINL("0");
-      LOGINL(address);
-      LOG("  !");
-
-      nDevices++;
-    }
-    else if (error==4)
-    {
-      LOGINL("Unknown error at address 0x");
-      if (address<16)
-        LOGINL("0");
-      LOG(address);
-    }    
-  }
-  if (nDevices == 0) LOG("No I2C devices found");
-  else LOG("I2C scan done");
-
   this->mcp->begin(0);                  // i2c addr
 
   for (int i=0; i<NB_BTN; i++) {
