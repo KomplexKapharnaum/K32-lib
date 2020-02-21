@@ -88,7 +88,7 @@ public:
         remote = new K32_remote(BTN_PIN[system->hw()]);
         if(nbOfMacro > 0)
         {
-          remote->setMacroNb(nbOfMacro);
+          remote->setMacroMax(nbOfMacro);
         } else
         {
           LOG("REMOTE: Error Number of Macro must be positive");

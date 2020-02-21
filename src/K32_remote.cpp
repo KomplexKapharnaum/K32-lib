@@ -6,7 +6,6 @@
 
 #include "Arduino.h"
 #include "K32_remote.h"
-#include "Adafruit_MCP23017.h"
 #include <Wire.h>
 
 /*
@@ -17,16 +16,17 @@ K32_remote::K32_remote(const int BTN_PIN[NB_BTN]) {
   LOG("REMOTE: init");
 
   this->lock = xSemaphoreCreateMutex();
-  /* Init I2C and Buttons pins */
- // Adafruit_MCP23017 mcp;
- //
- //  mcp.begin();
 
-  for (int i = 0 ; i < NB_BTN; i++)
-  {
-    this->buttons[i].pin = BTN_PIN[i];
+  /* Init I2C and Buttons pins */
+  Wire.begin(BTN_PIN[0], BTN_PIN[1]);   // i2c pins
+  this->mcp->begin(0);                  // i2c addr
+
+  for (int i=0; i<NB_BTN; i++) {
+    this->buttons[i].pin = i;
     this->buttons[i].state = LOW;
-    pinMode(buttons[i].pin, INPUT_PULLUP);
+
+    this->mcp->pinMode(i, INPUT);
+    this->mcp->pullUp(i, HIGH); 
   }
 
   // Start main task
@@ -34,42 +34,55 @@ K32_remote::K32_remote(const int BTN_PIN[NB_BTN]) {
       "remote_task",       // task name
       1000,              // stack memory
       (void*)this,        // args
-      3,                 // priority
+      0,                 // priority
       NULL);              // handler
 
-// Start read button state task
-xTaskCreate( this->read_btn_state,          // function
-    "read_btn_task",       // task name
-    1000,              // stack memory
-    (void*)this,        // args
-    3,                 // priority
-    NULL);              // handler
+  // Start read button state task
+  xTaskCreate( this->read_btn_state,          // function
+      "read_btn_task",       // task name
+      1000,              // stack memory
+      (void*)this,        // args
+      0,                 // priority
+      NULL);              // handler
 };
 
-void K32_remote::setMacroNb(int macroNb)
+void K32_remote::setMacroMax(int macroMax)
 {
-  this->_macroNb = macroNb;
+  xSemaphoreTake(this->lock, portMAX_DELAY);
+  this->_macroMax = macroMax;
+  xSemaphoreGive(this->lock);
 }
 
 void K32_remote::setAuto()
 {
-
+  xSemaphoreTake(this->lock, portMAX_DELAY);
+  this->_state = REMOTE_AUTO;
+  xSemaphoreGive(this->lock);
 }
 
 remoteState K32_remote::getState()
 {
-  return this->_state;
+  xSemaphoreTake(this->lock, portMAX_DELAY);
+  remoteState data = this->_state;
+  xSemaphoreGive(this->lock);
+  return data;
 }
 
 
 int K32_remote::getActiveMacro()
 {
-  return this->_activeMacro;
+  xSemaphoreTake(this->lock, portMAX_DELAY);
+  int data = this->_activeMacro;
+  xSemaphoreGive(this->lock);
+  return data;
 }
 
 int K32_remote::getPreviewMacro()
-{
-  return this->_previewMacro;
+{ 
+  xSemaphoreTake(this->lock, portMAX_DELAY);
+  int data = this->_previewMacro;
+  xSemaphoreGive(this->lock);
+  return data;
 }
 
 
@@ -87,7 +100,7 @@ int K32_remote::getPreviewMacro()
    while(true) {
      /* Main loop */
 
-     /* Check flogs for each button */
+     /* Check flags for each button */
 
      for (int i=0; i<NB_BTN; i++)
      {
@@ -96,63 +109,66 @@ int K32_remote::getPreviewMacro()
          LOGF("REMOTE: Short push on button %d\n",i);
 
          /* Instructions for the different buttons */
+         xSemaphoreTake(that->lock, portMAX_DELAY);
          switch (i)
          {
            case 0 :                           // Button 1 : BlackOut
+            that->_activeMacro = 0;
+            if (that->_state == REMOTE_AUTO) that->_state = REMOTE_MANU;
             break;
            case 1 :                          // Button 2 : Previous
             that->_previewMacro --;
-            if (that->_previewMacro < 0 ) that->_previewMacro = that->_macroNb - 1 ;
+            if (that->_previewMacro < 0 ) that->_previewMacro = that->_macroMax - 1 ;
             LOG("Preview --");
             break;
           case 2 :                          // Button 3 : Forward
             that->_previewMacro ++;
-            if (that->_previewMacro >= that->_macroNb ) that->_previewMacro = 0 ;
+            if (that->_previewMacro >= that->_macroMax ) that->_previewMacro = 0 ;
             LOG("Preview ++");
             break;
           case 3 :                         // Button 4 : Go
+            that->_activeMacro = that->_previewMacro;
             break;
-
          }
+         xSemaphoreGive(that->lock);
+
        } else if ( that->buttons[i].flag == 2) {
          LOGF("REMOTE: Long push on button %d\n",i);
 
          /* Instructions for the different buttons */
+         xSemaphoreTake(that->lock, portMAX_DELAY);
          switch (i)
          {
-           case 0 :                           // Button 1 : BlackOut
+           case 0 :                           // Button 1 : BlackOut Forced
+            that->_activeMacro = 0;
+            that->_state = REMOTE_MANULOCK;
             break;
            case 1 :                          // Button 2 : Previous
             break;
           case 2 :                          // Button 3 : Forward
             break;
-          case 3 :                         // Button 4 : Go
+          case 3 :                         // Button 4 : Go Forced
+            that->_activeMacro = that->_previewMacro;
+            that->_state = REMOTE_MANULOCK;
             break;
-
          }
-
+         xSemaphoreGive(that->lock);
        }
        that->buttons[i].flag = 0;
+
      }
 
 
-
-
-
-
      /********/
-
 
      vTaskDelay( xFrequency );
 
    }
  }
 
- void K32_remote::read_btn_state(void * parameter) {
+void K32_remote::read_btn_state(void * parameter) {
   K32_remote* that = (K32_remote*) parameter;
    TickType_t xFrequency = pdMS_TO_TICKS(BTN_CHECK);
-   int lastButtonState = LOW ;
-   unsigned long lastDebounceTime = 0;  // the last time the output pin was toggled
    unsigned long debounceDelay = 50;    // the debounce time; increase if the output flickers
    unsigned long longPushDelay = 1000; // Delay for a long push of the button
 
@@ -161,16 +177,19 @@ int K32_remote::getPreviewMacro()
    {
      for (int i = 0 ; i < NB_BTN ; i++)
      {
-             // read the state of the switch into a local variable:
-       int reading = digitalRead(that->buttons[i].pin);
+       
+       // read the state of the switch into a local variable:
+       int reading = that->mcp->digitalRead(that->buttons[i].pin);
 
+      // pushed
        if (reading == LOW)
        {
-         if (that->buttons[i].state == HIGH)
+         if (that->buttons[i].state == HIGH)  // was released
          {
            that->buttons[i].state = LOW ;
            that->buttons[i].lastPushTime = millis(); // Record time of pushing button
-         } else
+         } 
+         else  // was already pushed
          {
            if ((millis()-that->buttons[i].lastPushTime>longPushDelay)&&(that->buttons[i].lastPushTime!=0))
            {
@@ -178,9 +197,12 @@ int K32_remote::getPreviewMacro()
              that->buttons[i].lastPushTime = 0; // Reset counter
            }
          }
-       } else
+       } 
+       
+       // Released
+       else
        {
-         if (that->buttons[i].state == LOW)
+         if (that->buttons[i].state == LOW)  // was pushed
          {
            that->buttons[i].state = HIGH ;
            if ((millis()-that->buttons[i].lastPushTime>debounceDelay)&&(that->buttons[i].lastPushTime!=0))
@@ -189,6 +211,7 @@ int K32_remote::getPreviewMacro()
            }
          }
        }
+
      }
 
      vTaskDelay( xFrequency );

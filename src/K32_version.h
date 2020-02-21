@@ -27,7 +27,6 @@
 // #define K32_VERSION 1.19        // deprecated /audio/sample (keep max compat)
 #define K32_VERSION 2.00 // inter modules communication refactoring (modular / lazy includes
 
-#define NB_BTN 2 // Number of buttons on K32-BOARD for remote control
 
 // LEDS PINS ON K32-BOARD
 // {LED_PIN0, LED_PIN1}
@@ -57,11 +56,11 @@ const int SD_PIN[3][4] = {
 };
 
 // Buttons PINS on K32-BOARD
-// NB_BTN = Number of buttons ; then address of each button pin
+// {I2C_SDA_PIN, I2C_SCL_PIN}
 //
-const int BTN_PIN[3][NB_BTN] = {
-  {32, 33},        // HW_REVISION 0
-  {32, 33},        // HW_REVISION 1
+const int BTN_PIN[3][2] = {
+  {2, 4},          // HW_REVISION 0
+  {2, 4},          // HW_REVISION 1
   {32, 33}         // HW_REVISION 2
 };
 
