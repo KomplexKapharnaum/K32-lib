@@ -19,14 +19,14 @@ K32_remote::K32_remote(const int BTN_PIN[NB_BTN]) {
 
   /* Init I2C and Buttons pins */
   Wire.begin(BTN_PIN[0], BTN_PIN[1]);   // i2c pins
-  this->mcp->begin(0);                  // i2c addr
+  this->mcp.begin();                  // i2c addr
 
   for (int i=0; i<NB_BTN; i++) {
     this->buttons[i].pin = i;
     this->buttons[i].state = LOW;
 
-    this->mcp->pinMode(i, INPUT);
-    this->mcp->pullUp(i, HIGH); 
+    this->mcp.pinMode(i, INPUT);
+    this->mcp.pullUp(i, HIGH); 
   }
 
   // Start main task
@@ -179,7 +179,7 @@ void K32_remote::read_btn_state(void * parameter) {
      {
        
        // read the state of the switch into a local variable:
-       int reading = that->mcp->digitalRead(that->buttons[i].pin);
+       int reading = that->mcp.digitalRead(that->buttons[i].pin);
 
       // pushed
        if (reading == LOW)

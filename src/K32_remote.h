@@ -47,7 +47,7 @@ class K32_remote {
     int _activeMacro = 0;
     int _previewMacro = 0;
 
-    Adafruit_MCP23017* mcp;
+    Adafruit_MCP23017 mcp;
 
     static void task(void * parameter);
     static void read_btn_state(void * parameter);
