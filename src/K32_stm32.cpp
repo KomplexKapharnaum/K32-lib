@@ -74,6 +74,9 @@ int K32_stm32::firmware() {
   return this->get(K32_stm32_api::GET_FW_VERSION);
 };
 
+int K32_stm32::current() {
+  return this->get(K32_stm32_api::GET_LOAD_CURRENT);
+};
 
 int K32_stm32::battery() {
   xSemaphoreTake(this->lock, portMAX_DELAY);

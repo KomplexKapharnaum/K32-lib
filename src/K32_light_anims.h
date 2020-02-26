@@ -311,7 +311,7 @@ class K32_light_anim_chaser : public K32_light_anim {
 class K32_light_anim_discharge : public K32_light_anim {
   public:
     K32_light_anim_discharge() {
-      this->params[0] = 2;    // duration (seconds) 0 = infinite
+      this->params[0] = 0;    // duration (seconds) 0 = infinite
       this->params[1] = 100;  // intensity max
       this->params[2] = 0;    // intensity min
       /* Color 1 is for charged part of battery */
@@ -424,7 +424,7 @@ class K32_light_anim_discharge : public K32_light_anim {
 class K32_light_anim_charge : public K32_light_anim {
   public:
     K32_light_anim_charge() {
-      this->params[0] = 2;  // Animation Timeout in sec
+      this->params[0] = 0;  // Animation Timeout in sec
       this->params[1] = 100;  // intensity max
       this->params[2] = 0;    // intensity min
       /* Color 1 is for charged part of battery */
