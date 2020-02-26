@@ -38,6 +38,7 @@ class K32_remote {
     remoteState getState();
     int getActiveMacro();
     int getPreviewMacro();
+    int getLamp();
 
   private:
     SemaphoreHandle_t lock;
@@ -46,6 +47,7 @@ class K32_remote {
     int _macroMax = 0;
     int _activeMacro = 0;
     int _previewMacro = 0;
+    int _lamp = 0;
 
     void _lock();
     void _unlock();

@@ -102,6 +102,15 @@ int K32_remote::getPreviewMacro()
   return data;
 }
 
+int K32_remote::getLamp()
+{
+
+  this->_lock();
+  int data = this->_lamp;
+  this->_unlock();
+  return data;
+
+}
 
 /*
  *   PRIVATE
@@ -163,9 +172,13 @@ int K32_remote::getPreviewMacro()
             if (that->_state == REMOTE_MANULOCK) that->_state = REMOTE_MANU;
             else that->_state = REMOTE_MANULOCK;
             break;
-           case 1 :                          // Button 2 : Previous
+           case 1 :                          // Button 2 : lamp on/off
+            if (that->_lamp == 0) that->_lamp = 1;
+            else that->_lamp = 0;
             break;
-          case 2 :                          // Button 3 : Forward
+          case 2 :                          // Button 3 : lamp on/off
+            if (that->_lamp == 0) that->_lamp = 1;
+            else that->_lamp = 0;
             break;
           case 3 :                         // Button 4 : Go Forced
             that->_activeMacro = that->_previewMacro;
