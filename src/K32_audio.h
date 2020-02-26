@@ -7,6 +7,7 @@
 #define K32_audio_h
 
 #include "Arduino.h"
+#include <HTTPClient.h>
 #include "K32_log.h"
 #include "K32_samplermidi.h"
 
