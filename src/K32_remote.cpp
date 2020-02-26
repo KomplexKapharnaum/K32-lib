@@ -173,12 +173,12 @@ int K32_remote::getLamp()
             else that->_state = REMOTE_MANULOCK;
             break;
            case 1 :                          // Button 2 : lamp on/off
-            if (that->_lamp == 0) that->_lamp = 1;
-            else that->_lamp = 0;
+            if (that->_lamp == -1) that->_lamp = 255;
+            else that->_lamp = -1;
             break;
           case 2 :                          // Button 3 : lamp on/off
-            if (that->_lamp == 0) that->_lamp = 1;
-            else that->_lamp = 0;
+            if (that->_lamp == -1) that->_lamp = 255;
+            else that->_lamp = -1;
             break;
           case 3 :                         // Button 4 : Go Forced
             that->_activeMacro = that->_previewMacro;
