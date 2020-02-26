@@ -47,6 +47,9 @@ class K32_remote {
     int _activeMacro = 0;
     int _previewMacro = 0;
 
+    void _lock();
+    void _unlock();
+
     Adafruit_MCP23017 mcp;
 
     static void task(void * parameter);

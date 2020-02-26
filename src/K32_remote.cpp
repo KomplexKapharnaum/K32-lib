@@ -46,42 +46,59 @@ K32_remote::K32_remote(const int BTN_PIN[NB_BTN]) {
       NULL);              // handler
 };
 
+void K32_remote::_lock()
+{
+  //LOG("lock");
+  xSemaphoreTake(this->lock, portMAX_DELAY);
+}
+
+void K32_remote::_unlock()
+{
+  //LOG("unlock");
+  xSemaphoreGive(this->lock);
+}
+
 void K32_remote::setMacroMax(int macroMax)
 {
-  xSemaphoreTake(this->lock, portMAX_DELAY);
+  
+  this->_lock();
   this->_macroMax = macroMax;
-  xSemaphoreGive(this->lock);
+  this->_unlock();
 }
 
 void K32_remote::setAuto()
 {
-  xSemaphoreTake(this->lock, portMAX_DELAY);
+  
+  this->_lock();
   this->_state = REMOTE_AUTO;
-  xSemaphoreGive(this->lock);
+  this->_unlock();
 }
 
 remoteState K32_remote::getState()
 {
-  xSemaphoreTake(this->lock, portMAX_DELAY);
+  
+  this->_lock();
   remoteState data = this->_state;
-  xSemaphoreGive(this->lock);
+  this->_unlock();
   return data;
 }
 
 
 int K32_remote::getActiveMacro()
 {
-  xSemaphoreTake(this->lock, portMAX_DELAY);
+  
+  this->_lock();
   int data = this->_activeMacro;
-  xSemaphoreGive(this->lock);
+  this->_unlock();
   return data;
 }
 
 int K32_remote::getPreviewMacro()
 { 
-  xSemaphoreTake(this->lock, portMAX_DELAY);
+  
+  this->_lock();
   int data = this->_previewMacro;
-  xSemaphoreGive(this->lock);
+  this->_unlock();
   return data;
 }
 
@@ -104,17 +121,19 @@ int K32_remote::getPreviewMacro()
 
      for (int i=0; i<NB_BTN; i++)
      {
+       
+       that->_lock();
        if (  that->buttons[i].flag == 1)
        {
          LOGF("REMOTE: Short push on button %d\n",i);
 
          /* Instructions for the different buttons */
-         xSemaphoreTake(that->lock, portMAX_DELAY);
          switch (i)
          {
            case 0 :                           // Button 1 : BlackOut
             that->_activeMacro = 0;
             if (that->_state == REMOTE_AUTO) that->_state = REMOTE_MANU;
+            LOG("Blackout");
             break;
            case 1 :                          // Button 2 : Previous
             that->_previewMacro --;
@@ -128,15 +147,14 @@ int K32_remote::getPreviewMacro()
             break;
           case 3 :                         // Button 4 : Go
             that->_activeMacro = that->_previewMacro;
+            LOG("Go");
             break;
          }
-         xSemaphoreGive(that->lock);
 
        } else if ( that->buttons[i].flag == 2) {
          LOGF("REMOTE: Long push on button %d\n",i);
 
          /* Instructions for the different buttons */
-         xSemaphoreTake(that->lock, portMAX_DELAY);
          switch (i)
          {
            case 0 :                           // Button 1 : BlackOut Forced
@@ -152,10 +170,11 @@ int K32_remote::getPreviewMacro()
             that->_state = REMOTE_MANULOCK;
             break;
          }
-         xSemaphoreGive(that->lock);
        }
+       
+       that->_unlock();
        that->buttons[i].flag = 0;
-
+       yield();
      }
 
 
@@ -178,6 +197,7 @@ void K32_remote::read_btn_state(void * parameter) {
      for (int i = 0 ; i < NB_BTN ; i++)
      {
        
+       that->_lock();
        // read the state of the switch into a local variable:
        int reading = that->mcp.digitalRead(that->buttons[i].pin);
 
@@ -211,7 +231,7 @@ void K32_remote::read_btn_state(void * parameter) {
            }
          }
        }
-
+       that->_unlock();
      }
 
      vTaskDelay( xFrequency );
