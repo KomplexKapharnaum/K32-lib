@@ -32,7 +32,7 @@ K32_remote::K32_remote(const int BTN_PIN[NB_BTN]) {
   // Start main task
   xTaskCreate( this->task,          // function
       "remote_task",       // task name
-      1000,              // stack memory
+      5000,              // stack memory
       (void*)this,        // args
       0,                 // priority
       NULL);              // handler
@@ -40,7 +40,7 @@ K32_remote::K32_remote(const int BTN_PIN[NB_BTN]) {
   // Start read button state task
   xTaskCreate( this->read_btn_state,          // function
       "read_btn_task",       // task name
-      1000,              // stack memory
+      5000,              // stack memory
       (void*)this,        // args
       0,                 // priority
       NULL);              // handler
@@ -147,6 +147,7 @@ int K32_remote::getPreviewMacro()
             break;
           case 3 :                         // Button 4 : Go
             that->_activeMacro = that->_previewMacro;
+            if (that->_state == REMOTE_AUTO) that->_state = REMOTE_MANU;
             LOG("Go");
             break;
          }
