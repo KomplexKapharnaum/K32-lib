@@ -47,7 +47,7 @@ class K32_remote {
     int _macroMax = 0;
     int _activeMacro = 0;
     int _previewMacro = 0;
-    int _lamp = 0;
+    int _lamp = -1;
 
     void _lock();
     void _unlock();
