@@ -160,7 +160,8 @@ int K32_remote::getPreviewMacro()
          {
            case 0 :                           // Button 1 : BlackOut Forced
             that->_activeMacro = 0;
-            that->_state = REMOTE_MANULOCK;
+            if (that->_state == REMOTE_MANULOCK) that->_state = REMOTE_MANU;
+            else that->_state = REMOTE_MANULOCK;
             break;
            case 1 :                          // Button 2 : Previous
             break;
