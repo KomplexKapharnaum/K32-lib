@@ -20,6 +20,20 @@ K32_sd::K32_sd(const int SD_PIN[4]) {
     else LOG("SD card ERROR");
   }
 
+  LOG("SD scan");
+  int countFile = 0;
+  File root = SD.open("/");
+  while (true)
+  {
+    File entry = root.openNextFile();
+    if (!entry) break;
+    LOG(entry.name());
+    countFile +=1;
+    entry.close();
+  }
+  root.close();
+  LOGF("SD %i files found.", countFile);
+
 };
 
 int K32_sd::readFile(String path, byte *buffer) {
@@ -40,6 +54,7 @@ int K32_sd::readFile(String path, byte *buffer) {
       i++;
     }
 
+    myFile.close();
   }
   else LOG("ERROR: Can't open "+path);
 
