@@ -168,7 +168,8 @@ int K32_remote::getPreviewMacro()
             break;
           case 3 :                         // Button 4 : Go Forced
             that->_activeMacro = that->_previewMacro;
-            that->_state = REMOTE_MANULOCK;
+            if (that->_state == REMOTE_MANULOCK) that->_state = REMOTE_MANU;
+            else that->_state = REMOTE_MANULOCK;
             break;
          }
        }
