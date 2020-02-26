@@ -12,6 +12,7 @@
 #include "K32_log.h"
 #include "K32_system.h"
 #include "K32_wifi.h"
+#include "K32_sd.h"
 #include "K32_audio.h"
 #include "K32_light.h"
 #include "K32_remote.h"
@@ -46,6 +47,7 @@ public:
 
     K32_system *system = NULL;
     K32_wifi *wifi = NULL;
+    K32_sd *sd = NULL;
     K32_audio *audio = NULL;
     K32_light *light = NULL;
     K32_remote *remote = NULL;
@@ -55,6 +57,14 @@ public:
     void init_stm32()
     {
         system->stm32 = new K32_stm32();
+    }
+
+    void init_sd()
+    {
+        if (system->hw() >= 0 && system->hw() <= 2)
+            sd = new K32_sd(SD_PIN[system->hw()]);
+        else
+            LOG("SD: Error HWREVISION not valid please define K32_SET_HWREVISION");
     }
 
     void init_audio()
