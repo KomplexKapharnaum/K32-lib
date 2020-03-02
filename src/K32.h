@@ -93,7 +93,7 @@ public:
 
     void init_remote(int nbOfMacro)
     {
-      if (system->hw() >= 0 && system->hw() <= 2)
+      if (system->hw() >= 0 && system->hw() <= 3)
       {
         remote = new K32_remote(BTN_PIN[system->hw()]);
         if(nbOfMacro > 0)
