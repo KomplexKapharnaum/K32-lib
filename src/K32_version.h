@@ -25,43 +25,48 @@
 // #define K32_VERSION 1.17     // memory osc bug
 // #define K32_VERSION 1.18        // disable onclick (buggy !)
 // #define K32_VERSION 1.19        // deprecated /audio/sample (keep max compat)
-#define K32_VERSION 2.00 // inter modules communication refactoring (modular / lazy includes
+// #define K32_VERSION 2.00 // inter modules communication refactoring (modular / lazy includes
+#define K32_VERSION 2.01 // add atom
 
 
 // LEDS PINS ON K32-BOARD
 // {LED_PIN0, LED_PIN1}
 //
-const int LEDS_PIN[3][2] = {
+const int LEDS_PIN[4][2] = {
   {21, 22},               // HW_REVISION 0
   {21, 22},               // HW_REVISION 1
-  {23, 22}                // HW_REVISION 2
+  {23, 22},               // HW_REVISION 2
+  {26, 32}                // ATOM
 };
 
 // AUDIO PINS ON K32-BOARD
 // {I2C_SDA_PIN, I2C_SCL_PIN, I2S_LRCK_PIN, I2S_DATA_PIN, I2S_BCK_PIN}
 //
-const int AUDIO_PIN[3][5] = {
+const int AUDIO_PIN[4][5] = {
   {2, 4, 27, 26, 25},     // HW_REVISION 0
   {2, 4, 27, 26, 25},     // HW_REVISION 1
-  {32, 33, 25, 26, 27}    // HW_REVISION 2
+  {32, 33, 25, 26, 27},    // HW_REVISION 2
+  {27, 39, 22, 19, 23}     // ATOM  
 };
 
 // SD PINS ON K32-BOARD
 // {SD_DI_PIN, SD_DO_PIN, SD_SCK_PIN, SD_CS_PIN}
 //
-const int SD_PIN[3][4] = {
+const int SD_PIN[4][4] = {
   {23, 19, 18, 5},        // HW_REVISION 0
   {23, 19, 18, 5},        // HW_REVISION 1
-  {19, 5, 18, 21}         // HW_REVISION 2
+  {19, 5, 18, 21},         // HW_REVISION 2
+  {22, 19, 23, 33}        // ATOM
 };
 
 // Buttons PINS on K32-BOARD
 // {I2C_SDA_PIN, I2C_SCL_PIN}
 //
-const int BTN_PIN[3][2] = {
+const int BTN_PIN[4][2] = {
   {2, 4},          // HW_REVISION 0
   {2, 4},          // HW_REVISION 1
-  {32, 33}         // HW_REVISION 2
+  {32, 33},        // HW_REVISION 2
+  {25, 21}         // ATOM
 };
 
 #endif
