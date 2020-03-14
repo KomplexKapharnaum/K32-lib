@@ -76,11 +76,11 @@ K32_modulo_linplus::K32_modulo_linplus(int period, int min, int max) {
 int K32_modulo_linplus::getValue() {
 
     unsigned long time;
-    unsigned long period_last;
+    
     if (freezeTime == 0) time = millis();
     else time = freezeTime;
 
     if (time - period_last > this->params[0]) period_last = time ;
 
-    return ((time - period_last) * ((this->params[1] - this->params[2]) / this->params[0]));
+    return (((time - period_last) * (this->params[1] - this->params[2])) / this->params[0]);
 }
