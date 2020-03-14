@@ -55,7 +55,7 @@ int K32_modulo_sinus::getValue() {
 
 }
 
-int K32_modulo_random::K32_modulo_random(int min,int max) {
+K32_modulo_random::K32_modulo_random(int min,int max) {
 
     this->params[0] = min;      //value min
     this->params[1] = max;      //value max

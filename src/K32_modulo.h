@@ -52,7 +52,7 @@ public:
 
   int getValue();
 
-}
+};
 
 class K32_modulo_linplus : public K32_modulo
 {
@@ -61,7 +61,7 @@ public:
   K32_modulo_linplus(int period, int min, int max);
 
   int getValue();
-}
+};
 
 
 #endif
