@@ -55,6 +55,8 @@ int K32_modulo_sinus::getValue() {
 
 }
 
+// K32_MODULO_RANDOM
+
 K32_modulo_random::K32_modulo_random(int min,int max) {
 
     this->params[0] = min;      //value min
@@ -65,6 +67,8 @@ int K32_modulo_random::getValue() {
 
     return random(this->params[0],this->params[1]);
 }
+
+// K32_MODULO_LINPLUS
 
 K32_modulo_linplus::K32_modulo_linplus(int period, int min, int max) {
 
@@ -82,5 +86,26 @@ int K32_modulo_linplus::getValue() {
 
     if (time - period_last > this->params[0]) period_last = time ;
 
-    return ((((time - period_last) * (this->params[1] - this->params[2])) / this->params[0])+this->params[2]);
+    return ((((time - period_last) * (this->params[1] - this->params[2])) / this->params[0]) + this->params[2]);
+}
+
+// K32_MODULO_LINMOINS
+
+K32_modulo_linmoins::K32_modulo_linmoins(int period, int min, int max) {
+
+    this->params[0] = period;    //period
+    this->params[1] = max;       //value max
+    this->params[2] = min;       //value min
+}
+
+int K32_modulo_linmoins::getValue() {
+
+    unsigned long time;
+    
+    if (freezeTime == 0) time = millis();
+    else time = freezeTime;
+
+    if (time - period_last > this->params[0]) period_last = time ;
+
+    return map(((((time - period_last) * (this->params[1] - this->params[2])) / this->params[0]) + this->params[2]), this->params[2], this->params[1], this->params[1], this->params[2]);
 }
