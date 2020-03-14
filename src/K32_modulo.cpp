@@ -82,5 +82,5 @@ int K32_modulo_linplus::getValue() {
 
     if (time - period_last > this->params[0]) period_last = time ;
 
-    return (((time - period_last) * (this->params[1] - this->params[2])) / this->params[0]);
+    return ((((time - period_last) * (this->params[1] - this->params[2])) / this->params[0])+this->params[2]);
 }
