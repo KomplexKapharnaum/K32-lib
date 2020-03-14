@@ -78,10 +78,11 @@ class K32_modulo_onoff : public K32_modulo
 {
 
 public:
-  K32_modulo_linmoins(int period, int min, int max);
+  K32_modulo_onoff(int period, int min, int max);
   
   unsigned long period_last;
   bool period_cycle;
   int getValue();
 };
+
 #endif
