@@ -136,9 +136,9 @@ int K32_modulo_linmoins::getValue()
 K32_modulo_onoff::K32_modulo_onoff(int period, int min, int max)
 {
 
-    this->params[0] = period; //period
-    this->params[1] = max;    //value max
-    this->params[2] = min;    //value min
+    this->params[0] = period / 2; //period
+    this->params[1] = max;        //value max
+    this->params[2] = min;        //value min
 }
 
 int K32_modulo_onoff::getValue()
@@ -151,7 +151,7 @@ int K32_modulo_onoff::getValue()
     else
         time = freezeTime;
 
-    if (time - period_last > this->params[0] / 2)
+    if (time - period_last > this->params[0])
     {
         period_last = time;
         if (period_cycle == false)
@@ -163,4 +163,38 @@ int K32_modulo_onoff::getValue()
         return this->params[2];
     else
         return this->params[1];
+}
+
+// K32_MODULO_TRIPLUS
+
+K32_modulo_triplus::K32_modulo_triplus(int period, int min, int max)
+{
+
+    this->params[0] = period / 2; //period
+    this->params[1] = max;        //value max
+    this->params[2] = min;        //value min
+}
+
+int K32_modulo_triplus::getValue()
+{
+
+    unsigned long time;
+
+    if (freezeTime == 0)
+        time = millis();
+    else
+        time = freezeTime;
+
+    if (time - period_last > this->params[0])
+    {
+        period_last = time;
+        if (period_cycle == false)
+            period_cycle = true;
+        else
+            period_cycle = false;
+    }
+    if (period_cycle == false)
+        return ((((time - period_last) * (this->params[1] - this->params[2])) / this->params[0]) + this->params[2]);
+    else
+        return map(((((time - period_last) * (this->params[1] - this->params[2])) / this->params[0]) + this->params[2]), this->params[2], this->params[1], this->params[1], this->params[2]);
 }
