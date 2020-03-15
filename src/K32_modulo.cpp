@@ -201,7 +201,7 @@ int K32_modulo_triplus::getValue()
 
 // K32_MODULO_TRIMOINS
 
-K32_modulo_triplus::K32_modulo_trimoins(int period, int min, int max)
+K32_modulo_trimoins::K32_modulo_trimoins(int period, int min, int max)
 {
 
     this->params[0] = period / 2; //period
