@@ -132,13 +132,12 @@ class K32_modulo_phase : public K32_modulo
 {
 
 public:
-  K32_modulo_phase(int period, int min, int max, int phase);
+  K32_modulo_phase(int period, int min, int max);
 
   unsigned long period_last;
-  int getValue();
-
-protected:
-  bool period_cycle;
+  int getValue_1();
+  int getValue_2();
+  int getValue_3();
 };
 
 #endif
