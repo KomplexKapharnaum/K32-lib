@@ -126,4 +126,19 @@ protected:
   bool period_cycle;
 };
 
+// K32_MODULO_PHASE
+
+class K32_modulo_phase : public K32_modulo
+{
+
+public:
+  K32_modulo_phase(int period, int min, int max, int phase);
+
+  unsigned long period_last;
+  int getValue();
+
+protected:
+  bool period_cycle;
+};
+
 #endif

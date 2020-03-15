@@ -232,3 +232,33 @@ int K32_modulo_trimoins::getValue()
     else
         return ((((time - period_last) * (this->params[1] - this->params[2])) / this->params[0]) + this->params[2]);
 }
+
+// K32_MODULO_PHASE
+
+K32_modulo_phase::K32_modulo_phase(int period, int min, int max)
+{
+
+    this->params[0] = period; //period
+    this->params[1] = max;    //value max
+    this->params[2] = min;    //value min
+}
+
+int K32_modulo_phase::getValue(int phase)
+{
+
+    unsigned long time;
+    if (freezeTime == 0)
+        time = millis();
+    else
+        time = freezeTime;
+if (phase < 1) phase = 1;
+else if (phase > 3) phase = 3;
+
+if (phase == 1)
+    return ((0.5f + 0.5f * sin(2 * PI * time / this->params[0] - 0.5f * PI)) * (this->params[1] - this->params[2]) + this->params[2]);
+else if (phase == 2)
+    return ((0.5f + 0.5f * sin(2 * (PI/4) * time / this->params[0] - 0.5f * (PI/4))) * (this->params[1] - this->params[2]) + this->params[2]);
+else if (phase == 3)
+    return ((0.5f + 0.5f * sin(2 * (3*PI/4) * time / this->params[0] - 0.5f * (3*PI/4))) * (this->params[1] - this->params[2]) + this->params[2]);
+
+}
