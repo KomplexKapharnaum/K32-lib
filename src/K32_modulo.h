@@ -51,7 +51,6 @@ public:
   K32_modulo_random(int min, int max);
 
   int getValue();
-
 };
 
 class K32_modulo_linplus : public K32_modulo
@@ -69,7 +68,7 @@ class K32_modulo_linmoins : public K32_modulo
 
 public:
   K32_modulo_linmoins(int period, int min, int max);
-  
+
   unsigned long period_last;
   int getValue();
 };
@@ -79,10 +78,12 @@ class K32_modulo_onoff : public K32_modulo
 
 public:
   K32_modulo_onoff(int period, int min, int max);
-  
+
   unsigned long period_last;
-  bool period_cycle;
   int getValue();
+
+protected:
+  bool period_cycle;
 };
 
 #endif
