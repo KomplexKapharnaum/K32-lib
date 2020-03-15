@@ -243,7 +243,7 @@ K32_modulo_phase::K32_modulo_phase(int period, int min, int max)
     this->params[2] = min;    //value min
 }
 
-int K32_modulo_phase::getValue1()
+int K32_modulo_phase::getValue_1()
 {
 
     unsigned long time;
@@ -255,7 +255,7 @@ int K32_modulo_phase::getValue1()
     return ((0.5f + 0.5f * sin(2 * PI * time / this->params[0] - 0.5f * PI)) * (this->params[1] - this->params[2]) + this->params[2]);
 }
 
-int K32_modulo_phase::getValue2()
+int K32_modulo_phase::getValue_2()
 {
 
     unsigned long time;
@@ -267,7 +267,7 @@ int K32_modulo_phase::getValue2()
     return ((0.5f + 0.5f * sin(2 * (PI/4) * time / this->params[0] - 0.5f * (PI/4))) * (this->params[1] - this->params[2]) + this->params[2]);
 }
 
-int K32_modulo_phase::getValue3()
+int K32_modulo_phase::getValue_3()
 {
 
     unsigned long time;
