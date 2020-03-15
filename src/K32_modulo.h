@@ -111,4 +111,19 @@ protected:
   bool period_cycle;
 };
 
+// K32_MODULO_TRIMOINS
+
+class K32_modulo_trimoins : public K32_modulo
+{
+
+public:
+  K32_modulo_trimoins(int period, int min, int max);
+
+  unsigned long period_last;
+  int getValue();
+
+protected:
+  bool period_cycle;
+};
+
 #endif

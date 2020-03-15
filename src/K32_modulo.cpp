@@ -198,3 +198,37 @@ int K32_modulo_triplus::getValue()
     else
         return map(((((time - period_last) * (this->params[1] - this->params[2])) / this->params[0]) + this->params[2]), this->params[2], this->params[1], this->params[1], this->params[2]);
 }
+
+// K32_MODULO_TRIMOINS
+
+K32_modulo_triplus::K32_modulo_trimoins(int period, int min, int max)
+{
+
+    this->params[0] = period / 2; //period
+    this->params[1] = max;        //value max
+    this->params[2] = min;        //value min
+}
+
+int K32_modulo_trimoins::getValue()
+{
+
+    unsigned long time;
+
+    if (freezeTime == 0)
+        time = millis();
+    else
+        time = freezeTime;
+
+    if (time - period_last > this->params[0])
+    {
+        period_last = time;
+        if (period_cycle == false)
+            period_cycle = true;
+        else
+            period_cycle = false;
+    }
+    if (period_cycle == false)
+        return map(((((time - period_last) * (this->params[1] - this->params[2])) / this->params[0]) + this->params[2]), this->params[2], this->params[1], this->params[1], this->params[2]);
+    else
+        return ((((time - period_last) * (this->params[1] - this->params[2])) / this->params[0]) + this->params[2]);
+}
