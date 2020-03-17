@@ -155,44 +155,15 @@ public:
 
 class K32_modulo_typebook {
   public:
-    K32_modulo_typebook() {
+    K32_modulo_typebook() ;
 
-      // REGISTER AVAILABLE TYPE !
-
-      this->add( new K32_modulo_sinus() );
-      this->add( new K32_modulo_random() );
-      this->add( new K32_modulo_linplus() );
-      this->add( new K32_modulo_linmoins() );
-      this->add( new K32_modulo_onoff() );
-      this->add( new K32_modulo_triplus() );
-      this->add( new K32_modulo_trimoins() );
-      this->add( new K32_modulo_phase() );
-
-    }
-
-    K32_modulo_type* get( String type_name ) {
-      for (int k=0; k<this->counter; k++)
-        if (this->type[k]->type_name() == type_name) {
-          // LOGINL("TYPE: "); LOG(type_name);
-          return this->type[k];
-        }
-      LOGINL("TYPE: not found "); LOG(type_name);
-      return new K32_modulo();
-    }
-
+    K32_modulo* get( String type_name ); 
 
   private:
     K32_modulo* type[MODULO_TYPE_SLOTS];
     int counter = 0;
 
-    void add(K32_modulo* type) {
-      if (this->counter >= MODULO_TYPE_SLOTS) {
-        LOG("ERROR: no more slot available to register new modulo");
-        return;
-      }
-      this->type[ this->counter ] = type;
-      this->counter++;
-    };
+    void add(K32_modulo* type) ;
 
 };
 
