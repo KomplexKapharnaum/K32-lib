@@ -18,6 +18,7 @@
 #include "K32_remote.h"
 #include "K32_osc.h"
 #include "K32_mqtt.h"
+#include "K32_modulo.h"
 
 class K32
 {
@@ -53,6 +54,7 @@ public:
     K32_remote *remote = NULL;
     K32_osc *osc = NULL;
     K32_mqtt *mqtt = NULL;
+    K32_modulo *modulo = NULL;
 
     void init_stm32()
     {
@@ -129,6 +131,11 @@ public:
 
         if (!wifi)
             LOG("MQTT: Warning WIFI should be initialized BEFORE mqtt");
+    }
+
+    void init_modulo()
+    {
+        modulo = new K32_modulo();
     }
 
 private:
