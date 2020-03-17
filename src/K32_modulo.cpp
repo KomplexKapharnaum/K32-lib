@@ -285,14 +285,14 @@ K32_modulo_typebook::K32_modulo_typebook()
 {
          // REGISTER AVAILABLE TYPE !
 
-      this->add( new K32_modulo_sinus() );
-      this->add( new K32_modulo_random() );
-      this->add( new K32_modulo_linplus() );
-      this->add( new K32_modulo_linmoins() );
-      this->add( new K32_modulo_onoff() );
-      this->add( new K32_modulo_triplus() );
-      this->add( new K32_modulo_trimoins() );
-      this->add( new K32_modulo_phase() ); 
+      this->add( new K32_modulo_sinus(0,0,0) );
+      this->add( new K32_modulo_random(0,0) );
+      this->add( new K32_modulo_linplus(0,0,0) );
+      this->add( new K32_modulo_linmoins(0,0,0) );
+      this->add( new K32_modulo_onoff(0,0,0) );
+      this->add( new K32_modulo_triplus(0,0,0) );
+      this->add( new K32_modulo_trimoins(0,0,0) );
+      this->add( new K32_modulo_phase(0,0,0) );  
 }
 
 
