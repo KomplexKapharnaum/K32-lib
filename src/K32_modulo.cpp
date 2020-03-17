@@ -295,23 +295,8 @@ K32_modulo_typebook::K32_modulo_typebook()
       this->add( new K32_modulo_phase() ); 
 }
 
-K32_modulo* get( String type_name ) {
-      for (int k=0; k<this->counter; k++)
-        if (this->type[k]->type_name() == type_name) {
-          // LOGINL("TYPE: "); LOG(type_name);
-          return this->type[k];
-        }
-      LOGINL("TYPE: not found "); LOG(type_name);
-      return new K32_modulo();
-    }
 
-void add(K32_modulo* type) {
-      if (this->counter >= MODULO_TYPE_SLOTS) {
-        LOG("ERROR: no more slot available to register new modulo");
-        return;
-      }
-      this->type[ this->counter ] = type;
-      this->counter++;
-    };
-        
+
+
+
 
