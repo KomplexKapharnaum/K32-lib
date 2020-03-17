@@ -13,6 +13,7 @@ Released under GPL v3.0
 #include "Arduino.h"
 
 #define MODULO_PARAM_SLOTS 8
+#define MODULO_TYPE_SLOTS 8
 
 class K32_modulo
 {
@@ -21,6 +22,7 @@ public:
   K32_modulo();
 
   void set(int k, int value);
+  virtual String type_name () { return ""; };
   virtual int getValue();
   void play();
   void pause();
@@ -44,6 +46,7 @@ public:
   K32_modulo_sinus(int period, int min, int max);
 
   int getValue();
+  String type_name () { return "sinus"; }
 };
 
 // K32_MODULO_RANDOM
@@ -55,6 +58,7 @@ public:
   K32_modulo_random(int min, int max);
 
   int getValue();
+  String type_name () { return "random"; }
 };
 
 // K32_MODULO_LINPLUS
@@ -67,6 +71,7 @@ public:
 
   unsigned long period_last;
   int getValue();
+  String type_name () { return "linplus"; }
 };
 
 // K32_MODULO_LINMOINS
@@ -79,6 +84,7 @@ public:
 
   unsigned long period_last;
   int getValue();
+  String type_name () { return "linmoins"; }
 };
 
 // K32_MODULO_ONOFF
@@ -91,6 +97,7 @@ public:
 
   unsigned long period_last;
   int getValue();
+  String type_name () { return "onoff"; }
 
 protected:
   bool period_cycle;
@@ -106,6 +113,7 @@ public:
 
   unsigned long period_last;
   int getValue();
+  String type_name () { return "triplus"; }
 
 protected:
   bool period_cycle;
@@ -121,6 +129,7 @@ public:
 
   unsigned long period_last;
   int getValue();
+  String type_name () { return "trimoins"; }
 
 protected:
   bool period_cycle;
@@ -138,6 +147,56 @@ public:
   int getValue_1();
   int getValue_2();
   int getValue_3();
+  String type_name () { return "phase"; }
 };
+
+
+// MODULO BOOK
+
+class K32_modulo_typebook {
+  public:
+    K32_modulo_typebook() {
+
+      // REGISTER AVAILABLE TYPE !
+
+      this->add( new K32_modulo_sinus() );
+      this->add( new K32_modulo_random() );
+      this->add( new K32_modulo_linplus() );
+      this->add( new K32_modulo_linmoins() );
+      this->add( new K32_modulo_onoff() );
+      this->add( new K32_modulo_triplus() );
+      this->add( new K32_modulo_trimoins() );
+      this->add( new K32_modulo_phase() );
+
+    }
+
+    K32_modulo_type* get( String type_name ) {
+      for (int k=0; k<this->counter; k++)
+        if (this->type[k]->type_name() == type_name) {
+          // LOGINL("TYPE: "); LOG(type_name);
+          return this->type[k];
+        }
+      LOGINL("TYPE: not found "); LOG(type_name);
+      return new K32_modulo();
+    }
+
+
+  private:
+    K32_modulo* type[MODULO_TYPE_SLOTS];
+    int counter = 0;
+
+    void add(K32_modulo* type) {
+      if (this->counter >= MODULO_TYPE_SLOTS) {
+        LOG("ERROR: no more slot available to register new modulo");
+        return;
+      }
+      this->type[ this->counter ] = type;
+      this->counter++;
+    };
+
+};
+
+
+
 
 #endif
