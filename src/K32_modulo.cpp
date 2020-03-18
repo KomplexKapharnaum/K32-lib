@@ -264,7 +264,7 @@ int K32_modulo_phase::getValue_2()
     else
         time = freezeTime;
 
-    return ((0.5f + 0.5f * sin(2 * (3*PI/4) * time / this->params[0] - 0.5f * (3*PI/4))) * (this->params[1] - this->params[2]) + this->params[2]);
+    return ((0.5f + 0.5f * sin(2 * (5*PI/4) * time / this->params[0] - 0.5f * (5*PI/4))) * (this->params[1] - this->params[2]) + this->params[2]);
 }
 
 int K32_modulo_phase::getValue_3()
@@ -276,5 +276,5 @@ int K32_modulo_phase::getValue_3()
     else
         time = freezeTime;
 
-    return ((0.5f + 0.5f * sin(2 * (5*PI/4) * time / this->params[0] - 0.5f * (5*PI/4))) * (this->params[1] - this->params[2]) + this->params[2]);
+    return ((0.5f + 0.5f * sin(2 * (7*PI/4) * time / this->params[0] - 0.5f * (7*PI/4))) * (this->params[1] - this->params[2]) + this->params[2]);
 }
