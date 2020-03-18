@@ -278,25 +278,3 @@ int K32_modulo_phase::getValue_3()
 
     return ((0.5f + 0.5f * sin(2 * (3*PI/4) * time / this->params[0] - 0.5f * (3*PI/4))) * (this->params[1] - this->params[2]) + this->params[2]);
 }
-
-// MODULO BOOK
-
-K32_modulo_typebook::K32_modulo_typebook()
-{
-         // REGISTER AVAILABLE TYPE !
-
-      this->add( new K32_modulo_sinus(0,0,0) );
-      this->add( new K32_modulo_random(0,0) );
-      this->add( new K32_modulo_linplus(0,0,0) );
-      this->add( new K32_modulo_linmoins(0,0,0) );
-      this->add( new K32_modulo_onoff(0,0,0) );
-      this->add( new K32_modulo_triplus(0,0,0) );
-      this->add( new K32_modulo_trimoins(0,0,0) );
-      this->add( new K32_modulo_phase(0,0,0) );  
-}
-
-
-
-
-
-
