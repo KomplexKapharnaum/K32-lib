@@ -24,6 +24,7 @@ public:
   void set(int k, int value);
   virtual String type_name() { return ""; };
   virtual int getValue();
+  void setParam(int k, int value) { if (k < MODULO_PARAM_SLOTS) this->params[k] = value; }
   void play();
   void pause();
   void stop();
@@ -150,41 +151,5 @@ public:
   String type_name() { return "phase"; }
 };
 
-// MODULO BOOK
-
-class K32_modulo_typebook
-{
-public:
-  K32_modulo_typebook();
-
-  K32_modulo *get(String type_name)
-  {
-
-    for (int k = 0; k < this->counter; k++)
-      if (this->type[k]->type_name() == type_name)
-      {
-        // LOGINL("TYPE: "); LOG(type_name);
-        return this->type[k];
-      }
-    LOGINL("TYPE: not found ");
-    LOG(type_name);
-    return new K32_modulo();
-  }
-
-private:
-  K32_modulo *type[MODULO_TYPE_SLOTS];
-  int counter = 0;
-
-  void add(K32_modulo *type)
-  {
-    if (this->counter >= MODULO_TYPE_SLOTS)
-    {
-      LOG("ERROR: no more slot available to register new modulo");
-      return;
-    }
-    this->type[this->counter] = type;
-    this->counter++;
-  };
-};
 
 #endif
