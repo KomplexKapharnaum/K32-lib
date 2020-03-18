@@ -54,7 +54,16 @@ public:
     K32_remote *remote = NULL;
     K32_osc *osc = NULL;
     K32_mqtt *mqtt = NULL;
-    K32_modulo *modulo = NULL;
+    K32_modulo_sinus *modulo_sinus = NULL;
+    K32_modulo_random *modulo_random = NULL;
+    K32_modulo_linplus *modulo_linplus = NULL;
+    K32_modulo_linmoins *modulo_linmoins = NULL;
+    K32_modulo_onoff *modulo_onoff = NULL;
+    K32_modulo_triplus *modulo_triplus = NULL;
+    K32_modulo_trimoins *modulo_trimoins = NULL;
+    K32_modulo_phase *modulo_phase = NULL;
+
+
 
     void init_stm32()
     {
@@ -82,7 +91,7 @@ public:
 
     void init_light()
     {
-        if (system->hw() >= 0 && system->hw() <= 2)
+        if (system->hw() >= 0 && system->hw() <= 3)
         {
             light = new K32_light();
             light->leds()->attach(LEDS_PIN[system->hw()][0], 120, LED_SK6812W_V1);
@@ -135,7 +144,14 @@ public:
 
     void init_modulo()
     {
-        modulo = new K32_modulo();
+        modulo_sinus = new K32_modulo_sinus(0,0,0);
+        modulo_random = new K32_modulo_random(0,0);
+        modulo_linplus = new K32_modulo_linplus(0,0,0);
+        modulo_linmoins = new K32_modulo_linmoins(0,0,0);
+        modulo_onoff = new K32_modulo_onoff(0,0,0);
+        modulo_triplus = new K32_modulo_triplus(0,0,0);
+        modulo_trimoins = new K32_modulo_trimoins(0,0,0);
+        modulo_phase = new K32_modulo_phase(0,0,0);
     }
 
 private:
