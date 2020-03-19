@@ -50,6 +50,19 @@ public:
   String type_name() { return "sinus"; }
 };
 
+// K32_MODULO_BUMP
+
+class K32_modulo_bump : public K32_modulo
+{
+
+public:
+  K32_modulo_bump(int period, int min, int max);
+
+  unsigned long period_last;
+  int getValue();
+  String type_name() { return "bump"; }
+};
+
 // K32_MODULO_RANDOM
 
 class K32_modulo_random : public K32_modulo
@@ -148,6 +161,7 @@ public:
   int getValue_1();
   int getValue_2();
   int getValue_3();
+  int getValue_4();
   String type_name() { return "phase"; }
 };
 

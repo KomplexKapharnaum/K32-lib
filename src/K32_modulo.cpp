@@ -64,6 +64,31 @@ int K32_modulo_sinus::getValue()
     return ((0.5f + 0.5f * sin(2 * PI * time / this->params[0] - 0.5f * PI)) * (this->params[1] - this->params[2]) + this->params[2]);
 }
 
+// K32_MODULO_BUMP
+
+K32_modulo_bump::K32_modulo_bump(int period, int min, int max)
+{
+
+    this->params[0] = period; //period
+    this->params[1] = max;    //value max
+    this->params[2] = min;    //value min
+}
+
+int K32_modulo_bump::getValue()
+{
+
+    unsigned long time;
+    if (freezeTime == 0)
+        time = millis();
+    else
+        time = freezeTime;
+
+    if (time - period_last > this->params[0]/2)
+        period_last = time;  
+
+    return ((0.5f + 0.5f * sin(2 * PI * (time - period_last) / this->params[0] - 0.5f * PI)) * (this->params[1] - this->params[2]) + this->params[2]);
+}
+
 // K32_MODULO_RANDOM
 
 K32_modulo_random::K32_modulo_random(int min, int max)
@@ -277,4 +302,16 @@ int K32_modulo_phase::getValue_3()
         time = freezeTime;
 
     return ((0.5f + 0.5f * sin(2 * (7*PI/4) * time / this->params[0] - 0.5f * (7*PI/4))) * (this->params[1] - this->params[2]) + this->params[2]);
+}
+
+int K32_modulo_phase::getValue_4()
+{
+
+    unsigned long time;
+    if (freezeTime == 0)
+        time = millis();
+    else
+        time = freezeTime;
+
+    return ((0.5f + 0.5f * sin(2 * (9*PI/4) * time / this->params[0] - 0.5f * (9*PI/4))) * (this->params[1] - this->params[2]) + this->params[2]);
 }
