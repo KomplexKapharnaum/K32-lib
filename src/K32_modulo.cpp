@@ -83,8 +83,8 @@ int K32_modulo_bump::getValue()
     else
         time = freezeTime;
 
-    if (time - period_last > this->params[0]/2)
-        period_last = time;  
+    if (time - period_last > this->params[0] / 2)
+        period_last = time;
 
     return ((0.5f + 0.5f * sin(2 * PI * (time - period_last) / this->params[0] - 0.5f * PI)) * (this->params[1] - this->params[2]) + this->params[2]);
 }
@@ -277,7 +277,7 @@ int K32_modulo_phase::getValue_1()
     else
         time = freezeTime;
 
-    return ((0.5f + 0.5f * sin(2 * (3*PI/4) * time / this->params[0] - 0.5f * (3*PI/4))) * (this->params[1] - this->params[2]) + this->params[2]);
+    return ((0.5f + 0.5f * sin(2 * (3 * PI / 4) * time / this->params[0] - 0.5f * (3 * PI / 4))) * (this->params[1] - this->params[2]) + this->params[2]);
 }
 
 int K32_modulo_phase::getValue_2()
@@ -289,7 +289,7 @@ int K32_modulo_phase::getValue_2()
     else
         time = freezeTime;
 
-    return ((0.5f + 0.5f * sin(2 * (5*PI/4) * time / this->params[0] - 0.5f * (5*PI/4))) * (this->params[1] - this->params[2]) + this->params[2]);
+    return ((0.5f + 0.5f * sin(2 * (5 * PI / 4) * time / this->params[0] - 0.5f * (5 * PI / 4))) * (this->params[1] - this->params[2]) + this->params[2]);
 }
 
 int K32_modulo_phase::getValue_3()
@@ -301,7 +301,7 @@ int K32_modulo_phase::getValue_3()
     else
         time = freezeTime;
 
-    return ((0.5f + 0.5f * sin(2 * (7*PI/4) * time / this->params[0] - 0.5f * (7*PI/4))) * (this->params[1] - this->params[2]) + this->params[2]);
+    return ((0.5f + 0.5f * sin(2 * (7 * PI / 4) * time / this->params[0] - 0.5f * (7 * PI / 4))) * (this->params[1] - this->params[2]) + this->params[2]);
 }
 
 int K32_modulo_phase::getValue_4()
@@ -313,7 +313,7 @@ int K32_modulo_phase::getValue_4()
     else
         time = freezeTime;
 
-    return ((0.5f + 0.5f * sin(2 * (9*PI/4) * time / this->params[0] - 0.5f * (9*PI/4))) * (this->params[1] - this->params[2]) + this->params[2]);
+    return ((0.5f + 0.5f * sin(2 * (9 * PI / 4) * time / this->params[0] - 0.5f * (9 * PI / 4))) * (this->params[1] - this->params[2]) + this->params[2]);
 }
 
 // K32_MODULO_FADEIN
@@ -322,8 +322,8 @@ K32_modulo_fadein::K32_modulo_fadein(int period, int min, int max)
 {
 
     this->params[0] = period; //fade time
-    this->params[1] = max;    //value end
-    this->params[2] = min;    //value start
+    this->params[1] = min;    //value start
+    this->params[2] = max;    //value end
 }
 
 int K32_modulo_fadein::getValue()
@@ -336,11 +336,54 @@ int K32_modulo_fadein::getValue()
     else
         time = freezeTime;
 
-    if (time - period_last > this->params[0] + 1)
-        period_last = time;
-
     if (time - period_last > this->params[0])
-        freezeTime = 0;
+    {
+        period_last = time;
+    }
+    if (time - period_last >= this->params[0])
+    {
+        // freezeTime = time;
+        LOG(" freezzeeee  ");
+    }
 
-    return ((((time - period_last) * (this->params[1] - this->params[2])) / this->params[0]) + this->params[2]);
+    if ((this->params[1]) < (this->params[2]))
+    {
+        LOG(" 1<<<<<<2 ");
+        LOGINL(" p1 = ");
+        LOG(this->params[1]);
+        LOGINL(" p2  = ");
+        LOG(this->params[2]);
+        LOGINL(" p2 - p1 = ");
+        LOG((this->params[2] - this->params[1]));
+        LOGINL(" this->params[0] = ");
+        LOG(this->params[0]);
+
+        fact = (this->params[2] - this->params[1]) / this->params[0];
+    }
+    else if ((this->params[2]) < (this->params[1]))
+    {
+        LOG(" 1>>>>>>2  ");
+        fact = (this->params[1] - this->params[2]) / this->params[0];
+    }
+    else if (this->params[1] == this->params[2])
+    {
+        LOG(" =========  ");
+        fact = 0;
+    }
+
+    value = ((time - period_last) * fact) + this->params[1];
+
+    LOGINL(" time - periode = ");
+    LOG(time - period_last);
+    LOGINL(" fact = ");
+    LOG(fact);
+    LOGINL(" value = ");
+    LOG(value);
+
+    if (value != this->params[1])
+    {
+        return value;
+    }
+    else
+        return this->params[1];
 }

@@ -174,6 +174,8 @@ public:
   K32_modulo_fadein(int period, int min, int max);
 
   unsigned long period_last;
+  int value;
+  _Float32 fact;
   int getValue();
   String type_name() { return "fade_in"; }
 };
