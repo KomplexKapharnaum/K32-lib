@@ -336,14 +336,14 @@ int K32_modulo_fadein::getValue()
     else
         time = freezeTime;
 
-    if (time - period_last > this->params[0])
-    {
-        period_last = time;
-    }
     if (time - period_last >= this->params[0])
     {
         // freezeTime = time;
         LOG(" freezzeeee  ");
+    }
+    if (time - period_last > this->params[0])
+    {
+        period_last = time;
     }
 
     if ((this->params[1]) < (this->params[2]))
@@ -363,7 +363,7 @@ int K32_modulo_fadein::getValue()
     else if ((this->params[2]) < (this->params[1]))
     {
         LOG(" 1>>>>>>2  ");
-        fact = (this->params[1] - this->params[2]) / this->params[0];
+        fact = (this->params[1] - this->params[2]) / (this->params[0] * 1.0);
     }
     else if (this->params[1] == this->params[2])
     {

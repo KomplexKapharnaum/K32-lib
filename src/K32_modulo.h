@@ -175,7 +175,7 @@ public:
 
   unsigned long period_last;
   int value;
-  _Float32 fact;
+  float fact;
   int getValue();
   String type_name() { return "fade_in"; }
 };
