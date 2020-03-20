@@ -46,7 +46,7 @@ class K32_remote {
     remoteState _state = REMOTE_AUTO;
     int _macroMax = 0;
     int _activeMacro = 0;
-    int _previewMacro = 0;
+    int _previewMacro = _macroMax - 1;
     int _lamp = -1;
 
     void _lock();
