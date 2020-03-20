@@ -359,19 +359,20 @@ int K32_modulo_fadein::getValue()
         LOG(this->params[0]);
 
         fact = (this->params[2] - this->params[1]) / this->params[0];
+        value = this->params[1] + ((time - period_last) * fact);
     }
     else if ((this->params[2]) < (this->params[1]))
     {
         LOG(" 1>>>>>>2  ");
         fact = (this->params[1] - this->params[2]) / (this->params[0] * 1.0);
+        value = this->params[1] - ((time - period_last) * fact);
     }
     else if (this->params[1] == this->params[2])
     {
         LOG(" =========  ");
         fact = 0;
+        value = this->params[1];
     }
-
-    value = ((time - period_last) * fact) + this->params[1];
 
     LOGINL(" time - periode = ");
     LOG(time - period_last);
@@ -380,10 +381,5 @@ int K32_modulo_fadein::getValue()
     LOGINL(" value = ");
     LOG(value);
 
-    if (value != this->params[1])
-    {
-        return value;
-    }
-    else
-        return this->params[1];
+    return value;
 }
