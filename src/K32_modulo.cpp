@@ -315,3 +315,32 @@ int K32_modulo_phase::getValue_4()
 
     return ((0.5f + 0.5f * sin(2 * (9*PI/4) * time / this->params[0] - 0.5f * (9*PI/4))) * (this->params[1] - this->params[2]) + this->params[2]);
 }
+
+// K32_MODULO_FADEIN
+
+K32_modulo_fadein::K32_modulo_fadein(int period, int min, int max)
+{
+
+    this->params[0] = period; //fade time
+    this->params[1] = max;    //value end
+    this->params[2] = min;    //value start
+}
+
+int K32_modulo_fadein::getValue()
+{
+
+    unsigned long time;
+
+    if (freezeTime == 0)
+        time = millis();
+    else
+        time = freezeTime;
+
+    if (time - period_last > this->params[0] + 1)
+        period_last = time;
+
+    if (time - period_last > this->params[0])
+        freezeTime = 0;
+
+    return ((((time - period_last) * (this->params[1] - this->params[2])) / this->params[0]) + this->params[2]);
+}

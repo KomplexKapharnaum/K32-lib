@@ -13,7 +13,7 @@ Released under GPL v3.0
 #include "Arduino.h"
 
 #define MODULO_PARAM_SLOTS 8
-#define MODULO_TYPE_SLOTS 8
+// #define MODULO_TYPE_SLOTS 8
 
 class K32_modulo
 {
@@ -163,6 +163,19 @@ public:
   int getValue_3();
   int getValue_4();
   String type_name() { return "phase"; }
+};
+
+// K32_MODULO_FADEIN
+
+class K32_modulo_fadein : public K32_modulo
+{
+
+public:
+  K32_modulo_fadein(int period, int min, int max);
+
+  unsigned long period_last;
+  int getValue();
+  String type_name() { return "fade_in"; }
 };
 
 

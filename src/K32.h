@@ -62,6 +62,7 @@ public:
     K32_modulo_triplus *modulo_triplus = NULL;
     K32_modulo_trimoins *modulo_trimoins = NULL;
     K32_modulo_phase *modulo_phase = NULL;
+    K32_modulo_fadein *modulo_fadein = NULL;
 
 
 
@@ -152,6 +153,7 @@ public:
         modulo_triplus = new K32_modulo_triplus(0,0,0);
         modulo_trimoins = new K32_modulo_trimoins(0,0,0);
         modulo_phase = new K32_modulo_phase(0,0,0);
+        modulo_fadein = new K32_modulo_fadein(0,0,0);
     }
 
 private:
