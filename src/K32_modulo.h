@@ -167,17 +167,17 @@ public:
 
 // K32_MODULO_FADEIN
 
-class K32_modulo_fadein : public K32_modulo
+class K32_modulo_fade : public K32_modulo
 {
 
 public:
-  K32_modulo_fadein(int period, int min, int max);
+  K32_modulo_fade(int period, int min, int max);
 
   unsigned long period_last;
   int value;
   float fact;
   int getValue();
-  String type_name() { return "fade_in"; }
+  String type_name() { return "fade"; }
 };
 
 

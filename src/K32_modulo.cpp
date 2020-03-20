@@ -318,7 +318,7 @@ int K32_modulo_phase::getValue_4()
 
 // K32_MODULO_FADEIN
 
-K32_modulo_fadein::K32_modulo_fadein(int period, int min, int max)
+K32_modulo_fade::K32_modulo_fade(int period, int min, int max)
 {
 
     this->params[0] = period; //fade time
@@ -326,7 +326,7 @@ K32_modulo_fadein::K32_modulo_fadein(int period, int min, int max)
     this->params[2] = max;    //value end
 }
 
-int K32_modulo_fadein::getValue()
+int K32_modulo_fade::getValue()
 {
 
     unsigned long time;
@@ -336,50 +336,30 @@ int K32_modulo_fadein::getValue()
     else
         time = freezeTime;
 
-    if (time - period_last >= this->params[0])
-    {
-        // freezeTime = time;
-        LOG(" freezzeeee  ");
-    }
-    if (time - period_last > this->params[0])
+
+    if (time - period_last > this->params[0] + 10)
     {
         period_last = time;
+    }
+        if (time - period_last >= this->params[0])
+    {
+        freezeTime = time;
     }
 
     if ((this->params[1]) < (this->params[2]))
     {
-        LOG(" 1<<<<<<2 ");
-        LOGINL(" p1 = ");
-        LOG(this->params[1]);
-        LOGINL(" p2  = ");
-        LOG(this->params[2]);
-        LOGINL(" p2 - p1 = ");
-        LOG((this->params[2] - this->params[1]));
-        LOGINL(" this->params[0] = ");
-        LOG(this->params[0]);
-
-        fact = (this->params[2] - this->params[1]) / this->params[0];
+        fact = (this->params[2] - this->params[1]) / (this->params[0] * 1.0);
         value = this->params[1] + ((time - period_last) * fact);
     }
     else if ((this->params[2]) < (this->params[1]))
     {
-        LOG(" 1>>>>>>2  ");
         fact = (this->params[1] - this->params[2]) / (this->params[0] * 1.0);
         value = this->params[1] - ((time - period_last) * fact);
     }
     else if (this->params[1] == this->params[2])
     {
-        LOG(" =========  ");
-        fact = 0;
         value = this->params[1];
     }
-
-    LOGINL(" time - periode = ");
-    LOG(time - period_last);
-    LOGINL(" fact = ");
-    LOG(fact);
-    LOGINL(" value = ");
-    LOG(value);
 
     return value;
 }
