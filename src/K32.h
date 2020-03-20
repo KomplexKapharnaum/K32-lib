@@ -54,6 +54,7 @@ public:
     K32_remote *remote = NULL;
     K32_osc *osc = NULL;
     K32_mqtt *mqtt = NULL;
+    
     K32_modulo_sinus *modulo_sinus = NULL;
     K32_modulo_random *modulo_random = NULL;
     K32_modulo_linplus *modulo_linplus = NULL;
