@@ -42,6 +42,7 @@ void K32_modulo::stop()
     isRunning = false;
 }
 
+
 // K32_MODULO_SINUS
 
 K32_modulo_sinus::K32_modulo_sinus(int period, int min, int max)

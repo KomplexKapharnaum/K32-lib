@@ -7,7 +7,7 @@
 #define K32_leds_h
 
 #define LEDS_MAXSTRIPS 2
-#define LEDS_MAXPIXEL 180
+#define LEDS_MAXPIXEL 300
 
 #include "Arduino.h"
 #include "K32_log.h"

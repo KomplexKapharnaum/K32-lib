@@ -43,7 +43,7 @@ class K32_light_anim {
 class K32_light_anim_test : public K32_light_anim {
   public:
     K32_light_anim_test() {
-      this->params[0] = 150;    // intensity
+      this->params[0] = 50;    // intensity
       this->params[1] = 2000;   // initial delay
       this->params[2] = 200;    // step duration
     }

@@ -11,17 +11,16 @@
  *   PUBLIC
  */
 
-K32_stm32::K32_stm32() {
+K32_stm32::K32_stm32(bool startListening) {
   this->lock = xSemaphoreCreateMutex();
   Serial.begin(115200, SERIAL_8N1);
   Serial.setTimeout(10);
-  this->running = true;
-  
-  this->listen(true, true);
+  if (startListening) this->listen(true, true);
 };
 
 void K32_stm32::listen() {
   // Checking task
+  this->running = true;
   xTaskCreate( this->task,
                 "stm32_task",
                 1000,
@@ -34,6 +33,10 @@ void K32_stm32::listen(bool btn, bool battery) {
   this->_btn_listen = btn;
   this->_batt_listen = battery;
   this->listen();
+}
+
+void K32_stm32::stopListening() {
+  this->running = false;
 }
 
 void K32_stm32::leds(uint8_t *values) {

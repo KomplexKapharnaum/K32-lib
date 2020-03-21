@@ -17,10 +17,11 @@
 
 class K32_stm32 {
   public:
-    K32_stm32();
+    K32_stm32(bool startListening = true);
 
     void listen();      // Start monitoring thread
     void listen(bool btn, bool battery);      // Start monitoring thread (configurable)
+    void stopListening(); // Stop monitoring thread
 
     void leds(uint8_t *values);      // Set Leds
     void gauge(int percent);          // Set led gauge %

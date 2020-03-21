@@ -15,6 +15,7 @@
 #include "K32_sd.h"
 #include "K32_audio.h"
 #include "K32_light.h"
+#include "K32_pwm.h"
 #include "K32_remote.h"
 #include "K32_osc.h"
 #include "K32_mqtt.h"
@@ -28,7 +29,7 @@ public:
 
         // LOG
         LOGSETUP();
-        LOG("\n\n.:: K32  ::.");
+        LOG("\n\n.:: K32 ::.");
 
         // SYSTEM
         system = new K32_system();
@@ -60,6 +61,7 @@ public:
     K32_sd *sd = NULL;
     K32_audio *audio = NULL;
     K32_light *light = NULL;
+    K32_pwm *pwm = NULL;
     K32_remote *remote = NULL;
     K32_osc *osc = NULL;
     K32_mqtt *mqtt = NULL;
@@ -74,11 +76,9 @@ public:
     K32_modulo_phase *modulo_phase = NULL;
     K32_modulo_fade *modulo_fade = NULL;
 
-
-
     void init_stm32()
     {
-        system->stm32 = new K32_stm32();
+        system->stm32 = new K32_stm32( (system->hw() <= 2) );
     }
 
     void init_sd()
@@ -100,14 +100,28 @@ public:
             LOG("AUDIO: Warning AUDIO should be initialized BEFORE light");
     }
 
-    void init_light()
+    void init_light(int rubanType, int rubanSize)
     {
         if (system->hw() >= 0 && system->hw() <= MAX_HW)
         {
             light = new K32_light();
-            light->leds()->attach(LEDS_PIN[system->hw()][0], 120, LED_SK6812W_V1);
-            light->leds()->attach(LEDS_PIN[system->hw()][1], 120, LED_SK6812W_V1);
+            for(int k=0; k<LED_N_STRIPS; k++) 
+                if(LEDS_PIN[system->hw()][k] > 0) 
+                    light->leds()->attach(LEDS_PIN[system->hw()][k], rubanSize, (led_types) rubanType);
             light->start();
+        }
+        else
+            LOG("LIGHT: Error HWREVISION not valid please define K32_SET_HWREVISION or HW_REVISION");
+    }
+
+    void init_pwm()
+    {
+        if (system->hw() >= 0 && system->hw() <= MAX_HW)
+        {
+            pwm = new K32_pwm();
+            for(int k=0; k<PWM_N_CHAN; k++) 
+                if(PWM_PIN[system->hw()][k] > 0) 
+                    pwm->attach(PWM_PIN[system->hw()][k]);
         }
         else
             LOG("LIGHT: Error HWREVISION not valid please define K32_SET_HWREVISION or HW_REVISION");
@@ -165,6 +179,7 @@ public:
         modulo_phase = new K32_modulo_phase(0,0,0);
         modulo_fade = new K32_modulo_fade(0,0,0);
     }
+    
 
 private:
 };

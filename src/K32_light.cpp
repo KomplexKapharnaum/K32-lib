@@ -69,6 +69,11 @@ void K32_light::stop() {
   LOG("LIGHT: stop");
 }
 
+void K32_light::blackout() {
+  this->stop();
+  this->leds()->blackout();
+}
+
 bool K32_light::isPlaying() {
   return (this->activeAnim != NULL);
 }

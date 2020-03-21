@@ -24,6 +24,7 @@ class K32_light {
     void play( K32_light_anim* anim );
     void play( String animName );
     void stop();
+    void blackout();
 
     K32_light_anim* getActiveAnim();
     bool isPlaying();

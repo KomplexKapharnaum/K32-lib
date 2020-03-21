@@ -17,11 +17,23 @@
 // LEDS PINS
 // {LED_PIN0, LED_PIN1}
 //
-const int LEDS_PIN[MAX_HW+1][2] = {
+#define LED_N_STRIPS 2
+const int LEDS_PIN[MAX_HW+1][LED_N_STRIPS] = {
   {21, 22},               // HW_REVISION 0
   {21, 22},               // HW_REVISION 1
   {23, 22},               // HW_REVISION 2
   {27, 32}                // HW_REVISION 3: ATOM (26 & 32 pin out ph2.0 || 27 intern)
+};
+
+// PWM PINS
+// {PWM_PIN0, PWM_PIN1}
+//
+#define PWM_N_CHAN 2
+const int PWM_PIN[MAX_HW+1][PWM_N_CHAN] = {
+  {17, 16},               // HW_REVISION 0
+  {17, 16},               // HW_REVISION 1
+  {17, 16},               // HW_REVISION 2
+  {23, 33}                // HW_REVISION 3: ATOM
 };
 
 // AUDIO PINS
