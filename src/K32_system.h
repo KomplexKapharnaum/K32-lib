@@ -35,7 +35,8 @@ class K32_system {
 
     void id(int id) {
       xSemaphoreTake(this->lock, portMAX_DELAY);
-      preferences.putUInt("id", id);
+      int old = preferences.getUInt("id", 0);
+      if (id != old) preferences.putUInt("id", id);
       xSemaphoreGive(this->lock);
     }
 
@@ -49,13 +50,16 @@ class K32_system {
 
     void channel(int channel) {
       xSemaphoreTake(this->lock, portMAX_DELAY);
-      preferences.putUInt("channel", channel);
+      int old = preferences.getUInt("channel", 15);
+      if (channel != old) preferences.putUInt("channel", channel);
       xSemaphoreGive(this->lock);
     }
 
     int hw() {
       #ifdef K32_SET_HWREVISION
         return K32_SET_HWREVISION;
+      #elif HW_REVISION
+        return HW_REVISION
       #else
         int hw;
         xSemaphoreTake(this->lock, portMAX_DELAY);
@@ -67,7 +71,8 @@ class K32_system {
 
     void hw(int hwrevision) {
       xSemaphoreTake(this->lock, portMAX_DELAY);
-      preferences.putUInt("hw", hwrevision);
+      int old = preferences.getUInt("hw", 0);
+      if (hwrevision != old) preferences.putUInt("hw", hwrevision);
       xSemaphoreGive(this->lock);
     }
 

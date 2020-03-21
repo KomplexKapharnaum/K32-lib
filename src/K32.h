@@ -30,18 +30,22 @@ public:
         // SYSTEM
         system = new K32_system();
 
-        // System SET
+    // Save NODE_ID in flash
     #ifdef K32_SET_NODEID
         system->id(K32_SET_NODEID);
         system->channel(15);
-        LOGINL("Set id: ");
-        LOG(K32_SET_NODEID);
     #endif
+        LOGINL("Node ID: ");
+        LOG(system->id());
+
+    // Save HW_REVISION in flash
     #ifdef K32_SET_HWREVISION
         system->hw(K32_SET_HWREVISION);
-        LOGINL("Set HW rev: ");
-        LOG(K32_SET_HWREVISION);
+    #elif HW_REVISION
+        system->hw(HW_REVISION);
     #endif
+        LOGINL("HW rev: ");
+        LOG(system->hw());
 
     }
 
@@ -61,18 +65,18 @@ public:
 
     void init_sd()
     {
-        if (system->hw() >= 0 && system->hw() <= 2)
+        if (system->hw() >= 0 && system->hw() <= MAX_HW)
             sd = new K32_sd(SD_PIN[system->hw()]);
         else
-            LOG("SD: Error HWREVISION not valid please define K32_SET_HWREVISION");
+            LOG("SD: Error HWREVISION not valid please define K32_SET_HWREVISION or HW_REVISION");
     }
 
     void init_audio()
     {
-        if (system->hw() >= 0 && system->hw() <= 2)
+        if (system->hw() >= 0 && system->hw() <= MAX_HW)
             audio = new K32_audio(AUDIO_PIN[system->hw()], SD_PIN[system->hw()]);
         else
-            LOG("AUDIO: Error HWREVISION not valid please define K32_SET_HWREVISION");
+            LOG("AUDIO: Error HWREVISION not valid please define K32_SET_HWREVISION or HW_REVISION");
 
         if (light)
             LOG("AUDIO: Warning AUDIO should be initialized BEFORE light");
@@ -80,7 +84,7 @@ public:
 
     void init_light()
     {
-        if (system->hw() >= 0 && system->hw() <= 2)
+        if (system->hw() >= 0 && system->hw() <= MAX_HW)
         {
             light = new K32_light();
             light->leds()->attach(LEDS_PIN[system->hw()][0], 120, LED_SK6812W_V1);
@@ -88,12 +92,12 @@ public:
             light->start();
         }
         else
-            LOG("LIGHT: Error HWREVISION not valid please define K32_SET_HWREVISION");
+            LOG("LIGHT: Error HWREVISION not valid please define K32_SET_HWREVISION or HW_REVISION");
     }
 
     void init_remote(int nbOfMacro)
     {
-      if (system->hw() >= 0 && system->hw() <= 2)
+      if (system->hw() >= 0 && system->hw() <= MAX_HW)
       {
         remote = new K32_remote(BTN_PIN[system->hw()]);
         if(nbOfMacro > 0)
@@ -105,7 +109,7 @@ public:
         }
       } else
       {
-        LOG("REMOTE: Error HWREVISION not valid please define K32_SET_HWREVISION");
+        LOG("REMOTE: Error HWREVISION not valid please define K32_SET_HWREVISION or HW_REVISION");
       }
     }
 
