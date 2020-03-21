@@ -24,9 +24,11 @@ class K32
 {
 public:
     K32()
-    {
+    {   
+
         // LOG
         LOGSETUP();
+        LOG("\n\n.:: K32  ::.");
 
         // SYSTEM
         system = new K32_system();
@@ -47,6 +49,9 @@ public:
     #endif
         LOGINL("HW rev: ");
         LOG(system->hw());
+
+        LOG("");
+        delay(100); 
 
     }
 

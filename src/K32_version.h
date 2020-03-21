@@ -8,8 +8,8 @@
 
 #define MAX_HW 3          // Max value HW_REVISION
 
-#define K32_VERSION 2.00  // inter modules communication refactoring (modular / lazy includes)
-#define K32_VERSION 2.01  // add hw_3 ATOM
+// #define K32_VERSION 2.00  // inter modules communication refactoring (modular / lazy includes)
+// #define K32_VERSION 2.01  // add hw_3 ATOM
 #define K32_VERSION 2.02  // change HW_REVISON and Platformio.ini
 
 

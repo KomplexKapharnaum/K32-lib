@@ -59,7 +59,7 @@ class K32_system {
       #ifdef K32_SET_HWREVISION
         return K32_SET_HWREVISION;
       #elif HW_REVISION
-        return HW_REVISION
+        return HW_REVISION;
       #else
         int hw;
         xSemaphoreTake(this->lock, portMAX_DELAY);
