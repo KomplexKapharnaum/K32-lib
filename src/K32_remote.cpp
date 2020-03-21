@@ -140,7 +140,7 @@ int K32_remote::getLamp()
          switch (i)
          {
            case 0 :                           // Button 1 : BlackOut
-            that->_activeMacro = that->_macroMax;
+            that->_activeMacro = that->_macroMax - 1;
             if (that->_state == REMOTE_AUTO) that->_state = REMOTE_MANU;
             LOG("Blackout");
             break;
@@ -168,7 +168,7 @@ int K32_remote::getLamp()
          switch (i)
          {
            case 0 :                           // Button 1 : BlackOut Forced
-            that->_activeMacro = that->_macroMax;
+            that->_activeMacro = that->_macroMax - 1;
             if (that->_state == REMOTE_MANULOCK) that->_state = REMOTE_MANU;
             else that->_state = REMOTE_MANULOCK;
             break;
