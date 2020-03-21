@@ -21,7 +21,7 @@ const int LEDS_PIN[MAX_HW+1][2] = {
   {21, 22},               // HW_REVISION 0
   {21, 22},               // HW_REVISION 1
   {23, 22},               // HW_REVISION 2
-  {26, 32}                // HW_REVISION 3: ATOM
+  {27, 32}                // HW_REVISION 3: ATOM (26 & 32 pin out ph2.0 || 27 intern)
 };
 
 // AUDIO PINS
