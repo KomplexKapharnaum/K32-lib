@@ -31,6 +31,10 @@ K32_light_anim* K32_light::anim( String animName) {
   return this->_book->get(animName);
 }
 
+K32_light_anim* K32_light::getActiveAnim() {
+  if (this->activeAnim != NULL) return this->activeAnim;
+  else return new K32_light_anim();
+}
 
 void K32_light::play( K32_light_anim* anim ) {
   // ANIM task

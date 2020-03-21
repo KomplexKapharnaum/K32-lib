@@ -18,6 +18,7 @@
 #include "K32_remote.h"
 #include "K32_osc.h"
 #include "K32_mqtt.h"
+#include "K32_modulo.h"
 
 class K32
 {
@@ -57,6 +58,18 @@ public:
     K32_remote *remote = NULL;
     K32_osc *osc = NULL;
     K32_mqtt *mqtt = NULL;
+    
+    K32_modulo_sinus *modulo_sinus = NULL;
+    K32_modulo_random *modulo_random = NULL;
+    K32_modulo_linplus *modulo_linplus = NULL;
+    K32_modulo_linmoins *modulo_linmoins = NULL;
+    K32_modulo_onoff *modulo_onoff = NULL;
+    K32_modulo_triplus *modulo_triplus = NULL;
+    K32_modulo_trimoins *modulo_trimoins = NULL;
+    K32_modulo_phase *modulo_phase = NULL;
+    K32_modulo_fade *modulo_fade = NULL;
+
+
 
     void init_stm32()
     {
@@ -133,6 +146,19 @@ public:
 
         if (!wifi)
             LOG("MQTT: Warning WIFI should be initialized BEFORE mqtt");
+    }
+
+    void init_modulo()
+    {
+        modulo_sinus = new K32_modulo_sinus(0,0,0);
+        modulo_random = new K32_modulo_random(0,0);
+        modulo_linplus = new K32_modulo_linplus(0,0,0);
+        modulo_linmoins = new K32_modulo_linmoins(0,0,0);
+        modulo_onoff = new K32_modulo_onoff(0,0,0);
+        modulo_triplus = new K32_modulo_triplus(0,0,0);
+        modulo_trimoins = new K32_modulo_trimoins(0,0,0);
+        modulo_phase = new K32_modulo_phase(0,0,0);
+        modulo_fade = new K32_modulo_fade(0,0,0);
     }
 
 private:

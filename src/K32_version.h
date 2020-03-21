@@ -6,9 +6,12 @@
 #ifndef K32_version_h
 #define K32_version_h
 
-#define K32_VERSION 2.00  // inter modules communication refactoring (modular / lazy includes)
+#define MAX_HW 3          // Max value HW_REVISION
 
-#define MAX_HW 3          // Max value HW_REVISION -> size of config array
+#define K32_VERSION 2.00  // inter modules communication refactoring (modular / lazy includes)
+#define K32_VERSION 2.01  // add hw_3 ATOM
+#define K32_VERSION 2.02  // change HW_REVISON and Platformio.ini
+
 
 
 // LEDS PINS
@@ -18,7 +21,7 @@ const int LEDS_PIN[MAX_HW+1][2] = {
   {21, 22},               // HW_REVISION 0
   {21, 22},               // HW_REVISION 1
   {23, 22},               // HW_REVISION 2
-  {23, 22}                // HW_REVISION 3
+  {26, 32}                // HW_REVISION 3: ATOM
 };
 
 // AUDIO PINS
@@ -28,7 +31,7 @@ const int AUDIO_PIN[MAX_HW+1][5] = {
   {2, 4, 27, 26, 25},     // HW_REVISION 0
   {2, 4, 27, 26, 25},     // HW_REVISION 1
   {32, 33, 25, 26, 27},   // HW_REVISION 2
-  {32, 33, 25, 26, 27}    // HW_REVISION 3
+  {27, 39, 22, 19, 23}    // HW_REVISION 3 : ATOM
 };
 
 // SD PINS
@@ -38,7 +41,7 @@ const int SD_PIN[MAX_HW+1][4] = {
   {23, 19, 18, 5},        // HW_REVISION 0
   {23, 19, 18, 5},        // HW_REVISION 1
   {19, 5, 18, 21},        // HW_REVISION 2
-  {19, 5, 18, 21}         // HW_REVISION 3
+  {22, 19, 23, 33}        // HW_REVISION 3 : ATOM
 };
 
 // Buttons PINS
@@ -48,7 +51,7 @@ const int BTN_PIN[MAX_HW+1][2] = {
   {2, 4},          // HW_REVISION 0
   {2, 4},          // HW_REVISION 1
   {32, 33},        // HW_REVISION 2
-  {32, 33}         // HW_REVISION 3
+  {25, 21}         // HW_REVISION 3 : ATOM
 };
 
 #endif
