@@ -66,4 +66,14 @@ const int BTN_PIN[MAX_HW+1][2] = {
   {25, 21}         // HW_REVISION 3 : ATOM
 };
 
+// Current sensor PIN (ADC)
+// {Current Sensor Pin}
+//
+const int CURRENT_PIN[MAX_HW+1] = {
+  35 ,          // HW_REVISION 0
+  35 ,          // HW_REVISION 1
+  35 ,        // HW_REVISION 2
+  33         // HW_REVISION 3 : ATOM
+};
+
 #endif

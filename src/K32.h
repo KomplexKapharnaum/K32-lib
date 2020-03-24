@@ -9,6 +9,7 @@
 #include <Arduino.h>
 
 #include "K32_version.h"
+#include "K32_power.h"
 #include "system/K32_log.h"
 #include "system/K32_system.h"
 #include "system/K32_sd.h"
@@ -25,7 +26,7 @@ class K32
 {
 public:
     K32()
-    {   
+    {
 
         // LOG
         LOGSETUP();
@@ -52,7 +53,7 @@ public:
         LOG(system->hw());
 
         LOG("");
-        delay(100); 
+        delay(100);
 
     }
 
@@ -63,9 +64,10 @@ public:
     K32_light *light = NULL;
     K32_pwm *pwm = NULL;
     K32_remote *remote = NULL;
+    K32_power *power = NULL;
     K32_osc *osc = NULL;
     K32_mqtt *mqtt = NULL;
-    
+
     K32_modulo_sinus *modulo_sinus = NULL;
     K32_modulo_random *modulo_random = NULL;
     K32_modulo_linplus *modulo_linplus = NULL;
@@ -119,8 +121,8 @@ public:
         if (system->hw() >= 0 && system->hw() <= MAX_HW)
         {
             pwm = new K32_pwm();
-            for(int k=0; k<PWM_N_CHAN; k++) 
-                if(PWM_PIN[system->hw()][k] > 0) 
+            for(int k=0; k<PWM_N_CHAN; k++)
+                if(PWM_PIN[system->hw()][k] > 0)
                     pwm->attach(PWM_PIN[system->hw()][k]);
         }
         else
@@ -142,6 +144,23 @@ public:
       } else
       {
         LOG("REMOTE: Error HWREVISION not valid please define K32_SET_HWREVISION or HW_REVISION");
+      }
+    }
+
+    void init_power()
+    {
+      if (system->hw() >= 0 && system->hw() <= MAX_HW)
+      {
+        if(system->stm32 != NULL)
+        {
+          power = new K32_power(system->stm32, CURRENT_PIN[system->hw()]);
+        } else
+        {
+          LOG("POWER: Error Missing STM32 Init. Power module can not be used without STM32");
+        }
+      } else
+      {
+        LOG("POWER: Error HWREVISION not valid please define K32_SET_HWREVISION or HW_REVISION");
       }
     }
 
@@ -179,7 +198,7 @@ public:
         modulo_phase = new K32_modulo_phase(0,0,0);
         modulo_fade = new K32_modulo_fade(0,0,0);
     }
-    
+
 
 private:
 };
