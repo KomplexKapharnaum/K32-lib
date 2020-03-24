@@ -9,17 +9,17 @@
 #include <Arduino.h>
 
 #include "K32_version.h"
-#include "K32_log.h"
-#include "K32_system.h"
-#include "K32_wifi.h"
-#include "K32_sd.h"
-#include "K32_audio.h"
-#include "K32_light.h"
-#include "K32_pwm.h"
-#include "K32_remote.h"
-#include "K32_osc.h"
-#include "K32_mqtt.h"
-#include "K32_modulo.h"
+#include "system/K32_log.h"
+#include "system/K32_system.h"
+#include "system/K32_sd.h"
+#include "system/K32_pwm.h"
+#include "audio/K32_audio.h"
+#include "light/K32_light.h"
+#include "light/K32_modulo.h"
+#include "remote/K32_remote.h"
+#include "network/K32_wifi.h"
+#include "network/K32_osc.h"
+#include "network/K32_mqtt.h"
 
 class K32
 {
