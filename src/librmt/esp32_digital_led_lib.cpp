@@ -108,7 +108,7 @@ typedef struct {
   rmtPulsePair pulsePairMap[2];
 } digitalLeds_stateData;
 
-static strand_t * localStrands;
+static strand_t localStrands[8];
 static int localStrandCnt = 0;
 
 static intr_handle_t rmt_intr_handle = nullptr;
@@ -117,99 +117,87 @@ static intr_handle_t rmt_intr_handle = nullptr;
 static void copyToRmtBlock_half(strand_t * pStrand);
 static void handleInterrupt(void *arg);
 
-
-int digitalLeds_initStrands(strand_t strands [], int numStrands)
+int digitalLeds_init() 
 {
-  #if DEBUG_ESP32_DIGITAL_LED_LIB
-    snprintf(digitalLeds_debugBuffer, digitalLeds_debugBufferSz,
-             "%sdigitalLeds_init numStrands = %d\n", digitalLeds_debugBuffer, numStrands);
-  #endif
-
-  localStrands = strands;
-  localStrandCnt = numStrands;
-  if (localStrandCnt < 1 || localStrandCnt > 8) {
-    return -1;
-  }
-
   DPORT_SET_PERI_REG_MASK(DPORT_PERIP_CLK_EN_REG, DPORT_RMT_CLK_EN);
   DPORT_CLEAR_PERI_REG_MASK(DPORT_PERIP_RST_EN_REG, DPORT_RMT_RST);
 
   RMT.apb_conf.fifo_mask = 1;       // Enable memory access, instead of FIFO mode
   RMT.apb_conf.mem_tx_wrap_en = 1;  // Wrap around when hitting end of buffer
-
-  for (int i = 0; i < localStrandCnt; i++) {
-
-    strand_t * pStrand = &localStrands[i];
-    ledParams_t ledParams = ledParamsAll[pStrand->ledType];
-
-    pStrand->pixels = static_cast<pixelColor_t*>(malloc(pStrand->numPixels * sizeof(pixelColor_t)));
-    if (pStrand->pixels == nullptr) {
-      return -1;
-    }
-
-    pStrand->_stateVars = static_cast<digitalLeds_stateData*>(malloc(sizeof(digitalLeds_stateData)));
-    if (pStrand->_stateVars == nullptr) {
-      return -1;
-    }
-    digitalLeds_stateData * pState = static_cast<digitalLeds_stateData*>(pStrand->_stateVars);
-
-    pState->buf_len = (pStrand->numPixels * ledParams.bytesPerPixel);
-    pState->buf_data = static_cast<uint8_t*>(malloc(pState->buf_len));
-    if (pState->buf_data == nullptr) {
-      return -1;
-    }
-
-    rmt_set_pin(
-      static_cast<rmt_channel_t>(pStrand->rmtChannel),
-      RMT_MODE_TX,
-      static_cast<gpio_num_t>(pStrand->gpioNum));
-
-    RMT.conf_ch[pStrand->rmtChannel].conf0.div_cnt = DIVIDER;
-    RMT.conf_ch[pStrand->rmtChannel].conf0.mem_size = 1;
-    RMT.conf_ch[pStrand->rmtChannel].conf0.carrier_en = 0;
-    RMT.conf_ch[pStrand->rmtChannel].conf0.carrier_out_lv = 1;
-    RMT.conf_ch[pStrand->rmtChannel].conf0.mem_pd = 0;
-
-    RMT.conf_ch[pStrand->rmtChannel].conf1.rx_en = 0;
-    RMT.conf_ch[pStrand->rmtChannel].conf1.mem_owner = 0;
-    RMT.conf_ch[pStrand->rmtChannel].conf1.tx_conti_mode = 0;  //loop back mode
-    RMT.conf_ch[pStrand->rmtChannel].conf1.ref_always_on = 1;  // use apb clock: 80M
-    RMT.conf_ch[pStrand->rmtChannel].conf1.idle_out_en = 1;
-    RMT.conf_ch[pStrand->rmtChannel].conf1.idle_out_lv = 0;
-
-    RMT.tx_lim_ch[pStrand->rmtChannel].limit = MAX_PULSES;
-
-    // RMT config for transmitting a '0' bit val to this LED strand
-    pState->pulsePairMap[0].level0 = 1;
-    pState->pulsePairMap[0].level1 = 0;
-    pState->pulsePairMap[0].duration0 = ledParams.T0H / (RMT_DURATION_NS * DIVIDER);
-    pState->pulsePairMap[0].duration1 = ledParams.T0L / (RMT_DURATION_NS * DIVIDER);
-
-    // RMT config for transmitting a '0' bit val to this LED strand
-    pState->pulsePairMap[1].level0 = 1;
-    pState->pulsePairMap[1].level1 = 0;
-    pState->pulsePairMap[1].duration0 = ledParams.T1H / (RMT_DURATION_NS * DIVIDER);
-    pState->pulsePairMap[1].duration1 = ledParams.T1L / (RMT_DURATION_NS * DIVIDER);
-
-    RMT.int_ena.val |= tx_thr_event_offsets[pStrand->rmtChannel];  // RMT.int_ena.ch<n>_tx_thr_event = 1;
-    RMT.int_ena.val |= tx_end_offsets[pStrand->rmtChannel];  // RMT.int_ena.ch<n>_tx_end = 1;
-  }
-
+  
   esp_intr_alloc(ETS_RMT_INTR_SOURCE, 0, handleInterrupt, nullptr, &rmt_intr_handle);
-
-  for (int i = 0; i < localStrandCnt; i++) {
-    strand_t * pStrand = &localStrands[i];
-    digitalLeds_resetPixels(pStrand);
-  }
 
   return 0;
 }
 
-void digitalLeds_resetPixels(strand_t * pStrand)
+strand_t* digitalLeds_addStrand(strand_t strands)
 {
+  if (localStrandCnt >= 8) return nullptr;
+
+  localStrandCnt += 1;
+  localStrands[localStrandCnt-1] = strands;
+
+  strand_t * pStrand = &localStrands[localStrandCnt-1];
+  ledParams_t ledParams = ledParamsAll[pStrand->ledType];
+
+  pStrand->pixels = static_cast<pixelColor_t*>(malloc(pStrand->numPixels * sizeof(pixelColor_t)));
+  if (pStrand->pixels == nullptr) {
+    return nullptr;
+  }
   memset(pStrand->pixels, 0, pStrand->numPixels * sizeof(pixelColor_t));
+
+  pStrand->_stateVars = static_cast<digitalLeds_stateData*>(malloc(sizeof(digitalLeds_stateData)));
+  if (pStrand->_stateVars == nullptr) {
+    return nullptr;
+  }
+  digitalLeds_stateData * pState = static_cast<digitalLeds_stateData*>(pStrand->_stateVars);
+
+  pState->buf_len = (pStrand->numPixels * ledParams.bytesPerPixel);
+  pState->buf_data = static_cast<uint8_t*>(malloc(pState->buf_len));
+  if (pState->buf_data == nullptr) {
+    return nullptr;
+  }
+
+  rmt_set_pin(
+    static_cast<rmt_channel_t>(pStrand->rmtChannel),
+    RMT_MODE_TX,
+    static_cast<gpio_num_t>(pStrand->gpioNum));
+
+  RMT.conf_ch[pStrand->rmtChannel].conf0.div_cnt = DIVIDER;
+  RMT.conf_ch[pStrand->rmtChannel].conf0.mem_size = 1;
+  RMT.conf_ch[pStrand->rmtChannel].conf0.carrier_en = 0;
+  RMT.conf_ch[pStrand->rmtChannel].conf0.carrier_out_lv = 1;
+  RMT.conf_ch[pStrand->rmtChannel].conf0.mem_pd = 0;
+
+  RMT.conf_ch[pStrand->rmtChannel].conf1.rx_en = 0;
+  RMT.conf_ch[pStrand->rmtChannel].conf1.mem_owner = 0;
+  RMT.conf_ch[pStrand->rmtChannel].conf1.tx_conti_mode = 0;  //loop back mode
+  RMT.conf_ch[pStrand->rmtChannel].conf1.ref_always_on = 1;  // use apb clock: 80M
+  RMT.conf_ch[pStrand->rmtChannel].conf1.idle_out_en = 1;
+  RMT.conf_ch[pStrand->rmtChannel].conf1.idle_out_lv = 0;
+
+  RMT.tx_lim_ch[pStrand->rmtChannel].limit = MAX_PULSES;
+
+  // RMT config for transmitting a '0' bit val to this LED strand
+  pState->pulsePairMap[0].level0 = 1;
+  pState->pulsePairMap[0].level1 = 0;
+  pState->pulsePairMap[0].duration0 = ledParams.T0H / (RMT_DURATION_NS * DIVIDER);
+  pState->pulsePairMap[0].duration1 = ledParams.T0L / (RMT_DURATION_NS * DIVIDER);
+
+  // RMT config for transmitting a '0' bit val to this LED strand
+  pState->pulsePairMap[1].level0 = 1;
+  pState->pulsePairMap[1].level1 = 0;
+  pState->pulsePairMap[1].duration0 = ledParams.T1H / (RMT_DURATION_NS * DIVIDER);
+  pState->pulsePairMap[1].duration1 = ledParams.T1L / (RMT_DURATION_NS * DIVIDER);
+
+  RMT.int_ena.val |= tx_thr_event_offsets[pStrand->rmtChannel];  // RMT.int_ena.ch<n>_tx_thr_event = 1;
+  RMT.int_ena.val |= tx_end_offsets[pStrand->rmtChannel];  // RMT.int_ena.ch<n>_tx_end = 1;
+
   digitalLeds_updatePixels(pStrand);
+
+  return pStrand;
 }
+
 
 int IRAM_ATTR digitalLeds_updatePixels(strand_t * pStrand)
 {

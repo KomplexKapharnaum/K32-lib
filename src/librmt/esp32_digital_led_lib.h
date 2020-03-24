@@ -116,7 +116,8 @@ extern "C"
       [LED_SK6812W_V1] = {.bytesPerPixel = 4, .T0H = 300, .T1H = 600, .T0L = 900, .T1L = 600, .TRS = 80000}, // R V B W
   };
 
-  extern int digitalLeds_initStrands(strand_t strands[], int numStrands);
+  extern int digitalLeds_init();
+  extern strand_t* digitalLeds_addStrand(strand_t strands);
   extern int digitalLeds_updatePixels(strand_t *strand);
   extern void digitalLeds_resetPixels(strand_t *pStrand);
 

@@ -11,20 +11,70 @@
 K32_light::K32_light() {
   // ANIMATOR
   this->activeAnim = NULL;
-  this->_leds = new K32_leds();
   this->_book = new K32_light_animbook();
 
   this->stop_lock = xSemaphoreCreateBinary();
   xSemaphoreGive(this->stop_lock);
+
+  digitalLeds_init();
+}
+
+void K32_light::addStrip(const int pin, led_types type, int size)
+{
+  if (size == 0) size = LEDSTRIP_MAXPIXEL;
+
+  if (this->_nstrips >= LEDS_MAXSTRIPS) {
+    LOG("LEDS: no more strip can be attached..");
+    return;
+  }
+
+  int s = this->_nstrips;
+  this->_nstrips += 1;
+  
+  this->_strips[s] = new K32_ledstrip(s, pin, type, size);
 }
 
 void K32_light::start() {
-  this->_leds->start();
+  // test routine
   this->play( "test" );
 }
 
-K32_leds* K32_light::leds() {
-  return this->_leds;
+K32_ledstrip* K32_light::strip(int s) {
+  return this->_strips[s];
+}
+
+K32_light* K32_light::strips() {
+  return this;
+}
+
+K32_light* K32_light::black()
+{
+  for (int s = 0; s < this->_nstrips; s++) this->_strips[s]->black();
+  return this;
+}
+
+K32_light* K32_light::all(pixelColor_t color)
+{
+  for (int s = 0; s < this->_nstrips; s++) this->_strips[s]->all(color);
+  return this;
+}
+
+K32_light* K32_light::all(int red, int green, int blue, int white)
+{
+  return this->all( pixelFromRGBW(red, green, blue, white) );
+}
+
+K32_light* K32_light::pix(int pixel, pixelColor_t color) {
+  for (int s = 0; s < this->_nstrips; s++) this->_strips[s]->pix(pixel, color);
+  return this;
+}
+
+K32_light* K32_light::pix(int pixel, int red, int green, int blue, int white) {
+  return this->pix( pixel, pixelFromRGBW(red, green, blue, white) );
+}
+
+void K32_light::show() {
+  for (int s=0; s<this->_nstrips; s++) this->_strips[s]->show();
 }
 
 K32_light_anim* K32_light::anim( String animName) {
@@ -71,7 +121,7 @@ void K32_light::stop() {
 
 void K32_light::blackout() {
   this->stop();
-  this->leds()->blackout();
+  this->strips()->black()->show();
 }
 
 bool K32_light::isPlaying() {
@@ -83,34 +133,36 @@ bool K32_light::isPlaying() {
  *   PRIVATE
  */
 
-  void K32_light::animate( void * parameter ) {
-    K32_light* that = (K32_light*) parameter;
-    if (that->activeAnim){
-      bool RUN = true;
-      while(RUN) {
-        RUN = that->activeAnim->loop( that->_leds );
-        yield();
-      }
-    }
-    LOG("LIGHT: end");
-    that->animateHandle = NULL;
-    that->activeAnim = NULL;
-    vTaskDelete(NULL);
-  }
+int K32_light::_nstrips = 0;
 
-  void K32_light::async_stop( void * parameter ) {
-    K32_light* that = (K32_light*) parameter;
-    if (that->activeAnim) that->activeAnim->lock();
-    if (that->animateHandle) {
-      vTaskDelete( that->animateHandle );
-      that->animateHandle = NULL;
+void K32_light::animate( void * parameter ) {
+  K32_light* that = (K32_light*) parameter;
+  if (that->activeAnim){
+    bool RUN = true;
+    while(RUN) {
+      RUN = that->activeAnim->loop( that->strip(0) );
+      yield();
     }
-    if (that->activeAnim) that->activeAnim->unlock();
-    that->activeAnim = NULL;
-    that->_leds->blackout();
-    xSemaphoreGive(that->stop_lock);
-    vTaskDelete(NULL);
-  } 
+  }
+  LOG("LIGHT: end");
+  that->animateHandle = NULL;
+  that->activeAnim = NULL;
+  vTaskDelete(NULL);
+}
+
+void K32_light::async_stop( void * parameter ) {
+  K32_light* that = (K32_light*) parameter;
+  if (that->activeAnim) that->activeAnim->lock();
+  if (that->animateHandle) {
+    vTaskDelete( that->animateHandle );
+    that->animateHandle = NULL;
+  }
+  if (that->activeAnim) that->activeAnim->unlock();
+  that->activeAnim = NULL;
+  that->strip(0)->black();
+  xSemaphoreGive(that->stop_lock);
+  vTaskDelete(NULL);
+} 
 
 
  /////////////////////////////////////////////

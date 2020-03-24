@@ -6,19 +6,31 @@
 #ifndef K32_light_h
 #define K32_light_h
 
+#define LEDS_MAXSTRIPS 8    // There is 8 RMT channels on ESP32
+
 
 #include "Arduino.h"
-#include "K32_leds.h"
+#include "K32_ledstrip.h"
 #include "K32_light_anims.h"
-
-
 
 class K32_light {
   public:
     K32_light();
+
+    void addStrip(const int pin, led_types type, int size = 0);
     void start();
 
-    K32_leds* leds();
+    K32_ledstrip* strip(int s);
+    K32_light* strips();
+
+    K32_light* black();
+    K32_light* all(pixelColor_t color);
+    K32_light* all(int red, int green, int blue, int white = 0);
+    K32_light* pix(int pixel, pixelColor_t color);
+    K32_light* pix(int pixel, int red, int green, int blue, int white = 0);
+
+    void show();
+
     K32_light_anim* anim( String animName);
 
     void play( K32_light_anim* anim );
@@ -30,7 +42,10 @@ class K32_light {
     bool isPlaying();
 
   private:
-    K32_leds* _leds;
+
+    static int _nstrips;
+    K32_ledstrip* _strips[LEDS_MAXSTRIPS];
+
     K32_light_animbook* _book;
 
     TaskHandle_t animateHandle = NULL;

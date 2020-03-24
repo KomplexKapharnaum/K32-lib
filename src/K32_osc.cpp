@@ -415,7 +415,8 @@ void K32_osc::server( void * parameter ) {
                 }
                 else { green = red; blue = red; white = red; }
 
-                that->light->leds()->setAll( red, green, blue, white )->show();
+                that->light->strips()->all( red, green, blue, white );
+                that->light->show();
 
               }, offset);
 
@@ -423,9 +424,9 @@ void K32_osc::server( void * parameter ) {
               msg.dispatch("/strip", [](K32_osc* that, K32_oscmsg &msg){
 
                 if (!msg.isInt(0) || !msg.isInt(1)) return;
-                int strip, red, green, blue, white;
+                int s, red, green, blue, white;
                 
-                strip = msg.getInt(0);
+                s = msg.getInt(0);
                 red = msg.getInt(1);
                 if (msg.isInt(2) && msg.isInt(3)) {
                   green = msg.getInt(2);
@@ -434,7 +435,8 @@ void K32_osc::server( void * parameter ) {
                 }
                 else { green = red; blue = red; white = red; }
 
-                that->light->leds()->setStrip( strip, red, green, blue, white )->show();
+                that->light->strip(s)->all( red, green, blue, white );
+                that->light->show();
 
               }, offset);
 
@@ -442,9 +444,9 @@ void K32_osc::server( void * parameter ) {
               msg.dispatch("/pixel", [](K32_osc* that, K32_oscmsg &msg){
                 
                 if (!msg.isInt(0) || !msg.isInt(1) || !msg.isInt(2)) return;
-                int strip, pixel, red, green, blue, white;
+                int s, pixel, red, green, blue, white;
                 
-                strip = msg.getInt(0);
+                s = msg.getInt(0);
                 pixel = msg.getInt(1);
                 red = msg.getInt(2);
                 if (msg.isInt(3) && msg.isInt(4)) {
@@ -454,7 +456,8 @@ void K32_osc::server( void * parameter ) {
                 }
                 else { green = red; blue = red; white = red; }
 
-                that->light->leds()->setPixel( strip, pixel, red, green, blue, white )->show();
+                that->light->strip(s)->pix( pixel, red, green, blue, white );
+                that->light->show();
 
               }, offset);
 

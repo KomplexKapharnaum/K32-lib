@@ -100,14 +100,14 @@ public:
             LOG("AUDIO: Warning AUDIO should be initialized BEFORE light");
     }
 
-    void init_light(int rubanType, int rubanSize)
+    void init_light(int rubanType, int rubanSize = 0)
     {
         if (system->hw() >= 0 && system->hw() <= MAX_HW)
         {
             light = new K32_light();
             for(int k=0; k<LED_N_STRIPS; k++) 
                 if(LEDS_PIN[system->hw()][k] > 0) 
-                    light->leds()->attach(LEDS_PIN[system->hw()][k], rubanSize, (led_types) rubanType);
+                    light->strips()->addStrip(LEDS_PIN[system->hw()][k], (led_types)rubanType, rubanSize);
             light->start();
         }
         else

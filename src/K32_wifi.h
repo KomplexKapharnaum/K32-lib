@@ -27,7 +27,7 @@ class K32_wifi {
     void staticIP(String ip, String gateway, String mask);
     void staticIP(String ip);
 
-    void connect(const char* ssid, const char* password);
+    void connect(const char* ssid, const char* password = NULL);
     void connect();
 
     void add(const char* ssid);
