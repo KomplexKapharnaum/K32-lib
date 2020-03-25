@@ -9,7 +9,7 @@
 #include <Arduino.h>
 
 #include "K32_version.h"
-#include "K32_power.h"
+#include "system/K32_power.h"
 #include "system/K32_log.h"
 #include "system/K32_system.h"
 #include "system/K32_sd.h"
