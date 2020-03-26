@@ -26,7 +26,10 @@ struct digitalbtn {
 enum remoteState {
   REMOTE_AUTO,
   REMOTE_MANU,
-  REMOTE_MANULOCK
+  REMOTE_MANU_STM,
+  REMOTE_MANULOCK,
+  REMOTE_MANU_LAMP,
+  REMOTE_MANULOCK_LAMP
 };
 
 class K32_remote {
@@ -34,6 +37,11 @@ class K32_remote {
     K32_remote(const int BTN_PIN[2]);
     void setMacroMax(int macroMax) ;
     void setAuto();
+    void setManu();
+    void setManu_Stm();
+    void setManuLock();
+    void setManu_Lamp();
+    void setManuLock_Lamp();
 
     remoteState getState();
     int getActiveMacro();
@@ -48,6 +56,8 @@ class K32_remote {
     int _activeMacro = 0;
     int _previewMacro = _macroMax - 1;
     int _lamp = -1;
+    int _lamp_grad = 127;
+    bool _key_lock = false;
 
     void _lock();
     void _unlock();
