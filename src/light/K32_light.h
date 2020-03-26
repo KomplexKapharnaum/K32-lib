@@ -18,7 +18,6 @@ class K32_light {
     K32_light();
 
     void addStrip(const int pin, led_types type, int size = 0);
-    void start();
 
     K32_ledstrip* strip(int s);
     K32_light* strips();

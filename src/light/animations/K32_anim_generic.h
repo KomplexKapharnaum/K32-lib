@@ -25,7 +25,7 @@ class K32_anim_test : public K32_anim {
     K32_anim_test() : K32_anim("test") {}
     
     // Data
-    int brightness    = 50;     // brightnessness
+    int brightness    = 50;     // brightness
     int initDelay = 1000;   // initial delay
     int stepMS    = 250;    // step duration
 

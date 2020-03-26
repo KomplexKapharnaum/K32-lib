@@ -110,7 +110,6 @@ public:
             for(int k=0; k<LED_N_STRIPS; k++) 
                 if(LEDS_PIN[system->hw()][k] > 0) 
                     light->strips()->addStrip(LEDS_PIN[system->hw()][k], (led_types)rubanType, rubanSize);
-            light->start();
         }
         else
             LOG("LIGHT: Error HWREVISION not valid please define K32_SET_HWREVISION or HW_REVISION");

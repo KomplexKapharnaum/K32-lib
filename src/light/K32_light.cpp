@@ -34,11 +34,6 @@ void K32_light::addStrip(const int pin, led_types type, int size)
   this->_strips[s] = new K32_ledstrip(s, pin, type, size);
 }
 
-void K32_light::start() {
-  // test routine
-  this->play( "test" );
-}
-
 K32_ledstrip* K32_light::strip(int s) {
   return this->_strips[s];
 }
