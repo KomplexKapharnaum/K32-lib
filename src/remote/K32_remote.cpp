@@ -71,7 +71,6 @@ void K32_remote::setMacroMax(int macroMax)
 
 void K32_remote::setAuto()
 {
-
   this->_lock();
   this->_state = REMOTE_AUTO;
   this->_unlock();
@@ -79,7 +78,6 @@ void K32_remote::setAuto()
 
 void K32_remote::setManu()
 {
-
   this->_lock();
   this->_state = REMOTE_MANU;
   this->_unlock();
@@ -87,7 +85,6 @@ void K32_remote::setManu()
 
 void K32_remote::setManu_Stm()
 {
-
   this->_lock();
   this->_state = REMOTE_MANU_STM;
   this->_unlock();
@@ -95,7 +92,6 @@ void K32_remote::setManu_Stm()
 
 void K32_remote::setManuLock()
 {
-
   this->_lock();
   this->_state = REMOTE_MANULOCK;
   this->_unlock();
@@ -103,7 +99,6 @@ void K32_remote::setManuLock()
 
 void K32_remote::setManu_Lamp()
 {
-
   this->_lock();
   this->_state = REMOTE_MANU_LAMP;
   this->_unlock();
@@ -111,7 +106,6 @@ void K32_remote::setManu_Lamp()
 
 void K32_remote::setManuLock_Lamp()
 {
-
   this->_lock();
   this->_state = REMOTE_MANULOCK_LAMP;
   this->_unlock();
@@ -446,7 +440,7 @@ void K32_remote::read_btn_state(void *parameter)
             {
               if (j != i)
               {
-                if ((that->buttons[j].state == LOW) || (that->buttons[j].flag = 3))
+                if ((that->buttons[j].state == LOW) || (that->buttons[j].flag == 3))
                 {
                   nbOtherPush++;
                 }
