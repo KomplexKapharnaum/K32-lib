@@ -171,10 +171,115 @@ void K32_remote::task(void *parameter)
 
       that->_lock();
 
-      if (that->_key_lock != true)
+      if (that->_key_lock != true) // Remote control is locked
       {
+        if (that->buttons[i].flag == 1) // Short push
+        {
+          LOGF("REMOTE: Short push on button %d\n", i);
+          /* Do nothing */
+          that->buttons[i].flag = 0;
+        }  else if (that->buttons[i].flag == 2) // Long push
+        {
+          LOGF("REMOTE: Long push on button %d\n", i);
+          /* Do nothing */
+          that->buttons[i].flag = 0;
 
-        if (that->buttons[i].flag == 1)
+        } else if (that->buttons[i].flag >= 10) // Combined push
+        {
+          LOGF("REMOTE: Combined short push on button %d\n", that->buttons[i].flag);
+          switch (that->buttons[i].flag)
+          {
+          case 10: // Button 1 and 2
+                  /* */
+                  /* Do actions */
+                  /* */
+            that->buttons[0].flag = 0;
+            that->buttons[1].flag = 0; // reset flags after action
+            break;
+          case 20: // Button 1 and 3
+                  /* */
+                  /* Do actions */
+                  /* */
+            that->buttons[0].flag = 0;
+            that->buttons[2].flag = 0; // reset flags after action
+            break;
+          case 30: // Button 1 and 4                                // LOCK & UNLOCK
+            /* */
+            that->_key_lock = false;
+            /* */
+            that->buttons[0].flag = 0;
+            that->buttons[3].flag = 0; // reset flags after action
+            break;
+          case 21: // Button 2 and 3                                // LAMP_GRAD
+            /* */
+            if (that->_state == REMOTE_MANU)
+              that->_state = REMOTE_MANU_LAMP;
+            else if (that->_state == REMOTE_MANULOCK)
+              that->_state = REMOTE_MANULOCK_LAMP;
+            /* */
+            that->buttons[1].flag = 0;
+            that->buttons[2].flag = 0; // reset flags after action
+            break;
+          case 31: // Button 2 and 4
+                  /* */
+                  /* Do actions */
+                  /* */
+            that->buttons[1].flag = 0;
+            that->buttons[3].flag = 0; // reset flags after action
+            break;
+          case 32: // Button 3 and 4
+                  /* */
+                  /* Do actions */
+                  /* */
+            that->buttons[2].flag = 0;
+            that->buttons[3].flag = 0; // reset flags after action
+            break;
+          case 210: // Button 1, 2, 3
+                    /* */
+                    /* Do actions */
+                    /* */
+            that->buttons[0].flag = 0;
+            that->buttons[1].flag = 0;
+            that->buttons[2].flag = 0; // reset flags after action
+            break;
+          case 310: // Button 1, 2, 4
+                    /* */
+                    /* Do actions */
+                    /* */
+            that->buttons[0].flag = 0;
+            that->buttons[1].flag = 0;
+            that->buttons[3].flag = 0; // reset flags after action
+            break;
+          case 320: // Button 1, 3, 4
+                    /* */
+                    /* Do actions */
+                    /* */
+            that->buttons[0].flag = 0;
+            that->buttons[2].flag = 0;
+            that->buttons[3].flag = 0; // reset flags after action
+            break;
+          case 321: // Button 2, 3, 4
+                    /* */
+                    /* Do actions */
+                    /* */
+            that->buttons[1].flag = 0;
+            that->buttons[2].flag = 0;
+            that->buttons[3].flag = 0; // reset flags after action
+            break;
+          case 3210: // Button 1,2,3,4
+                    /* */
+                    /* Do actions */
+                    /* */
+            that->buttons[0].flag = 0;
+            that->buttons[1].flag = 0;
+            that->buttons[2].flag = 0;
+            that->buttons[3].flag = 0; // reset flags after action
+            break;
+          }
+        } 
+      } else                  // Remote unlocked (_key_lock == false)
+      {
+        if (that->buttons[i].flag == 1) // Short push
         {
           LOGF("REMOTE: Short push on button %d\n", i);
 
@@ -241,9 +346,7 @@ void K32_remote::task(void *parameter)
             }
           }
           that->buttons[i].flag = 0;
-        } //if (that->buttons[i].flag == 1)
-
-        else if (that->buttons[i].flag == 2)
+        } else if (that->buttons[i].flag == 2) // Long push
         {
           LOGF("REMOTE: Long push on button %d\n", i);
 
@@ -275,115 +378,105 @@ void K32_remote::task(void *parameter)
             break;
           }
           that->buttons[i].flag = 0;
-        } //else if (that->buttons[i].flag == 2)
-      }   //if (that->_key_lock != true)
-
-      else if (that->buttons[i].flag >= 10)
-      {
-        LOGF("REMOTE: Combined short push on button %d\n", that->buttons[i].flag);
-        switch (that->buttons[i].flag)
+        } else if (that->buttons[i].flag >= 10) // Combined push
         {
-        case 10: // Button 1 and 2
-                 /* */
-                 /* Do actions */
-                 /* */
-          that->buttons[0].flag = 0;
-          that->buttons[1].flag = 0; // reset flags after action
-          break;
-        case 20: // Button 1 and 3
-                 /* */
-                 /* Do actions */
-                 /* */
-          that->buttons[0].flag = 0;
-          that->buttons[2].flag = 0; // reset flags after action
-          break;
-        case 30: // Button 1 and 4                                // LOCK & UNLOCK
-          /* */
-          if (that->_key_lock == true)
-            that->_key_lock = false;
-          else
+          LOGF("REMOTE: Combined short push on button %d\n", that->buttons[i].flag);
+          switch (that->buttons[i].flag)
+          {
+          case 10: // Button 1 and 2
+                  /* */
+                  /* Do actions */
+                  /* */
+            that->buttons[0].flag = 0;
+            that->buttons[1].flag = 0; // reset flags after action
+            break;
+          case 20: // Button 1 and 3
+                  /* */
+                  /* Do actions */
+                  /* */
+            that->buttons[0].flag = 0;
+            that->buttons[2].flag = 0; // reset flags after action
+            break;
+          case 30: // Button 1 and 4                                // LOCK & UNLOCK
+            /* */
             that->_key_lock = true;
-          /* */
-          that->buttons[0].flag = 0;
-          that->buttons[3].flag = 0; // reset flags after action
-          break;
-        case 21: // Button 2 and 3                                // LAMP_GRAD
-          /* */
-          if (that->_state == REMOTE_MANU)
-            that->_state = REMOTE_MANU_LAMP;
-          else if (that->_state == REMOTE_MANULOCK)
-            that->_state = REMOTE_MANULOCK_LAMP;
-          /* */
-          that->buttons[1].flag = 0;
-          that->buttons[2].flag = 0; // reset flags after action
-          break;
-        case 31: // Button 2 and 4
-                 /* */
-                 /* Do actions */
-                 /* */
-          that->buttons[1].flag = 0;
-          that->buttons[3].flag = 0; // reset flags after action
-          break;
-        case 32: // Button 3 and 4
-                 /* */
-                 /* Do actions */
-                 /* */
-          that->buttons[2].flag = 0;
-          that->buttons[3].flag = 0; // reset flags after action
-          break;
-        case 210: // Button 1, 2, 3
+            /* */
+            that->buttons[0].flag = 0;
+            that->buttons[3].flag = 0; // reset flags after action
+            break;
+          case 21: // Button 2 and 3                                // LAMP_GRAD
+            /* */
+            if (that->_state == REMOTE_MANU)
+              that->_state = REMOTE_MANU_LAMP;
+            else if (that->_state == REMOTE_MANULOCK)
+              that->_state = REMOTE_MANULOCK_LAMP;
+            /* */
+            that->buttons[1].flag = 0;
+            that->buttons[2].flag = 0; // reset flags after action
+            break;
+          case 31: // Button 2 and 4
                   /* */
                   /* Do actions */
                   /* */
-          that->buttons[0].flag = 0;
-          that->buttons[1].flag = 0;
-          that->buttons[2].flag = 0; // reset flags after action
-          break;
-        case 310: // Button 1, 2, 4
+            that->buttons[1].flag = 0;
+            that->buttons[3].flag = 0; // reset flags after action
+            break;
+          case 32: // Button 3 and 4
                   /* */
                   /* Do actions */
                   /* */
-          that->buttons[0].flag = 0;
-          that->buttons[1].flag = 0;
-          that->buttons[3].flag = 0; // reset flags after action
-          break;
-        case 320: // Button 1, 3, 4
-                  /* */
-                  /* Do actions */
-                  /* */
-          that->buttons[0].flag = 0;
-          that->buttons[2].flag = 0;
-          that->buttons[3].flag = 0; // reset flags after action
-          break;
-        case 321: // Button 2, 3, 4
-                  /* */
-                  /* Do actions */
-                  /* */
-          that->buttons[1].flag = 0;
-          that->buttons[2].flag = 0;
-          that->buttons[3].flag = 0; // reset flags after action
-          break;
-        case 3210: // Button 1,2,3,4
-                   /* */
-                   /* Do actions */
-                   /* */
-          that->buttons[0].flag = 0;
-          that->buttons[1].flag = 0;
-          that->buttons[2].flag = 0;
-          that->buttons[3].flag = 0; // reset flags after action
-          break;
-        }
-      } //else if (that->buttons[i].flag >= 10)
-
-      if (that->buttons[i].flag != 3)
-        that->buttons[i].flag = 0;
+            that->buttons[2].flag = 0;
+            that->buttons[3].flag = 0; // reset flags after action
+            break;
+          case 210: // Button 1, 2, 3
+                    /* */
+                    /* Do actions */
+                    /* */
+            that->buttons[0].flag = 0;
+            that->buttons[1].flag = 0;
+            that->buttons[2].flag = 0; // reset flags after action
+            break;
+          case 310: // Button 1, 2, 4
+                    /* */
+                    /* Do actions */
+                    /* */
+            that->buttons[0].flag = 0;
+            that->buttons[1].flag = 0;
+            that->buttons[3].flag = 0; // reset flags after action
+            break;
+          case 320: // Button 1, 3, 4
+                    /* */
+                    /* Do actions */
+                    /* */
+            that->buttons[0].flag = 0;
+            that->buttons[2].flag = 0;
+            that->buttons[3].flag = 0; // reset flags after action
+            break;
+          case 321: // Button 2, 3, 4
+                    /* */
+                    /* Do actions */
+                    /* */
+            that->buttons[1].flag = 0;
+            that->buttons[2].flag = 0;
+            that->buttons[3].flag = 0; // reset flags after action
+            break;
+          case 3210: // Button 1,2,3,4
+                    /* */
+                    /* Do actions */
+                    /* */
+            that->buttons[0].flag = 0;
+            that->buttons[1].flag = 0;
+            that->buttons[2].flag = 0;
+            that->buttons[3].flag = 0; // reset flags after action
+            break;
+          }
+        } 
+      }
 
       that->_unlock();
       yield();
-    } //for (int i = 0; i < NB_BTN; i++)
-
+    }
     /********/
-
     vTaskDelay(xFrequency);
   } //while (true)
 } //void K32_remote::task(void *parameter)
