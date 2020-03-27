@@ -478,9 +478,9 @@ void K32_osc::server( void * parameter ) {
                 K32_anim* anim = that->light->anim( msg.getStr(0) );
                 LOGINL("LEDS: play "); LOGINL(msg.getStr(0));
 
-                for (int k=0; k<LEDS_PARAM_SLOTS; k++) 
+                for (int k=0; k<LEDS_DATA_SLOTS; k++) 
                   if (msg.isInt(k+1)) {
-                    anim->setParam(k, msg.getInt(k+1));
+                    anim->set(k, msg.getInt(k+1));
                     LOGINL(" "); LOGINL(msg.getInt(k+1));
                   }
                 LOG("");

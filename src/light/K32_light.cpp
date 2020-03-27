@@ -81,23 +81,27 @@ K32_anim* K32_light::getActiveAnim() {
   else return new K32_anim("dummy");
 }
 
-void K32_light::play( K32_anim* anim ) {
-  // ANIM task
+K32_anim* K32_light::play( K32_anim* anim ) {
   this->stop();
   this->activeAnim = anim;
   this->activeAnim->init();
-  xTaskCreate( this->animate,        // function
-                "leds_anim_task", // task name
-                2000,             // stack memory    // 5000 not enough 
-                (void*)this,      // args
+  xTaskCreate( this->animate,           // function
+                "leds_anim_task",       // task name
+                10000,                   // stack memory
+                (void*)this,            // args
                 3,                      // priority
                 &this->animateHandle ); // handler
-   LOGINL("LIGHT: play ");
-   LOG(anim->name());
+  LOGINL("LIGHT: play ");
+  LOG(anim->name());
+  
+  return this->activeAnim;
 }
 
-void K32_light::play( String animName ) {
-  this->play( this->anim( animName ) );
+K32_anim* K32_light::play( String animName ) {
+  if (this->isPlaying() && animName == this->activeAnim->name())
+    return this->activeAnim;
+    
+  return this->play( this->anim( animName ) );
 }
 
 void K32_light::stop() {

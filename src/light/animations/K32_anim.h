@@ -6,7 +6,7 @@
 #ifndef K32_anim_h
 #define K32_anim_h
 
-#define LEDS_PARAM_SLOTS  16
+#define LEDS_DATA_SLOTS  64
 
 #include "../K32_ledstrip.h"
 
@@ -17,24 +17,60 @@ class K32_anim {
   public:
     K32_anim(String name) {
       this->_name = name;
-      this->critical = xSemaphoreCreateMutex();
+      this->newdata = xSemaphoreCreateMutex();
+    }
+    
+    // retrieve name (set by anim class)
+    String name () { return this->_name; };
+
+    // init called when anim starts to play (can be overloaded by anim class)
+    // waiting for initdata ensure that nothing is really played before first data are pushed
+    // setting startTime can be usefull..
+    void init() { 
+      this->waitData();
+      this->refresh();
+      this->startTime = millis(); 
     }
 
-    void init() { this->startTime = millis(); }
-    virtual bool loop ( K32_ledstrip* strip ) { return false; };
+    // loop called by dedicated xtask
+    // this is a prototype, mus be defined in specific anim class
+    // return true/false to loop or not
+    // can check or block waiting for new external data, or run on itself
+    virtual bool loop ( K32_ledstrip* strip ) { 
+      this->waitData();
+      LOG("ANIM: newdata pushed !");
+      return false; 
+    };
 
-    String name () { return this->_name; };
-  
-    void delay(int ms) { vTaskDelay(pdMS_TO_TICKS(ms)); }
+    // change one element in data
+    K32_anim* set(int k, int value) { 
+      if (k < LEDS_DATA_SLOTS) this->data[k] = value; 
+    }
 
-    void setParam(int k, int value) { if (k < LEDS_PARAM_SLOTS) this->params[k] = value; }
-    int params[LEDS_PARAM_SLOTS];
+    // signal that data has been updated
+    K32_anim* refresh() {
+      xSemaphoreGive(this->newdata);
+    }
 
-    void lock() { xSemaphoreTake(this->critical, portMAX_DELAY); }
-    void unlock() { xSemaphoreGive(this->critical); }
-    SemaphoreHandle_t critical;
+    // block until refresh is called
+    K32_anim* waitData() {
+      xSemaphoreTake(this->newdata, (TickType_t) 1);  // lock it, if not already token
+      xSemaphoreTake(this->newdata, portMAX_DELAY);   // block until next refresh
+    }
+
+    // set a new data and signal the update
+    K32_anim* push(int* frame, int size) {
+      for(int k=0; k<size; k++) this->set(k, frame[k]);
+      this->refresh();
+    }
+
 
   protected:
+
+    void delay(int ms) { vTaskDelay(pdMS_TO_TICKS(ms)); }
+    
+    int data[LEDS_DATA_SLOTS];
+    SemaphoreHandle_t newdata;  
     unsigned long startTime = 0;
     String _name = "?"; 
 };

@@ -10,6 +10,7 @@
 
 #include "K32_anim_generic.h"
 #include "K32_anim_charge.h"
+#include "K32_anim_dmx.h"
 
 //
 // NOTE: to be able to load an animation by name, it must be registered in K32_animbook.h
@@ -23,7 +24,7 @@ class K32_animbook {
     K32_animbook() {
 
       //
-      // REGISTER AVAILABLE ANIMS !
+      // REGISTER AVAILABLE ANIMS HERE !
       //
       this->add( new K32_anim_test() );
       // this->add( new K32_anim_sinus() );
@@ -32,6 +33,7 @@ class K32_animbook {
       // this->add( new K32_anim_chaser() );
       this->add( new K32_anim_discharge() );
       this->add( new K32_anim_charge() );
+      this->add( new K32_anim_dmx() );
 
     }
 

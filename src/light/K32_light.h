@@ -32,8 +32,8 @@ class K32_light {
 
     K32_anim* anim( String animName);
 
-    void play( K32_anim* anim );
-    void play( String animName );
+    K32_anim* play( K32_anim* anim );
+    K32_anim* play( String animName );
     void stop();
     void blackout();
 
