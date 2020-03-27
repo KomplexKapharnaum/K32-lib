@@ -192,7 +192,7 @@ void K32_remote::task(void *parameter)
               that->_state = REMOTE_MANULOCK;
             else if (that->_state == REMOTE_MANU_STM)
               that->_state = REMOTE_AUTO;
-            LOG("Escape");
+            LOGF("Escape STATE =  %d\n",that->_state);
             break;
           case 1: // Button 2 : Previous
             if (that->_state == REMOTE_MANU || that->_state != REMOTE_MANULOCK)
@@ -200,14 +200,14 @@ void K32_remote::task(void *parameter)
               that->_previewMacro--;
               if (that->_previewMacro < 0)
                 that->_previewMacro = that->_macroMax - 1;
-              LOG("Preview --");
+              LOGF("Preview -- STATE =  %d\n",that->_state);
             }
             else if (that->_state == REMOTE_MANU_LAMP || that->_state == REMOTE_MANULOCK_LAMP)
             {
               that->_lamp_grad--;
               if (that->_lamp_grad < 0)
                 that->_lamp_grad = 0;
-              LOG("LAMP --");
+              LOGF("LAMP -- STATE =  %d\n",that->_state);
             }
             break;
           case 2: // Button 3 : Forward
@@ -216,14 +216,14 @@ void K32_remote::task(void *parameter)
               that->_previewMacro++;
               if (that->_previewMacro >= that->_macroMax)
                 that->_previewMacro = 0;
-              LOG("Preview ++");
+              LOGF("Preview ++  STATE =  %d\n",that->_state);
             }
             else if (that->_state == REMOTE_MANU_LAMP || that->_state == REMOTE_MANULOCK_LAMP)
             {
               that->_lamp_grad++;
               if (that->_lamp_grad > 255)
                 that->_lamp_grad = 255;
-              LOG("LAMP ++");
+              LOGF("LAMP ++ STATE =  %d\n",that->_state);
             }
             break;
           case 3: // Button 4 : Go
@@ -232,7 +232,7 @@ void K32_remote::task(void *parameter)
               that->_activeMacro = that->_previewMacro;
               if (that->_state == REMOTE_AUTO)
                 that->_state = REMOTE_MANU;
-              LOG("Go");
+              LOGF("Go STATE =  %d\n",that->_state);
               break;
             }
             else if (that->_state == REMOTE_MANU_LAMP || that->_state == REMOTE_MANULOCK_LAMP)
