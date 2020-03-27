@@ -176,9 +176,8 @@ void K32_remote::task(void *parameter)
 
     /* Check flags for each button */
 
-    if (that->_key_lock == false)
+    if (that->_key_lock == false && that->_check_key == false)
     {
-      LOG("key false");
       that->_check_key = true;
 
       if (that->_old_state == REMOTE_AUTO || that->_old_state == REMOTE_MANULOCK)
@@ -605,7 +604,7 @@ void K32_remote::read_btn_state(void *parameter)
                 {
                   if (that->buttons[j].flag == 3)
                   {
-                    newFlag += j * 10 ^ power;
+                    newFlag += j * pow(10,power);
                     power++;
                   }
                 }
