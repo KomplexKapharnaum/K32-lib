@@ -45,23 +45,27 @@ class K32_anim {
     // change one element in data
     K32_anim* set(int k, int value) { 
       if (k < LEDS_DATA_SLOTS) this->data[k] = value; 
+      return this;
     }
 
     // signal that data has been updated
     K32_anim* refresh() {
       xSemaphoreGive(this->newdata);
+      return this;
     }
 
     // block until refresh is called
     K32_anim* waitData() {
       xSemaphoreTake(this->newdata, (TickType_t) 1);  // lock it, if not already token
       xSemaphoreTake(this->newdata, portMAX_DELAY);   // block until next refresh
+      return this;
     }
 
     // set a new data and signal the update
     K32_anim* push(int* frame, int size) {
       for(int k=0; k<size; k++) this->set(k, frame[k]);
       this->refresh();
+      return this;
     }
 
 

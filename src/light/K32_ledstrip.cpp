@@ -42,12 +42,16 @@ void K32_ledstrip::unlock() {
   xSemaphoreGive(this->show_lock);
 }
 
-K32_ledstrip *K32_ledstrip::black() {
+K32_ledstrip *K32_ledstrip::clear() {
   xSemaphoreTake(this->buffer_lock, portMAX_DELAY);
   memset(this->_buffer, 0, this->size() * sizeof(pixelColor_t));
   this->dirty = true;
   xSemaphoreGive(this->buffer_lock);
-  this->show();
+  return this;
+}
+
+K32_ledstrip *K32_ledstrip::black() {
+  this->clear()->show();
   return this;
 }
 

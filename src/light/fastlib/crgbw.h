@@ -1,8 +1,9 @@
 #ifndef __INC_PIXELS_H
 #define __INC_PIXELS_H
 
-#include "math8.h"
 #include "../librmt/esp32_digital_led_lib.h"
+#include "math8.h"
+#include "hsv2rgb.h"
 
 /// Representation of an RGB pixel (Red, Green, Blue)
 struct CRGBW {
@@ -46,8 +47,8 @@ struct CRGBW {
     }
 
     /// allow construction from R, G, B, W
-    inline CRGBW( uint8_t ir, uint8_t ig, uint8_t ib, uint8_t iw=0)  __attribute__((always_inline))
-        : r(ir), g(ig), b(ib), w(iw)
+    inline CRGBW( int ir, int ig, int ib, int iw=0)  __attribute__((always_inline))
+        : r((uint8_t)ir), g((uint8_t)ig), b((uint8_t)ib), w((uint8_t)iw)
     {
     }
 
@@ -89,6 +90,18 @@ struct CRGBW {
         return *this;
     }
 
+    /// allow assignment from just a Hue, saturation and value automatically at max.
+	inline CRGBW& setHue (uint8_t hue) __attribute__((always_inline))
+    {
+        uint8_t rgbw[4];
+        hue2rgb_rainbow( hue, rgbw);
+        r = rgbw[0];
+        g = rgbw[1];
+        b = rgbw[2];
+        w = rgbw[3];
+        return *this;
+    }
+
     /// allow assignment from 32-bit (really 24-bit) 0xRRGGBB color code
 	inline CRGBW& setColorCode (uint32_t colorcode) __attribute__((always_inline))
     {
@@ -103,6 +116,12 @@ struct CRGBW {
     inline void makePixel(pixelColor_t &pixel)
     {
         pixel = pixelFromRGBW(r, g, b, w);
+    }
+
+    // convert CRGBW color into librmt pixel (applying i*i/255)
+    inline pixelColor_t getPixel()
+    {
+        return pixelFromRGBW(r, g, b, w);
     }
 
 

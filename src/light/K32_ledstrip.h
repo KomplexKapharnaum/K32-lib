@@ -23,6 +23,7 @@ class K32_ledstrip {
     void lock();
     void unlock();
 
+    K32_ledstrip* clear();
     K32_ledstrip* black();
     K32_ledstrip* all(pixelColor_t color);
     K32_ledstrip* all(int red, int green, int blue, int white = 0);

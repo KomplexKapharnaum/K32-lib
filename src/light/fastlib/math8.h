@@ -65,6 +65,31 @@ LIB8STATIC_ALWAYS_INLINE uint8_t scale8_video( uint8_t i, fract8 scale)
 }
 
 
+/// This version of scale8 does not clean up the R1 register on AVR
+/// If you are doing several 'scale8's in a row, use this, and
+/// then explicitly call cleanup_R1.
+LIB8STATIC_ALWAYS_INLINE uint8_t scale8_LEAVING_R1_DIRTY( uint8_t i, fract8 scale)
+{
+#if (FASTLED_SCALE8_FIXED == 1)
+    return (((uint16_t)i) * ((uint16_t)(scale)+1)) >> 8;
+#else
+    return ((int)i * (int)(scale) ) >> 8;
+#endif
+}
+
+
+/// This version of scale8_video does not clean up the R1 register on AVR
+/// If you are doing several 'scale8_video's in a row, use this, and
+/// then explicitly call cleanup_R1.
+LIB8STATIC_ALWAYS_INLINE uint8_t scale8_video_LEAVING_R1_DIRTY( uint8_t i, fract8 scale)
+{
+    uint8_t j = (((int)i * (int)scale) >> 8) + ((i&&scale)?1:0);
+    // uint8_t nonzeroscale = (scale != 0) ? 1 : 0;
+    // uint8_t j = (i == 0) ? 0 : (((int)i * (int)(scale) ) >> 8) + nonzeroscale;
+    return j;
+}
+
+
 /// scale three one byte values by a fourth one, which is treated as
 ///         the numerator of a fraction whose demominator is 256
 ///         In other words, it computes r,g,b,w * (scale / 256)

@@ -162,7 +162,7 @@ void K32_wifi::getWiFiLevel(uint8_t (&led_display)[6])
     led_display[1] = 4;
     long wifiRSSI = this->getRSSI();
     long comp = -80; // Used to compare RSSI value
-    LOGF("\nWIFI: Rssi : %d \n", wifiRSSI);
+    LOGF("\nWIFI: Rssi : %ld \n", wifiRSSI);
     for (int l = 2; l < 6; l++)
     {
       if (wifiRSSI > comp)

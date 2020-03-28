@@ -22,7 +22,7 @@ enum color_mode {
   COLOR_SD      = 2        
 };
 
-CRGBW colorPreset[25] = {
+static  CRGBW colorPreset[25] = {
   {CRGBW::Black},         // 0
   {CRGBW::Red},           // 1
   {CRGBW::Green},         // 2
@@ -33,6 +33,7 @@ CRGBW colorPreset[25] = {
   {CRGBW::Cyan},          // 7
   {CRGBW::Orange}        // 8
 };
+
 
 // Transform DMX range into simple value, I.E.  0-10 => 0, 11-20 => 1, 21-30 => 2, ....
 inline int simplifyDmxRange(int value) {
@@ -57,9 +58,7 @@ class K32_anim_dmx : public K32_anim {
       // ONDMXFRAME PUSH
       //
       this->waitData();                   // wait for a data refresh (pushed by ArtNet or manually)
-      
-      // Master
-      int master      = this->data[0];
+    
       
       // Mirror & Zoom -> Segment size
       int mirrorMode  = simplifyDmxRange(this->data[15]);
@@ -77,13 +76,13 @@ class K32_anim_dmx : public K32_anim {
       int colorMode   = simplifyDmxRange(this->data[14]);
       int pixMode     = simplifyDmxRange(this->data[5]);
 
-      
+      //
+      // GENERATE BASE SEGMENT
+      //
+
       // Color mode NORM
       //
       if (colorMode == COLOR_NORM) {
-        
-        // Pix Length
-        int pixLength  = min(1, (segmentSize * data[6]) / 255);         // pix_start
 
         // Bi-color
         //
@@ -91,11 +90,12 @@ class K32_anim_dmx : public K32_anim {
           
           // Colors
           CRGBW color1 {this->data[1], this->data[2], this->data[3], this->data[4]};
-          CRGBW color2 {this->data[1], this->data[2], this->data[3], this->data[4]};
-          
-          // Pix Offset 
-          int pixOffset  =  (segmentSize * data[7]) / 255;                // pix_pos
+          CRGBW color2 {this->data[10], this->data[11], this->data[12], this->data[13]};
 
+          // Dash Length + Offset
+          int dashLength  = min(1, (segmentSize * data[6]) / 255);         // pix_start
+          int dashOffset  =  (segmentSize * data[7]) / 255;                // pix_pos
+          
           // Fix = only color1
           if (pixMode == 0) 
           {
@@ -107,7 +107,7 @@ class K32_anim_dmx : public K32_anim {
           {
             for(int i=0; i<segmentSize; i++) 
             {
-              if (i >= pixOffset && i < pixOffset+pixLength) segment[i] = color1;
+              if (i >= dashOffset && i < dashOffset+dashLength) segment[i] = color1;
               else segment[i] = color2;
             }
           }
@@ -115,11 +115,11 @@ class K32_anim_dmx : public K32_anim {
           // 01:02 = color1 + color2 dash 
           if (pixMode == 2) 
           {
-            pixLength = data[6];   // on this one, length is absolute and not relative to segementSize
+            dashLength = data[6];   // on this one, length is absolute and not relative to segementSize
 
             for(int i=0; i<segmentSize; i++) 
             {
-              if ( (i+pixOffset)/pixLength % 2 == 0 ) segment[i] = color1;
+              if ( (i+dashOffset)/dashLength % 2 == 0 ) segment[i] = color1;
               else segment[i] = color2;
             }
           }
@@ -129,12 +129,12 @@ class K32_anim_dmx : public K32_anim {
           {
             for(int i=0; i<segmentSize; i++) 
             {
-              int coef = ((pixOffset+pixLength-i) * 255 ) / pixLength;
+              int coef = ((dashOffset+dashLength-i) * 255 ) / dashLength;
               coef = (coef*coef)/255;
 
-              if (i >= pixOffset && i < pixOffset+pixLength) {
-                segment[i] = color1 % coef;
-                if (pixMode == 9) segment[i] += color2 % (255-coef);
+              if (i >= dashOffset && i < dashOffset+dashLength) {
+                segment[i] = color1 % (uint8_t)coef;
+                if (pixMode == 9) segment[i] += color2 % (uint8_t)(255-coef);
               }
               else segment[i] = color2;
             }
@@ -145,12 +145,12 @@ class K32_anim_dmx : public K32_anim {
           {
             for(int i=0; i<segmentSize; i++) 
             {
-              int coef = ((i-pixOffset) * 255 ) / pixLength;
+              int coef = ((i-dashOffset) * 255 ) / dashLength;
               coef = (coef*coef)/255;
 
-              if (i >= pixOffset && i < pixOffset+pixLength) {
-                segment[i] = color1 % coef;
-                if (pixMode == 10) segment[i] += color2 % (255-coef);
+              if (i >= dashOffset && i < dashOffset+dashLength) {
+                segment[i] = color1 % (uint8_t)coef;
+                if (pixMode == 10) segment[i] += color2 % (uint8_t)(255-coef);
               }
               else segment[i] = color2;
             }
@@ -161,19 +161,19 @@ class K32_anim_dmx : public K32_anim {
           {
             for(int i=0; i<segmentSize; i++) 
             {
-              int coefL = ((i-pixOffset) * 255 ) / (pixLength/2);
+              int coefL = ((i-dashOffset) * 255 ) / (dashLength/2);
               coefL = (coefL*coefL)/255;
 
-              int coefR = ((pixOffset+pixLength-i) * 255 ) / (pixLength/2);
+              int coefR = ((dashOffset+dashLength-i) * 255 ) / (dashLength/2);
               coefR = (coefR*coefR)/255;
 
-              if (i >= pixOffset && i < pixOffset+pixLength/2) {
-                segment[i] = color1 % coefL;
-                if (pixMode == 11) segment[i] += color2 % (255-coefL); 
+              if (i >= dashOffset && i < dashOffset+dashLength/2) {
+                segment[i] = color1 % (uint8_t)coefL;
+                if (pixMode == 11) segment[i] += color2 % (uint8_t)(255-coefL); 
               }
-              else if (i >= pixOffset+pixLength/2 && i < pixOffset+pixLength) {
-                segment[i] = color1 % coefR;
-                if (pixMode == 11) segment[i] += color2 % (255-coefR); 
+              else if (i >= dashOffset+dashLength/2 && i < dashOffset+dashLength) {
+                segment[i] = color1 % (uint8_t)coefR;
+                if (pixMode == 11) segment[i] += color2 % (uint8_t)(255-coefR); 
               }
               else segment[i] = color2;
             }
@@ -181,21 +181,33 @@ class K32_anim_dmx : public K32_anim {
 
         }
 
-        // Tri-color + Quadri-color
+        // Tri-color + Quadri-color 
         //
         else if (pixMode == 23 || pixMode == 24) {
           
           // Colors
-          CRGBW color1 { colorPreset[ simplifyDmxRange(this->data[1]) ] };
-          CRGBW color2 { colorPreset[ simplifyDmxRange(this->data[2]) ] };
-          CRGBW color3 { colorPreset[ simplifyDmxRange(this->data[3]) ] };
-          CRGBW color4 { colorPreset[ simplifyDmxRange(this->data[4]) ] };
+          CRGBW color[5] = {
+            {this->data[10], this->data[11], this->data[12], this->data[13]}, // background
+            colorPreset[ simplifyDmxRange(this->data[1]) ],                   // color1
+            colorPreset[ simplifyDmxRange(this->data[2]) ],                   // color2
+            colorPreset[ simplifyDmxRange(this->data[3]) ],                   // color3
+            colorPreset[ simplifyDmxRange(this->data[4]) ]                    // color4
+          };
 
-          // Pix Offset 
-          int rap_tri    =  map(data[adr + 5], 0, 255, 0, NUM_LEDS_PER_STRIP * 2);
-          int pixOffset  =  ((NUM_LEDS_PER_STRIP / 2 - rap_tri / 2) + map(pix_pos_v, 0, 255, -NUM_LEDS_PER_STRIP + 1, NUM_LEDS_PER_STRIP + 1));  // pix_pos
+          // Dash Length + Offset + Split 
+          int dashLength  = min(3, (3 * segmentSize * data[6]) / 255);          
+          int dashOffset  = ((segmentSize-dashLength) * data[7]) / 255;
+          int dashSplit = pixMode % 20;
+          int dashPart  = 0;
 
-          // NOT FINNISHED !
+          // Multi-color dash / color0 backgound
+          for(int i=0; i<segmentSize; i++) 
+          {
+            dashPart = (i-dashOffset)*dashSplit/dashLength + 1;       // find in which part of the dash we are
+            if (dashPart < 0 || dashPart > dashSplit) dashPart = 0;   // use 0 if outside of the dash
+
+            segment[i] = color[ dashPart ];
+          }          
 
         }       
 
@@ -204,29 +216,82 @@ class K32_anim_dmx : public K32_anim {
       // Color mode PICKER
       else if (colorMode == COLOR_PICKER) {
 
+        // Hue range
+        uint8_t hueStart = this->data[10];
+        uint8_t hueEnd = this->data[11];
+
+        // Channel master
+        CRGBW rgbwMaster {this->data[1], this->data[2], this->data[3], this->data[4]};
+        
+        // Color wheel
+        CRGBW colorWheel;
+        for(int i=0; i<segmentSize; i++) {
+          segment[i] = colorWheel.setHue( hueStart + ((hueEnd - hueStart) * i) / segmentSize );
+          segment[i] %= rgbwMaster;
+        }
 
       }
 
       // Color mode SD
       else if (colorMode == COLOR_SD) {
-
-
+        // TODO: load image from SD !
       }
 
 
+      //
+      // APPLY STROBE
+      //
+      // int strobeMode  = simplifyDmxRange(this->data[8]);
+      // int strobeSeuil = (this->data[8] - 10*strobeMode)*4;
+      // int strobeSpeed = this->data[9];
       
-      int strobeMode  = simplifyDmxRange(this->data[8]);
-      int strobeSeuil = (this->data[8] - 10*strobeMode)*4;
-      int strobeSpeed = this->data[9];
+      // TODO: use MODULATOR      
+
+
+      //
+      // APPLY MASTER
+      //
+      uint8_t master = this->data[0];
+      for(int i=0; i<segmentSize; i++) segment[i] %= master;
+
+
+      //
+      // DRAW ON STRIP WITH ZOOM & MIRROR
+      //
+
+      // Empty the whole strip
+      strip->clear();
       
+      // Export color segment into pixels
+      pixelColor_t pixels[segmentSize];
+      for(int i=0; i<segmentSize; i++) 
+        pixels[i] = segment[i].getPixel();
 
+      // Mirroring alternate (1 = copy, 2 = alternate)
+      int mirrorAlternate = 1 + (mirrorMode == 1 || mirrorMode == 2 || mirrorMode == 3); 
 
+      // Zoom offset
+      int zoomOffset = (strip->size() - zoomedSize);
 
+      // Copy pixels into strip
+      for(int i=0; i<zoomedSize; i++) 
+      {
+        int pix  = i % segmentSize;           // pix cursor into segment
+        int iter = i / segmentSize;           // count of mirror copy 
+        
+        if (iter && iter % mirrorAlternate)   // alternate: invert pix cursor
+          pix = segmentSize - pix - 1;    
 
+        strip->pix(i+zoomOffset, pixels[ pix ]);
+      }      
 
-      // LOOP AND WAIT NEXT REFRESH
+      // Show !
+      strip->show();
+
+      // Loop and wait for new data
       return true;    
-    };
+
+    }
 
 };
 

@@ -46,7 +46,7 @@ int K32_sd::readFile(String path, byte *buffer) {
     maxSize = min(int(myFile.size()), 1024*10);
     buffer = (byte*) malloc(maxSize);
 
-    byte buffer[ maxSize ];
+    // byte buffer[ maxSize ];
     
     int i = 0;
     while (myFile.available() && i < maxSize) {
