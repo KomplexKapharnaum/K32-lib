@@ -9,9 +9,13 @@
 #include "K32_remote.h"
 #include <Wire.h>
 
-/*
- * //////////////////////////////// PUBLIC ////////////////////////////////
- */
+////////////////////////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////// PUBLIC /////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////////////////////////////////////////
 
 K32_remote::K32_remote(const int BTN_PIN[NB_BTN])
 {
@@ -58,8 +62,13 @@ void K32_remote::_unlock()
 {
   xSemaphoreGive(this->lock);
 }
+////////////////////////////////////////////////////////////////////////////////////////
 
-//////////////////////////////// SET ////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////// SET ///////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////////////////////////////////////////
 
 void K32_remote::setMacroMax(int macroMax)
 {
@@ -89,10 +98,24 @@ void K32_remote::setManu_Stm()
   this->_unlock();
 }
 
-void K32_remote::setManuLock()
+void K32_remote::setManu_Stm_lock()
 {
   this->_lock();
-  this->_state = REMOTE_MANULOCK;
+  this->_state = REMOTE_MANU_STM_LOCK;
+  this->_unlock();
+}
+
+void K32_remote::setAuto_Lock()
+{
+  this->_lock();
+  this->_state = REMOTE_AUTO_LOCK;
+  this->_unlock();
+}
+
+void K32_remote::setManu_Lock()
+{
+  this->_lock();
+  this->_state = REMOTE_MANU_LOCK;
   this->_unlock();
 }
 
@@ -103,21 +126,19 @@ void K32_remote::setManu_Lamp()
   this->_unlock();
 }
 
-void K32_remote::setManuLock_Lamp()
-{
-  this->_lock();
-  this->_state = REMOTE_MANULOCK_LAMP;
-  this->_unlock();
-}
-
 void K32_remote::setSendMacro()
 {
   this->_lock();
   this->_send_active_macro = false;
   this->_unlock();
 }
+////////////////////////////////////////////////////////////////////////////////////////
 
-//////////////////////////////// GET ////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////// GET //////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////////////////////////////////////////
 
 remoteState K32_remote::getState()
 {
@@ -162,8 +183,13 @@ int K32_remote::getSendMacro()
 /*
  *   //////////////////////////////// PRIVATE ////////////////////////////////
  */
+////////////////////////////////////////////////////////////////////////////////////////
 
-//////////////////////////////// TASK ////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////// TASK /////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////////////////////////////////////////
 
 void K32_remote::task(void *parameter)
 {
@@ -179,18 +205,22 @@ void K32_remote::task(void *parameter)
     if (that->_key_lock == false && that->_check_key == false)
     {
       that->_check_key = true;
+      LOG(":REMOTE key false && check key true");
 
-      if (that->_old_state == REMOTE_AUTO || that->_old_state == REMOTE_MANULOCK)
+      if (that->_old_state == REMOTE_AUTO || that->_old_state == REMOTE_MANU_LOCK)
         that->_state = REMOTE_MANU;
-      else if (that->_old_state == REMOTE_MANULOCK_LAMP)
-        that->_state = REMOTE_MANU_LAMP;
     }
     else if (that->_key_lock == true && that->_check_key == true)
     {
-      LOG("key true");
       that->_check_key = false;
+      LOG(":REMOTE key true && check key false");
+
       if (that->_old_state != that->_state)
         that->_old_state = that->_state;
+      if (that->_old_state == REMOTE_MANU)
+        that->_state = REMOTE_MANU_LOCK;
+      else if (that->_old_state == REMOTE_MANU_STM)
+        that->_state = REMOTE_MANU_STM_LOCK;
     }
 
     for (int i = 0; i < NB_BTN; i++)
@@ -200,19 +230,61 @@ void K32_remote::task(void *parameter)
 
       if (that->_key_lock == true) // Remote control is locked
       {
-        if (that->buttons[i].flag == 1) ///////////////////////////////////////////// Short push
+        if (that->buttons[i].flag == 1) //////////////////////////////////// Short push
         {
           LOGF("1 REMOTE: Short push on button %d\n", i);
+          if (that->_state == REMOTE_MANU_LAMP)
+          {
+            switch (i)
+            {
+            case 0: // Button 1 : Escape
+              that->_state = that->_old_state;
+              LOGF("1 Escape STATE =  %d\n", that->_state);
+              break;
+            case 1: // Button 2 : Previous
+              that->_lamp_grad--;
+              if (that->_lamp_grad < 0)
+                that->_lamp_grad = 0;
+              break;
+            case 2: // Button 3 : Forward
+              that->_lamp_grad++;
+              if (that->_lamp_grad > 255)
+                that->_lamp_grad = 255;
+              break;
+            case 3: // Button 4 : Go
+              that->_state == that->_old_state;
+              LOGF("1 Escape STATE =  %d\n", that->_state);
+              break;
+            }
+          }
           /* Do nothing */
           that->buttons[i].flag = 0;
         }
-        if (that->buttons[i].flag == 2) ////////////////////////////////////// Long push
+        if (that->buttons[i].flag == 2) ///////////////////////////////////// Long push
         {
           LOGF("1 REMOTE: Long push on button %d\n", i);
+          if (that->_state == REMOTE_MANU_LAMP)
+          {
+            switch (i)
+            {
+            case 1: // Button 2 : lamp on/off
+              if (that->_lamp == -1)
+                that->_lamp = that->_lamp_grad;
+              else
+                that->_lamp = -1;
+              break;
+            case 2: // Button 3 : lamp on/off
+              if (that->_lamp == -1)
+                that->_lamp = 255;
+              else
+                that->_lamp = -1;
+              break;
+            }
+          }
           /* Do nothing */
           that->buttons[i].flag = 0;
         }
-        if (that->buttons[i].flag >= 10) ////////////////////////////////// Combined push
+        if (that->buttons[i].flag >= 10) //////////////////////////////// Combined push
         {
           LOGF("1 REMOTE: Combined short push on button %d\n", that->buttons[i].flag);
           switch (that->buttons[i].flag)
@@ -240,10 +312,10 @@ void K32_remote::task(void *parameter)
             break;
           case 21: // Button 2 and 3                                // LAMP_GRAD
             /* */
-            if (that->_state == REMOTE_MANU)
+            if (that->_state == that->_old_state)
               that->_state = REMOTE_MANU_LAMP;
-            else if (that->_state == REMOTE_MANULOCK)
-              that->_state = REMOTE_MANULOCK_LAMP;
+            else if (that->_state == REMOTE_MANU_LAMP)
+              that->_state = that->_old_state;
             /* */
             that->buttons[1].flag = 0;
             that->buttons[2].flag = 0; // reset flags after action
@@ -261,7 +333,6 @@ void K32_remote::task(void *parameter)
             /* */
             that->buttons[1].flag = 0;
             that->buttons[3].flag = 0; // reset flags after action
-            LOG("1 REMOTE: 31 = 0 ");
             break;
           case 32: // Button 3 and 4
                    /* */
@@ -326,25 +397,21 @@ void K32_remote::task(void *parameter)
           case 0: // Button 1 : Escape
             if (that->_state == REMOTE_MANU)
               that->_state = REMOTE_AUTO;
-            else if (that->_state == REMOTE_MANULOCK)
-              that->_state = REMOTE_MANU;
             else if (that->_state == REMOTE_MANU_LAMP)
               that->_state = REMOTE_MANU;
-            else if (that->_state == REMOTE_MANULOCK_LAMP)
-              that->_state = REMOTE_MANULOCK;
             else if (that->_state == REMOTE_MANU_STM)
-              that->_state = REMOTE_AUTO;
+              that->_state = REMOTE_MANU;
             LOGF("Escape STATE =  %d\n", that->_state);
             break;
           case 1: // Button 2 : Previous
-            if (that->_state == REMOTE_MANU || that->_state == REMOTE_MANULOCK)
+            if (that->_state == REMOTE_MANU)
             {
               that->_previewMacro--;
               if (that->_previewMacro < 0)
                 that->_previewMacro = that->_macroMax - 1;
               LOGF("Preview -- STATE =  %d\n", that->_state);
             }
-            else if (that->_state == REMOTE_MANU_LAMP || that->_state == REMOTE_MANULOCK_LAMP)
+            else if (that->_state == REMOTE_MANU_LAMP)
             {
               that->_lamp_grad--;
               if (that->_lamp_grad < 0)
@@ -353,14 +420,14 @@ void K32_remote::task(void *parameter)
             }
             break;
           case 2: // Button 3 : Forward
-            if (that->_state == REMOTE_MANU || that->_state == REMOTE_MANULOCK)
+            if (that->_state == REMOTE_MANU)
             {
               that->_previewMacro++;
               if (that->_previewMacro >= that->_macroMax)
                 that->_previewMacro = 0;
               LOGF("Preview ++  STATE =  %d\n", that->_state);
             }
-            else if (that->_state == REMOTE_MANU_LAMP || that->_state == REMOTE_MANULOCK_LAMP)
+            else if (that->_state == REMOTE_MANU_LAMP)
             {
               that->_lamp_grad++;
               if (that->_lamp_grad > 255)
@@ -369,7 +436,7 @@ void K32_remote::task(void *parameter)
             }
             break;
           case 3: // Button 4 : Go
-            if (that->_state == REMOTE_MANU || that->_state == REMOTE_MANULOCK)
+            if (that->_state == REMOTE_MANU)
             {
               that->_activeMacro = that->_previewMacro;
               that->_send_active_macro = true;
@@ -377,7 +444,7 @@ void K32_remote::task(void *parameter)
               LOGF("Go STATE =  %d\n", that->_state);
               break;
             }
-            else if (that->_state == REMOTE_MANU_LAMP || that->_state == REMOTE_MANULOCK_LAMP)
+            else if (that->_state == REMOTE_MANU_LAMP)
             {
               that->_state == REMOTE_MANU;
             }
@@ -395,7 +462,7 @@ void K32_remote::task(void *parameter)
             that->_activeMacro = that->_macroMax - 1;
             that->_previewMacro = that->_macroMax - 1;
             that->_send_active_macro = true;
-            that->_state = REMOTE_MANULOCK;
+            that->_state = REMOTE_MANU;
             break;
           case 1: // Button 2 : lamp on/off
             if (that->_lamp == -1)
@@ -411,10 +478,7 @@ void K32_remote::task(void *parameter)
             break;
           case 3: // Button 4 : Go Forced
             that->_activeMacro = that->_previewMacro;
-            if (that->_state == REMOTE_MANULOCK)
-              that->_state = REMOTE_MANU;
-            else
-              that->_state = REMOTE_MANULOCK;
+            that->_state = REMOTE_MANU;
             break;
           }
           that->buttons[i].flag = 0;
@@ -449,8 +513,6 @@ void K32_remote::task(void *parameter)
             /* */
             if (that->_state == REMOTE_MANU)
               that->_state = REMOTE_MANU_LAMP;
-            else if (that->_state == REMOTE_MANULOCK)
-              that->_state = REMOTE_MANULOCK_LAMP;
             /* */
             that->buttons[1].flag = 0;
             that->buttons[2].flag = 0; // reset flags after action
@@ -530,7 +592,13 @@ void K32_remote::task(void *parameter)
   } //while (true)
 } //void K32_remote::task(void *parameter)
 
-//////////////////////////////// STATE ////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////// STATE ////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////////////////////////////////////////
 
 void K32_remote::read_btn_state(void *parameter)
 {
@@ -604,7 +672,7 @@ void K32_remote::read_btn_state(void *parameter)
                 {
                   if (that->buttons[j].flag == 3)
                   {
-                    newFlag += j * pow(10,power);
+                    newFlag += j * pow(10, power);
                     power++;
                   }
                 }
@@ -612,7 +680,7 @@ void K32_remote::read_btn_state(void *parameter)
                 {
                   if (that->buttons[j].flag == 3)
                   {
-                    LOGF("newflag %d\n",newFlag);
+                    LOGF("newflag %d\n", newFlag);
                     that->buttons[j].flag = newFlag;
                   }
                 }
