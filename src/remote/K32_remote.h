@@ -24,8 +24,8 @@ struct digitalbtn
 
 enum remoteState
 {
-  REMOTE_AUTO,
   REMOTE_AUTO_LOCK,
+  REMOTE_AUTO,
   REMOTE_MANU_STM,
   REMOTE_MANU_STM_LOCK,
   REMOTE_MANU_LOCK,
@@ -38,13 +38,14 @@ class K32_remote
 public:
   K32_remote(const int BTN_PIN[2]);
   void setMacroMax(int macroMax);
+  void setAuto_Lock();
   void setAuto();
-  void setManu();
   void setManu_Stm();
   void setManu_Stm_lock();
-  void setAuto_Lock();
   void setManu_Lock();
+  void setManu();
   void setManu_Lamp();
+  
   void setSendMacro();
 
   remoteState getState();
