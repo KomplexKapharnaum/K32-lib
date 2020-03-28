@@ -77,6 +77,13 @@ void K32_remote::setMacroMax(int macroMax)
   this->_unlock();
 }
 
+void K32_remote::setAuto_Lock()
+{
+  this->_lock();
+  this->_state = REMOTE_AUTO_LOCK;
+  this->_unlock();
+}
+
 void K32_remote::setAuto()
 {
   this->_lock();
@@ -102,13 +109,6 @@ void K32_remote::setManu_Stm_lock()
 {
   this->_lock();
   this->_state = REMOTE_MANU_STM_LOCK;
-  this->_unlock();
-}
-
-void K32_remote::setAuto_Lock()
-{
-  this->_lock();
-  this->_state = REMOTE_AUTO_LOCK;
   this->_unlock();
 }
 
@@ -221,6 +221,8 @@ void K32_remote::task(void *parameter)
         that->_state = REMOTE_MANU_LOCK;
       else if (that->_old_state == REMOTE_MANU_STM)
         that->_state = REMOTE_MANU_STM_LOCK;
+      else if (that->_old_state == REMOTE_AUTO)
+        that->_state = REMOTE_AUTO_LOCK;
     }
 
     for (int i = 0; i < NB_BTN; i++)
@@ -395,7 +397,9 @@ void K32_remote::task(void *parameter)
           switch (i)
           {
           case 0: // Button 1 : Escape
-            if (that->_state == REMOTE_MANU)
+            if (that->_state == REMOTE_AUTO)
+              that->_state = REMOTE_AUTO_LOCK;
+            else if (that->_state == REMOTE_MANU)
               that->_state = REMOTE_AUTO;
             else if (that->_state == REMOTE_MANU_LAMP)
               that->_state = REMOTE_MANU;
