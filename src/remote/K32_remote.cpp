@@ -209,17 +209,24 @@ void K32_remote::task(void *parameter)
       that->_check_key = true;
       that->_send_active_macro = false;
       LOG(":REMOTE key UNLOCK");
+      LOGF("that->_state %d\n", that->_state);
       LOGF("that->_old_state %d\n", that->_old_state);
-      if (that->_old_state < 2 || that->_old_state == REMOTE_MANU_LOCK)
+      if (that->_old_state < 3)
       {
         that->_state = REMOTE_MANU;
       }
-      LOGF("key: that->_state %d\n", that->_state);
+      else if (that->_old_state == REMOTE_MANU_STM_LOCK)
+      {
+        that->_state = REMOTE_MANU_STM;
+      }
+      LOGF("NEW that->_old_state %d\n", that->_old_state);
+      LOGF("NEW that->_state %d\n", that->_state);
     }
     else if (that->_key_lock == true && that->_check_key == true) // LOCK
     {
       that->_check_key = false;
       LOG(":REMOTE key LOCKED");
+      LOGF("that->_state %d\n", that->_state);
       LOGF("that->_old_state %d\n", that->_old_state);
       if (that->_old_state != that->_state)
       {
@@ -239,11 +246,10 @@ void K32_remote::task(void *parameter)
       }
       else
       {
-        that->_state = REMOTE_MANU_LOCK;
+        that->_state = REMOTE_AUTO_LOCK;
       }
-
       LOGF("NEW that->_old_state %d\n", that->_old_state);
-      LOGF("key: that->_state %d\n", that->_state);
+      LOGF("NEW that->_state %d\n", that->_state);
     }
 
     //////////////////////////////////////////////////////////////////////////////
