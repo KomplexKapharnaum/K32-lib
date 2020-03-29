@@ -52,6 +52,7 @@ public:
   int getActiveMacro();
   int getPreviewMacro();
   int getLamp();
+  int getLampGrad();
   int getSendMacro();
 
 private:

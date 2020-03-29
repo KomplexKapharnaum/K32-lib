@@ -172,6 +172,14 @@ int K32_remote::getLamp()
   return data;
 }
 
+int K32_remote::getLampGrad()
+{
+  this->_lock();
+  int data = this->_lamp_grad;
+  this->_unlock();
+  return data;
+}
+
 int K32_remote::getSendMacro()
 {
   this->_lock();
@@ -507,6 +515,7 @@ void K32_remote::task(void *parameter)
             else if (that->_state == REMOTE_MANU_LAMP)
             {
               that->_lamp_grad++;
+              LOGF("LAMP ++ that->_lamp_grad =  %d\n", that->_lamp_grad);
               if (that->_lamp_grad > 255)
               {
                 that->_lamp_grad = 255;
@@ -597,7 +606,6 @@ void K32_remote::task(void *parameter)
             break;
           case 21: // Button 2 and 3                                // LAMP_GRAD
             /* */
-            if (that->_state == REMOTE_MANU)
               that->_state = REMOTE_MANU_LAMP;
             /* */
             that->buttons[1].flag = 0;
