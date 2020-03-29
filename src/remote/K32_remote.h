@@ -45,7 +45,7 @@ public:
   void setManu_Lock();
   void setManu();
   void setManu_Lamp();
-  
+
   void setSendMacro();
 
   remoteState getState();
