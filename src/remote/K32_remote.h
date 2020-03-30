@@ -10,6 +10,8 @@ Released under GPL v3.0
 #define BTN_CHECK 10     // btn reading task loop in ms
 #define NB_BTN 4         // Number of push buttons
 
+// #define DEBUG_lib_btn 1
+
 #include "system/K32_log.h"
 #include "Arduino.h"
 #include "Adafruit_MCP23017.h"

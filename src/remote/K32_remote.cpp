@@ -188,9 +188,14 @@ int K32_remote::getSendMacro()
   return data;
 }
 
+////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////
 /*
- *   //////////////////////////////// PRIVATE ////////////////////////////////
+ * /////////////////////////////////////// PRIVATE /////////////////////////////////////
  */
+////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////////////////////////////////////////
@@ -216,9 +221,11 @@ void K32_remote::task(void *parameter)
     {
       that->_check_key = true;
       that->_send_active_macro = false;
+#ifdef DEBUG_lib_btn
       LOG(":REMOTE key UNLOCK");
       LOGF("that->_state %d\n", that->_state);
       LOGF("that->_old_state %d\n", that->_old_state);
+#endif
       if (that->_old_state < 3)
       {
         that->_state = REMOTE_MANU;
@@ -227,15 +234,19 @@ void K32_remote::task(void *parameter)
       {
         that->_state = REMOTE_MANU_STM;
       }
+#ifdef DEBUG_lib_btn
       LOGF("NEW that->_old_state %d\n", that->_old_state);
       LOGF("NEW that->_state %d\n", that->_state);
+#endif
     }
     else if (that->_key_lock == true && that->_check_key == true) // LOCK
     {
       that->_check_key = false;
+#ifdef DEBUG_lib_btn
       LOG(":REMOTE key LOCKED");
       LOGF("that->_state %d\n", that->_state);
       LOGF("that->_old_state %d\n", that->_old_state);
+#endif
       if (that->_old_state != that->_state)
       {
         that->_old_state = that->_state;
@@ -256,8 +267,10 @@ void K32_remote::task(void *parameter)
       {
         that->_state = REMOTE_AUTO_LOCK;
       }
+#ifdef DEBUG_lib_btn
       LOGF("NEW that->_old_state %d\n", that->_old_state);
       LOGF("NEW that->_state %d\n", that->_state);
+#endif
     }
 
     //////////////////////////////////////////////////////////////////////////////
@@ -275,14 +288,18 @@ void K32_remote::task(void *parameter)
       {
         if (that->buttons[i].flag == 1) ////////// Short push //////////
         {
+#ifdef DEBUG_lib_btn
           LOGF("LOCK REMOTE: Short push on button %d\n", i);
+#endif
           if (that->_state == REMOTE_MANU_LAMP)
           {
             switch (i)
             {
             case 0: // Button 1 : Escape
               that->_state = that->_old_state;
+#ifdef DEBUG_lib_btn
               LOGF("1 Escape STATE =  %d\n", that->_state);
+#endif
               break;
             case 1: // Button 2 : Previous
               that->_lamp_grad--;
@@ -304,7 +321,9 @@ void K32_remote::task(void *parameter)
             {
               that->_state == that->_old_state;
             }
+#ifdef DEBUG_lib_btn
               LOGF("1 Escape STATE =  %d\n", that->_state);
+#endif
               break;
             }
           }
@@ -313,7 +332,9 @@ void K32_remote::task(void *parameter)
         }
         if (that->buttons[i].flag == 2) ////////// Long push //////////
         {
+#ifdef DEBUG_lib_btn
           LOGF("LOCK REMOTE: Long push on button %d\n", i);
+#endif
           switch (i)
           {
           case 1: // Button 2 : lamp on/off
@@ -342,7 +363,9 @@ void K32_remote::task(void *parameter)
         }
         if (that->buttons[i].flag >= 10) ////////// Combined push //////////
         {
+#ifdef DEBUG_lib_btn
           LOGF("LOCK REMOTE: Combined short push on button %d\n", that->buttons[i].flag);
+#endif
           switch (that->buttons[i].flag)
           {
           case 10: // Button 1 and 2
@@ -390,8 +413,10 @@ void K32_remote::task(void *parameter)
             {
               that->_key_lock = true;
             }
+#ifdef DEBUG_lib_btn
             LOGF("that->_key_lock %d\n", that->_key_lock);
             LOGF("_check_key %d\n", that->_check_key);
+#endif
             /* */
             that->buttons[1].flag = 0;
             that->buttons[3].flag = 0; // reset flags after action
@@ -456,8 +481,10 @@ void K32_remote::task(void *parameter)
       {
         if (that->buttons[i].flag == 1) ////////// Short push //////////
         {
+#ifdef DEBUG_lib_btn
           LOGF("UNLOCK REMOTE: Short push on button %d\n", i);
           LOGF("UNLOCK REMOTE: that->_state %d\n", that->_state);
+#endif
 
           /* Instructions for the different buttons */
           switch (i)
@@ -480,7 +507,9 @@ void K32_remote::task(void *parameter)
             {
               that->_state = REMOTE_MANU;
             }
+#ifdef DEBUG_lib_btn
             LOGF("Escape STATE =  %d\n", that->_state);
+#endif
             break;
           case 1: // Button 2 : Previous
             if (that->_state == REMOTE_MANU)
@@ -490,7 +519,9 @@ void K32_remote::task(void *parameter)
               {
                 that->_previewMacro = that->_macroMax - 1;
               }
+#ifdef DEBUG_lib_btn
               LOGF("Preview -- STATE =  %d\n", that->_state);
+#endif
             }
             else if (that->_state == REMOTE_MANU_LAMP)
             {
@@ -499,7 +530,9 @@ void K32_remote::task(void *parameter)
               {
                 that->_lamp_grad = 0;
               }
+#ifdef DEBUG_lib_btn
               LOGF("LAMP -- STATE =  %d\n", that->_state);
+#endif
             }
             break;
           case 2: // Button 3 : Forward
@@ -510,17 +543,23 @@ void K32_remote::task(void *parameter)
               {
                 that->_previewMacro = 0;
               }
+#ifdef DEBUG_lib_btn
               LOGF("Preview ++  STATE =  %d\n", that->_state);
+#endif
             }
             else if (that->_state == REMOTE_MANU_LAMP)
             {
               that->_lamp_grad++;
+#ifdef DEBUG_lib_btn
               LOGF("LAMP ++ that->_lamp_grad =  %d\n", that->_lamp_grad);
+#endif
               if (that->_lamp_grad > 255)
               {
                 that->_lamp_grad = 255;
               }
+#ifdef DEBUG_lib_btn
               LOGF("LAMP ++ STATE =  %d\n", that->_state);
+#endif
             }
             break;
           case 3: // Button 4 : Go
@@ -533,14 +572,18 @@ void K32_remote::task(void *parameter)
             {
               that->_state == REMOTE_MANU;
             }
+#ifdef DEBUG_lib_btn
             LOGF("Go STATE =  %d\n", that->_state);
+#endif
             break;
           }
           that->buttons[i].flag = 0;
         }
         else if (that->buttons[i].flag == 2) ////////// Long push //////////
         {
+#ifdef DEBUG_lib_btn
           LOGF("UNLOCK REMOTE: Long push on button %d\n", i);
+#endif
 
           /* Instructions for the different buttons */
           switch (i)
@@ -580,7 +623,9 @@ void K32_remote::task(void *parameter)
         }
         else if (that->buttons[i].flag >= 10) ////////// Combined push //////////
         {
+#ifdef DEBUG_lib_btn
           LOGF("UNLOCK REMOTE: Combined short push on button %d\n", that->buttons[i].flag);
+#endif
           switch (that->buttons[i].flag)
           {
           case 10: // Button 1 and 2
@@ -605,8 +650,8 @@ void K32_remote::task(void *parameter)
             that->buttons[3].flag = 0; // reset flags after action
             break;
           case 21: // Button 2 and 3                                // LAMP_GRAD
-            /* */
-              that->_state = REMOTE_MANU_LAMP;
+                   /* */
+            that->_state = REMOTE_MANU_LAMP;
             /* */
             that->buttons[1].flag = 0;
             that->buttons[2].flag = 0; // reset flags after action
@@ -621,8 +666,10 @@ void K32_remote::task(void *parameter)
             {
               that->_key_lock = true;
             }
+#ifdef DEBUG_lib_btn
             LOGF("that->_key_lock %d\n", that->_key_lock);
             LOGF("_check_key %d\n", that->_check_key);
+#endif
             /* */
             that->buttons[1].flag = 0;
             that->buttons[3].flag = 0; // reset flags after action
@@ -775,7 +822,9 @@ void K32_remote::read_btn_state(void *parameter)
                 {
                   if (that->buttons[j].flag == 3)
                   {
+#ifdef DEBUG_lib_btn
                     LOGF("newflag %d\n", newFlag);
+#endif
                     that->buttons[j].flag = newFlag;
                   }
                 }
