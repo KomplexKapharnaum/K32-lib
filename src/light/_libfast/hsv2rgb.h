@@ -1,6 +1,12 @@
 #ifndef __INC_HSB2RGB_H
 #define __INC_HSB2RGB_H
 
+/*
+    _libfast files are freely adapted from FastLED / lib8tion libraries
+    Original author and license: FastLED / MIT license 
+    Modified by: Thomas BOHL for KXKM / MIT license / 2020
+*/
+
 #define K255 255
 #define K171 171
 #define K170 170

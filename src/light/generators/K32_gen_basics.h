@@ -1,15 +1,13 @@
 /*
-  K32_anim_generic.h
+  K32_gen_basics.h
   Created by Thomas BOHL, february 2019.
   Released under GPL v3.0
 */
-#ifndef K32_anim_generic_h
-#define K32_anim_generic_h
-
-#include "K32_anim.h"
+#ifndef K32_gen_basics_h
+#define K32_gen_basics_h
 
 //
-// NOTE: to be able to load an animation by name, it must be registered in K32_animbook.h
+// NOTE: to be able to load an animation by name, it must be registered in K32_genbook class
 //
 
 
@@ -18,39 +16,42 @@
 //
 
 
-class K32_anim_test : public K32_anim {
+class K32_gen_test : public K32_gen {
   public:
 
-    // Set Name
-    K32_anim_test() : K32_anim("test") {}
+    // Set Name & init data
+    K32_gen_test() : K32_gen("test") 
+    {
+      data[0] = 50;     // brightness
+      data[1] = 250;    // step duration
+    }
     
-    // Data
-    int brightness    = 50;     // brightness
-    int initDelay = 1000;   // initial delay
-    int stepMS    = 250;    // step duration
 
     // Loop
-    bool loop ( K32_ledstrip* strip ){
+    bool loop ( K32_ledstrip* strip ) override
+    {
 
-      delay(initDelay);
+      uint8_t master = this->data[0];
+      int stepMS = this->data[1];
+
       LOG("LEDS: testing..");
 
-      strip->all( pixelFromRGB(brightness, 0, 0) );
+      strip->all( ( CRGBW(CRGBW::Red) % master) );
       strip->show();
       
       delay(stepMS);
 
-      strip->all( pixelFromRGB(0, brightness, 0) );
+      strip->all( ( CRGBW(CRGBW::Green) % master) );
       strip->show();
 
       delay(stepMS);
 
-      strip->all( pixelFromRGB(0, 0, brightness) );
+      strip->all( ( CRGBW(CRGBW::Blue) % master) );
       strip->show();
 
       delay(stepMS);
 
-      strip->all( pixelFromRGBW(0, 0, 0, brightness) );
+      strip->all( ( CRGBW{0,0,0,255} % master) );
       strip->show();
 
       delay(stepMS);
@@ -66,24 +67,32 @@ class K32_anim_test : public K32_anim {
 //
 // FULLCOLOR
 //
-class K32_anim_color : public K32_anim {
+class K32_gen_color : public K32_gen {
   public:
 
-    // Set Name
-    K32_anim_color() : K32_anim("color") {}
+    // Set Name & init data
+    K32_gen_color() : K32_gen("color") 
+    {
+      data[0] = 255;  // master
+      data[1] = 255;  // red
+      data[2] = 255;  // green
+      data[3] = 255;  // blue
+      data[4] = 255;  // white
+    }
 
-    int brightness  = 255;
-    int red         = 255; 
-    int green       = 255; 
-    int blue        = 255; 
-    int white       = 255; 
 
-    bool loop ( K32_ledstrip* strip ){
+    // Loop
+    bool loop ( K32_ledstrip* strip ) override
+    {
+      this->waitData();
 
-      strip->all( pixelFromRGBW( brightness*red/255, brightness*green/255, brightness*blue/255, brightness*white/255) );
+      CRGBW color {this->data[1], this->data[2], this->data[3], this->data[4]};
+      color %= this->data[0];      
+
+      strip->all( color );
       strip->show();
 
-      return false;    // DON'T LOOP !
+      return true;
     };
 };
 
@@ -92,11 +101,11 @@ class K32_anim_color : public K32_anim {
 //
 // SINUS
 //
-class K32_anim_sinus : public K32_anim {
+class K32_gen_sinus : public K32_gen {
   public:
 
     // Set Name
-    K32_anim_sinus() : K32_anim("sinus") {
+    K32_gen_sinus() : K32_gen("sinus") {
       this->params[0] = 2000; // period
       this->params[1] = 255;  // intensity max
       this->params[2] = 0;    // intensity min
@@ -148,9 +157,9 @@ class K32_anim_sinus : public K32_anim {
 //
 // STROBE
 //
-class K32_anim_strobe : public K32_anim {
+class K32_gen_strobe : public K32_gen {
   public:
-    K32_anim_strobe() : K32_anim("strobe") {
+    K32_gen_strobe() : K32_gen("strobe") {
       this->params[0] = 2000; // period
       this->params[1] = 50;   // % ON
     }
@@ -180,9 +189,9 @@ class K32_anim_strobe : public K32_anim {
 //
 // HARDSTROBE
 //
-class K32_anim_hardstrobe : public K32_anim {
+class K32_gen_hardstrobe : public K32_gen {
   public:
-    K32_anim_hardstrobe() : K32_anim("hardstrobe") {
+    K32_gen_hardstrobe() : K32_gen("hardstrobe") {
       this->params[0] = 2000; // period
       this->params[1] = 50;   // % ON
 
@@ -224,9 +233,9 @@ class K32_anim_hardstrobe : public K32_anim {
 //
 // CHASER
 //
-class K32_anim_chaser : public K32_anim {
+class K32_gen_chaser : public K32_gen {
   public:
-    K32_anim_chaser() : K32_anim("chaser") {
+    K32_gen_chaser() : K32_gen("chaser") {
       this->params[0] = 10; // step duration
       this->params[1] = 255;  // intensity max
       this->params[2] = 0;    // intensity min

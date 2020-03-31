@@ -1,9 +1,16 @@
 #ifndef __INC_PIXELS_H
 #define __INC_PIXELS_H
 
-#include "../librmt/esp32_digital_led_lib.h"
+/*
+    _libfast files are freely adapted from FastLED / lib8tion libraries
+    Original author and license: FastLED / MIT license 
+    Modified by: Thomas BOHL for KXKM / MIT license / 2020
+*/
+
+#include "../_librmt/esp32_digital_led_lib.h"
 #include "math8.h"
 #include "hsv2rgb.h"
+
 
 /// Representation of an RGB pixel (Red, Green, Blue)
 struct CRGBW {
@@ -112,18 +119,23 @@ struct CRGBW {
         return *this;
     }
 
-    // convert CRGBW color into librmt pixel (applying i*i/255)
+    // convert CRGBW color into _librmt pixel (applying i*i/255)
     inline void makePixel(pixelColor_t &pixel)
     {
         pixel = pixelFromRGBW(r, g, b, w);
     }
 
-    // convert CRGBW color into librmt pixel (applying i*i/255)
+    // convert CRGBW color into _librmt pixel (applying i*i/255)
     inline pixelColor_t getPixel()
     {
         return pixelFromRGBW(r, g, b, w);
     }
 
+    // convert CRGBW color into _librmt pixel (applying i*i/255): implicit cast !
+    inline operator pixelColor_t() const 
+    { 
+        return pixelFromRGBW(r, g, b, w);
+    }
 
     /// add one RGB to another, saturating at 0xFF for each channel
     inline CRGBW& operator+= (const CRGBW& rhs )
@@ -248,6 +260,17 @@ struct CRGBW {
     inline CRGBW& operator%= (uint8_t scaledown )
     {
         nscale8x4_video( r, g, b, w, scaledown);
+        return *this;
+    }
+
+    /// %= is a synonym for nscale8_video.  Think of it is scaling down
+    /// by "a percentage"
+    inline CRGBW& operator%= (CRGBW scalecolor )
+    {
+        r = scale8_video(r, scalecolor.r);
+        g = scale8_video(g, scalecolor.g);
+        b = scale8_video(b, scalecolor.b);
+        w = scale8_video(w, scalecolor.w);
         return *this;
     }
 
@@ -661,6 +684,17 @@ inline CRGBW operator%( const CRGBW& p1, uint8_t d)
 {
     CRGBW retval( p1);
     retval.nscale8_video( d);
+    return retval;
+}
+
+__attribute__((always_inline))
+inline CRGBW operator%( const CRGBW& p1, CRGBW p2)
+{
+    CRGBW retval(p1);
+    retval.r = scale8_video(retval.r, p2.r);
+    retval.g = scale8_video(retval.g, p2.g);
+    retval.b = scale8_video(retval.b, p2.b);
+    retval.w = scale8_video(retval.w, p2.w);
     return retval;
 }
 

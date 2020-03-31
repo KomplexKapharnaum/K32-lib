@@ -1,25 +1,22 @@
 /*
-  K32_anim_charge.h
+  K32_gen_charge.h
   Created by Thomas BOHL, february 2019.
   Released under GPL v3.0
 */
-#ifndef K32_anim_charge_h
-#define K32_anim_charge_h
-
-#include "K32_anim.h"
-
+#ifndef K32_gen_charge_h
+#define K32_gen_charge_h
 
 //
-// NOTE: to be able to load an animation by name, it must be registered in K32_animbook.h
+// NOTE: to be able to load an animation by name, it must be registered in K32_genbook class
 //
 
 
 //
 // DISCHARGE : Anim for battery gauge display
 //
-class K32_anim_discharge : public K32_anim {
+class K32_gen_discharge : public K32_gen {
   public:
-    K32_anim_discharge() : K32_anim("discharge") {
+    K32_gen_discharge() : K32_gen("discharge") {
       this->data[0] = 0;    // duration (seconds) 0 = infinite
       this->data[1] = 100;  // intensity max
       this->data[2] = 0;    // intensity min
@@ -108,9 +105,9 @@ class K32_anim_discharge : public K32_anim {
 //
 // CHARGE : Anim for battery gauge display
 //
-class K32_anim_charge : public K32_anim {
+class K32_gen_charge : public K32_gen {
   public:
-    K32_anim_charge() : K32_anim("charge") {
+    K32_gen_charge() : K32_gen("charge") {
       this->data[0] = 0;    // Animation Timeout in sec
       this->data[1] = 100;  // intensity max
       this->data[2] = 0;    // intensity min

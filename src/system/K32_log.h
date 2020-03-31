@@ -18,6 +18,7 @@
  #define LOGF2(x, y1, y2)              Serial.printf (x, y1, y2)
  #define LOGF3(x, y1, y2, y3)          Serial.printf (x, y1, y2, y3)
  #define LOGF4(x, y1, y2, y3, y4)      Serial.printf (x, y1, y2, y3, y4)
+ #define LOGF5(x, y1, y2, y3, y4, y5)  Serial.printf (x, y1, y2, y3, y4, y5)
  #define LOG(x)                        Serial.println (x)
 #else
  #define LOGSETUP()

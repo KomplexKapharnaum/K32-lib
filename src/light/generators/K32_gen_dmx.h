@@ -1,15 +1,13 @@
 /*
-  K32_anim_generic.h
+  K32_gen_basics.h
   Created by Thomas BOHL, february 2019.
   Released under GPL v3.0
 */
-#ifndef K32_anim_dmx_h
-#define K32_anim_dmx_h
-
-#include "K32_anim.h"
+#ifndef K32_gen_dmx_h
+#define K32_gen_dmx_h
 
 //
-// NOTE: to be able to load an animation by name, it must be registered in K32_animbook.h
+// NOTE: to be able to load an animation by name, it must be registered in K32_genbook class
 //
 
 
@@ -41,18 +39,30 @@ inline int simplifyDmxRange(int value) {
   return value/10;
 }
 
+// Return rounded value after dividing by 255
+inline int roundDivInt(int a, int b) {
+  return a/b + ((a%b)>(b/2));
+}
+
+// Scale a number based on a 8bit value
+inline int scale255(int a, uint8_t value) {
+  return roundDivInt( a*value, 255 );
+}
 
 // ANIM DMX
 //
 
-class K32_anim_dmx : public K32_anim {
+class K32_gen_dmx : public K32_gen {
   public:
 
     // Set Name
-    K32_anim_dmx() : K32_anim("dmx") {}
+    K32_gen_dmx() : K32_gen("dmx") {}
+
+
 
     // Loop
-    bool loop ( K32_ledstrip* strip ){
+    bool loop ( K32_ledstrip* strip ) override
+    {
       
       //
       // ONDMXFRAME PUSH
@@ -62,7 +72,7 @@ class K32_anim_dmx : public K32_anim {
       
       // Mirror & Zoom -> Segment size
       int mirrorMode  = simplifyDmxRange(this->data[15]);
-      int zoomedSize  = min(1, ( strip->size() * this->data[16] )/255 );
+      int zoomedSize  = max(1, scale255( strip->size(), this->data[16]) );
 
       int segmentSize = zoomedSize;
       if (mirrorMode == 1 || mirrorMode == 4)       segmentSize /= 2;
@@ -93,9 +103,9 @@ class K32_anim_dmx : public K32_anim {
           CRGBW color2 {this->data[10], this->data[11], this->data[12], this->data[13]};
 
           // Dash Length + Offset
-          int dashLength  = min(1, (segmentSize * data[6]) / 255);         // pix_start
-          int dashOffset  =  (segmentSize * data[7]) / 255;                // pix_pos
-          
+          int dashLength  = max(1, scale255(segmentSize, data[6]) );         // pix_start
+          int dashOffset  =  scale255(segmentSize, data[7]);                // pix_pos
+
           // Fix = only color1
           if (pixMode == 0) 
           {
@@ -103,7 +113,7 @@ class K32_anim_dmx : public K32_anim {
           }
 
           // Ruban = color1 one-dash / color2 background
-          if (pixMode == 1) 
+          else if (pixMode == 1) 
           {
             for(int i=0; i<segmentSize; i++) 
             {
@@ -125,14 +135,14 @@ class K32_anim_dmx : public K32_anim {
           }
 
           // rus> + rusf> = color1 one-dash fade or blend R / color2 background
-          if (pixMode == 3 || pixMode == 9) 
+          else if (pixMode == 3 || pixMode == 9) 
           {
             for(int i=0; i<segmentSize; i++) 
             {
-              int coef = ((dashOffset+dashLength-i) * 255 ) / dashLength;
-              coef = (coef*coef)/255;
+              if (i >= dashOffset && i < dashOffset+dashLength) 
+              {
+                int coef = ((dashOffset+dashLength-1-i) * 255 ) / (dashLength-1);
 
-              if (i >= dashOffset && i < dashOffset+dashLength) {
                 segment[i] = color1 % (uint8_t)coef;
                 if (pixMode == 9) segment[i] += color2 % (uint8_t)(255-coef);
               }
@@ -141,14 +151,14 @@ class K32_anim_dmx : public K32_anim {
           }
 
           // rus< + rusf< = color1 one-dash fade or blend L / color2 background
-          if (pixMode == 4 || pixMode == 10) 
+          else if (pixMode == 4 || pixMode == 10) 
           {
             for(int i=0; i<segmentSize; i++) 
             {
-              int coef = ((i-dashOffset) * 255 ) / dashLength;
-              coef = (coef*coef)/255;
+              if (i >= dashOffset && i < dashOffset+dashLength) 
+              {
+                int coef = ((i-dashOffset) * 255 ) / (dashLength-1);
 
-              if (i >= dashOffset && i < dashOffset+dashLength) {
                 segment[i] = color1 % (uint8_t)coef;
                 if (pixMode == 10) segment[i] += color2 % (uint8_t)(255-coef);
               }
@@ -157,23 +167,23 @@ class K32_anim_dmx : public K32_anim {
           }
 
           // rus<> + rusf<> = color1 one-dash fade or blend LR / color2 background
-          if (pixMode == 5 || pixMode == 11) 
+          else if (pixMode == 5 || pixMode == 11) 
           {
             for(int i=0; i<segmentSize; i++) 
-            {
-              int coefL = ((i-dashOffset) * 255 ) / (dashLength/2);
-              coefL = (coefL*coefL)/255;
+            {    
+              if (i >= dashOffset && i < dashOffset+dashLength/2) 
+              {
+                int coef = ((i-dashOffset) * 255 ) / (dashLength/2);
 
-              int coefR = ((dashOffset+dashLength-i) * 255 ) / (dashLength/2);
-              coefR = (coefR*coefR)/255;
-
-              if (i >= dashOffset && i < dashOffset+dashLength/2) {
-                segment[i] = color1 % (uint8_t)coefL;
-                if (pixMode == 11) segment[i] += color2 % (uint8_t)(255-coefL); 
+                segment[i] = color1 % (uint8_t)coef;
+                if (pixMode == 11) segment[i] += color2 % (uint8_t)(255-coef); 
               }
-              else if (i >= dashOffset+dashLength/2 && i < dashOffset+dashLength) {
-                segment[i] = color1 % (uint8_t)coefR;
-                if (pixMode == 11) segment[i] += color2 % (uint8_t)(255-coefR); 
+              else if (i >= dashOffset+dashLength/2 && i < dashOffset+dashLength) 
+              {
+                int coef = ((dashOffset+dashLength-1-i) * 255 ) / (dashLength/2);
+
+                segment[i] = color1 % (uint8_t)coef;
+                if (pixMode == 11) segment[i] += color2 % (uint8_t)(255-coef); 
               }
               else segment[i] = color2;
             }
@@ -195,8 +205,8 @@ class K32_anim_dmx : public K32_anim {
           };
 
           // Dash Length + Offset + Split 
-          int dashLength  = min(3, (3 * segmentSize * data[6]) / 255);          
-          int dashOffset  = ((segmentSize-dashLength) * data[7]) / 255;
+          int dashLength  = max(3, scale255(2 * segmentSize, data[6]));          
+          int dashOffset  = scale255((segmentSize-dashLength), data[7]);
           int dashSplit = pixMode % 20;
           int dashPart  = 0;
 
@@ -217,8 +227,8 @@ class K32_anim_dmx : public K32_anim {
       else if (colorMode == COLOR_PICKER) {
 
         // Hue range
-        uint8_t hueStart = this->data[10];
-        uint8_t hueEnd = this->data[11];
+        int hueStart = this->data[10] + data[7];
+        int hueEnd = this->data[11] + data[7];
 
         // Channel master
         CRGBW rgbwMaster {this->data[1], this->data[2], this->data[3], this->data[4]};
@@ -226,7 +236,7 @@ class K32_anim_dmx : public K32_anim {
         // Color wheel
         CRGBW colorWheel;
         for(int i=0; i<segmentSize; i++) {
-          segment[i] = colorWheel.setHue( hueStart + ((hueEnd - hueStart) * i) / segmentSize );
+          segment[i] = colorWheel.setHue( (hueStart + ((hueEnd - hueStart) * i) / segmentSize) );
           segment[i] %= rgbwMaster;
         }
 
@@ -254,24 +264,18 @@ class K32_anim_dmx : public K32_anim {
       uint8_t master = this->data[0];
       for(int i=0; i<segmentSize; i++) segment[i] %= master;
 
-
       //
       // DRAW ON STRIP WITH ZOOM & MIRROR
       //
 
       // Empty the whole strip
       strip->clear();
-      
-      // Export color segment into pixels
-      pixelColor_t pixels[segmentSize];
-      for(int i=0; i<segmentSize; i++) 
-        pixels[i] = segment[i].getPixel();
 
       // Mirroring alternate (1 = copy, 2 = alternate)
       int mirrorAlternate = 1 + (mirrorMode == 1 || mirrorMode == 2 || mirrorMode == 3); 
 
       // Zoom offset
-      int zoomOffset = (strip->size() - zoomedSize);
+      int zoomOffset = (strip->size() - zoomedSize)/2;      
 
       // Copy pixels into strip
       for(int i=0; i<zoomedSize; i++) 
@@ -282,7 +286,7 @@ class K32_anim_dmx : public K32_anim {
         if (iter && iter % mirrorAlternate)   // alternate: invert pix cursor
           pix = segmentSize - pix - 1;    
 
-        strip->pix(i+zoomOffset, pixels[ pix ]);
+        strip->pix(i+zoomOffset, segment[pix]);
       }      
 
       // Show !

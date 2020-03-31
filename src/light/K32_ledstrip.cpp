@@ -13,13 +13,13 @@ K32_ledstrip::K32_ledstrip(int chan, int pin, int type, int size) {
   this->buffer_lock = xSemaphoreCreateMutex();
   this->draw_lock = xSemaphoreCreateBinary();
   this->show_lock = xSemaphoreCreateBinary();
-  xSemaphoreGive(this->show_lock);
+  xSemaphoreTake(this->draw_lock, 1);
+  xSemaphoreTake(this->show_lock, 1);
 
   this->_strand = digitalLeds_addStrand(
     {.rmtChannel = chan, .gpioNum = pin, .ledType = type, .brightLimit = 255, .numPixels = size, .pixels = nullptr, ._stateVars = nullptr});
 
   this->_buffer = static_cast<pixelColor_t*>(malloc(this->_strand->numPixels * sizeof(pixelColor_t)));
-  this->black();
 
   // LOOP task
   xTaskCreate(this->draw,       // function
@@ -28,6 +28,9 @@ K32_ledstrip::K32_ledstrip(int chan, int pin, int type, int size) {
               (void *)this,     // args
               4,                // priority
               NULL);            // handler
+  
+  // LOG("-- init strip");
+  this->black();
 }
 
 int K32_ledstrip::size() {
@@ -81,6 +84,8 @@ K32_ledstrip* K32_ledstrip::pix(int pixel, int red, int green, int blue, int whi
 
 void K32_ledstrip::show() {
   
+  // LOG("LIGHT: show in");
+
   // COPY Buffers to STRAND
   xSemaphoreTake(this->show_lock, portMAX_DELAY);
   xSemaphoreTake(this->buffer_lock, portMAX_DELAY);
@@ -91,17 +96,21 @@ void K32_ledstrip::show() {
   }
   else xSemaphoreGive(this->show_lock);
   xSemaphoreGive(this->buffer_lock);
-
+  // LOG("LIGHT: show end");
 }
 
 void K32_ledstrip::draw(void *parameter)
 {
   K32_ledstrip *that = (K32_ledstrip *)parameter;
 
+  // ready
+  xSemaphoreGive(that->show_lock);
+
   // run
   while (true) {
     xSemaphoreTake(that->draw_lock, portMAX_DELAY);   // WAIT for show()
     digitalLeds_updatePixels(that->_strand);           // PUSH LEDS TO RMT
+    delay(1);
     xSemaphoreGive(that->show_lock);                  // READY for next show()
   }
   vTaskDelete(NULL);

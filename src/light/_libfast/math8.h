@@ -1,8 +1,13 @@
 #ifndef __INC_LIB8TION_MATH_H
 #define __INC_LIB8TION_MATH_H
 
-#define FASTLED_SCALE8_FIXED 1
+/*
+    _libfast files are freely adapted from FastLED / lib8tion libraries
+    Original author and license: FastLED / MIT license 
+    Modified by: Thomas BOHL for KXKM / MIT license / 2020
+*/
 
+#define FASTLED_SCALE8_FIXED 1
 
 #include <stdint.h>
 

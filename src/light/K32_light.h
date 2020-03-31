@@ -11,7 +11,7 @@
 
 #include "Arduino.h"
 #include "K32_ledstrip.h"
-#include "animations/K32_animbook.h"
+#include "generators/K32_gen.h"
 
 class K32_light {
   public:
@@ -30,14 +30,15 @@ class K32_light {
 
     void show();
 
-    K32_anim* anim( String animName);
+    K32_gen* anim( String animName = "");
 
-    K32_anim* play( K32_anim* anim );
-    K32_anim* play( String animName );
+    K32_gen* play( K32_gen* anim );
+    K32_gen* play( String animName );
     void stop();
+    bool wait(int timeout = 0);
     void blackout();
 
-    K32_anim* getActiveAnim();
+    K32_gen* getActiveAnim();
     bool isPlaying();
 
   private:
@@ -45,11 +46,12 @@ class K32_light {
     static int _nstrips;
     K32_ledstrip* _strips[LEDS_MAXSTRIPS];
 
-    K32_animbook* _book;
+    K32_genbook* _book;
 
     TaskHandle_t animateHandle = NULL;
-    K32_anim* activeAnim;
+    K32_gen* activeAnim;
     SemaphoreHandle_t stop_lock;
+    SemaphoreHandle_t wait_lock;
 
     static void animate( void * parameter );
     static void async_stop( void * parameter );

@@ -10,8 +10,8 @@
 
 #include "Arduino.h"
 #include "system/K32_log.h"
-#include "librmt/esp32_digital_led_lib.h"
-#include "fastlib/crgbw.h"
+#include "_librmt/esp32_digital_led_lib.h"
+#include "_libfast/crgbw.h"
 
 
 class K32_ledstrip {

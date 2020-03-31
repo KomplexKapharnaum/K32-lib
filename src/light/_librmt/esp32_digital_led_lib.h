@@ -1,4 +1,10 @@
 /*
+    _librmt files are freely adapted from Chris Osborn / Martin Falatic libraries
+    Original author and license: Chris Osborn & Martin F. Falatic / MIT license 
+    Modified by: Thomas BOHL for KXKM / MIT license / 2020
+*/
+
+/*
  * Library for driving digital RGB(W) LEDs using the ESP32's RMT peripheral
  *
  * Modifications Copyright (c) 2017 Martin F. Falatic
@@ -7,6 +13,7 @@
  * http://insentricity.com
  *
  */
+
 /*
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -27,6 +34,7 @@
  * THE SOFTWARE.
  */
 
+
 #ifndef ESP32_DIGITAL_LED_LIB_H
 #define ESP32_DIGITAL_LED_LIB_H
 
@@ -39,7 +47,9 @@ extern "C"
 
 #define DEBUG_ESP32_DIGITAL_LED_LIB 0
 
-  typedef union {
+  extern uint8_t gamma8(uint8_t value);
+  
+  typedef union { 
     struct __attribute__((packed))
     {
       uint8_t r, g, b, w;
@@ -50,9 +60,9 @@ extern "C"
   inline pixelColor_t pixelFromRGB(uint8_t r, uint8_t g, uint8_t b)
   {
     pixelColor_t v;
-    v.r = (static_cast<int>(r) * static_cast<int>(r)) >> 8;
-    v.g = (static_cast<int>(g) * static_cast<int>(g)) >> 8;
-    v.b = (static_cast<int>(b) * static_cast<int>(b)) >> 8;
+    v.r = gamma8(r);
+    v.g = gamma8(g);
+    v.b = gamma8(b);
     v.w = 0;
     return v;
   }
@@ -60,10 +70,10 @@ extern "C"
   inline pixelColor_t pixelFromRGBW(uint8_t r, uint8_t g, uint8_t b, uint8_t w)
   {
     pixelColor_t v;
-    v.r = (static_cast<int>(r) * static_cast<int>(r)) >> 8;
-    v.g = (static_cast<int>(g) * static_cast<int>(g)) >> 8;
-    v.b = (static_cast<int>(b) * static_cast<int>(b)) >> 8;
-    v.w = (static_cast<int>(w) * static_cast<int>(w)) >> 8;
+    v.r = gamma8(r);
+    v.g = gamma8(g);
+    v.b = gamma8(b);
+    v.w = gamma8(w);
     return v;
   }
 
@@ -116,10 +126,13 @@ extern "C"
       [LED_SK6812W_V1] = {.bytesPerPixel = 4, .T0H = 300, .T1H = 600, .T0L = 900, .T1L = 600, .TRS = 80000}, // R V B W
   };
 
+  
   extern int digitalLeds_init();
   extern strand_t* digitalLeds_addStrand(strand_t strands);
   extern int digitalLeds_updatePixels(strand_t *strand);
   extern void digitalLeds_resetPixels(strand_t *pStrand);
+  
+  
 
 #ifdef __cplusplus
 }
