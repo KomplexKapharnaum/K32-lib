@@ -1,22 +1,22 @@
 /*
-  K32_gen_charge.h
+  K32_anim_charge.h
   Created by Thomas BOHL, february 2019.
   Released under GPL v3.0
 */
-#ifndef K32_gen_charge_h
-#define K32_gen_charge_h
+#ifndef K32_anim_charge_h
+#define K32_anim_charge_h
 
 //
-// NOTE: to be able to load an animation by name, it must be registered in K32_genbook class
+// NOTE: to be able to load a generator by name, it must be registered in K32_animbook class
 //
 
 
 //
 // DISCHARGE : Anim for battery gauge display
 //
-class K32_gen_discharge : public K32_gen {
+class K32_anim_discharge : public K32_anim {
   public:
-    K32_gen_discharge() : K32_gen("discharge") {
+    K32_anim_discharge() : K32_anim("discharge") {
       this->data[0] = 0;    // duration (seconds) 0 = infinite
       this->data[1] = 100;  // intensity max
       this->data[2] = 0;    // intensity min
@@ -35,7 +35,7 @@ class K32_gen_discharge : public K32_gen {
       this->data[13] = LEDSTRIP_MAXPIXEL;  // Length of Led strip
     }
 
-    bool loop ( K32_ledstrip* strip ){
+    void gener8 ( K32_ledstrip* strip ){
 
       int length = data[13] ;
       pixelColor_t color1 = pixelFromRGBW(data[3],data[4],data[5],data[6]);
@@ -93,11 +93,9 @@ class K32_gen_discharge : public K32_gen {
       if (this->data[0] > 0) {
         if (millis() > (this->startTime+this->data[0]*1000)) {
           strip->black();
-          return false;
+          this->loop(false);
         }
       }
-
-      return true;    //  loop
 
     };
 };
@@ -105,9 +103,9 @@ class K32_gen_discharge : public K32_gen {
 //
 // CHARGE : Anim for battery gauge display
 //
-class K32_gen_charge : public K32_gen {
+class K32_anim_charge : public K32_anim {
   public:
-    K32_gen_charge() : K32_gen("charge") {
+    K32_anim_charge() : K32_anim("charge") {
       this->data[0] = 0;    // Animation Timeout in sec
       this->data[1] = 100;  // intensity max
       this->data[2] = 0;    // intensity min
@@ -126,7 +124,7 @@ class K32_gen_charge : public K32_gen {
       this->data[13] = LEDSTRIP_MAXPIXEL;  // Length of Led strip
     }
 
-    bool loop ( K32_ledstrip* strip ){
+    void gener8 ( K32_ledstrip* strip ){
 
       int length = data[13] ;
 
@@ -183,11 +181,9 @@ class K32_gen_charge : public K32_gen {
       if (this->data[0] > 0) {
         if (millis() > (this->startTime+this->data[0]*1000)) {
           strip->black();
-          return false;
+          this->loop(false);
         }
       }
-
-      return true;    //  loop
 
     };
 };

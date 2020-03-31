@@ -1,13 +1,13 @@
 /*
-  K32_gen_basics.h
+  K32_anim_basics.h
   Created by Thomas BOHL, february 2019.
   Released under GPL v3.0
 */
-#ifndef K32_gen_dmx_h
-#define K32_gen_dmx_h
+#ifndef K32_anim_dmx_h
+#define K32_anim_dmx_h
 
 //
-// NOTE: to be able to load an animation by name, it must be registered in K32_genbook class
+// NOTE: to be able to load a generator by name, it must be registered in K32_animbook class
 //
 
 
@@ -52,23 +52,21 @@ inline int scale255(int a, uint8_t value) {
 // ANIM DMX
 //
 
-class K32_gen_dmx : public K32_gen {
+class K32_anim_dmx : public K32_anim {
   public:
 
     // Set Name
-    K32_gen_dmx() : K32_gen("dmx") {}
+    K32_anim_dmx() : K32_anim("dmx") {}
 
 
 
     // Loop
-    bool loop ( K32_ledstrip* strip ) override
+    void gener8 ( K32_ledstrip* strip )
     {
       
       //
       // ONDMXFRAME PUSH
       //
-      this->waitData();                   // wait for a data refresh (pushed by ArtNet or manually)
-    
       
       // Mirror & Zoom -> Segment size
       int mirrorMode  = simplifyDmxRange(this->data[15]);
@@ -291,9 +289,6 @@ class K32_gen_dmx : public K32_gen {
 
       // Show !
       strip->show();
-
-      // Loop and wait for new data
-      return true;    
 
     }
 

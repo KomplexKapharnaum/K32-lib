@@ -1,25 +1,25 @@
 /*
-  K32_gen.h
+  K32_modulator.h
   Created by Thomas BOHL, february 2019.
   Released under GPL v3.0
 */
-#ifndef K32_gen_h
-#define K32_gen_h
+#ifndef K32_modulator_h
+#define K32_modulator_h
 
 #define LEDS_DATA_SLOTS  64
 
 #include "../K32_ledstrip.h"
 
 //
-// NOTE: to be able to load an animation by name, it must be registered in K32_genbook
+// NOTE: to be able to load a modulator by name, it must be registered in K32_modulatorbook
 //
 
 //
 // BASE ANIM
 //
-class K32_gen {
+class K32_modulator {
   public:
-    K32_gen(String name) {
+    K32_modulator(String name) {
       this->_name = name;
       this->newdata = xSemaphoreCreateMutex();
     }
@@ -47,46 +47,46 @@ class K32_gen {
     };
 
     // change one element in data (do not trigger refresh !)
-    virtual K32_gen* set(int k, int value) { 
+    virtual K32_modulator* set(int k, int value) { 
       if (k < LEDS_DATA_SLOTS) this->data[k] = value; 
       return this;
     }
 
     // signal that data has been updated
-    K32_gen* refresh() {
+    K32_modulator* refresh() {
       xSemaphoreGive(this->newdata);
       return this;
     }
 
     // flush newdata flag: cancel programmed refresh
-    K32_gen* flush() {
+    K32_modulator* flush() {
       xSemaphoreTake(this->newdata, (TickType_t) 1);  // lock it, if not already token
       return this;
     }
 
     // block until refresh is called
-    K32_gen* waitData() {
+    K32_modulator* waitData() {
       xSemaphoreTake(this->newdata, portMAX_DELAY);   // block until next refresh
       return this;
     }
 
     // set a new data and trigger refresh !
-    K32_gen* push(int* frame, int size) {
+    K32_modulator* push(int* frame, int size) {
       size = min(size, LEDS_DATA_SLOTS);
       for(int k=0; k<size; k++) this->set(k, frame[k]);
       return this->refresh();
     }
 
     // Helper to set and refresh various amount of data
-    K32_gen* push() { return this->refresh(); }
-    K32_gen* push(int d0) { return this->push(new int[1]{d0}, 1); }
-    K32_gen* push(int d0, int d1) { return this->push(new int[2]{d0, d1}, 2); }
-    K32_gen* push(int d0, int d1, int d2) { return this->push(new int[3]{d0, d1, d2}, 3); }
-    K32_gen* push(int d0, int d1, int d2, int d3) { return this->push(new int[4]{d0, d1, d2, d3}, 4); }
-    K32_gen* push(int d0, int d1, int d2, int d3, int d4) { return this->push(new int[5]{d0, d1, d2, d3, d4}, 5); }
-    K32_gen* push(int d0, int d1, int d2, int d3, int d4, int d5) { return this->push(new int[6]{d0, d1, d2, d3, d4, d5}, 6); }
-    K32_gen* push(int d0, int d1, int d2, int d3, int d4, int d5, int d6) { return this->push(new int[7]{d0, d1, d2, d3, d4, d5, d6}, 7); }
-    K32_gen* push(int d0, int d1, int d2, int d3, int d4, int d5, int d6, int d7) { return this->push(new int[8]{d0, d1, d2, d3, d4, d5, d6, d7}, 8); }
+    K32_modulator* push() { return this->refresh(); }
+    K32_modulator* push(int d0) { return this->push(new int[1]{d0}, 1); }
+    K32_modulator* push(int d0, int d1) { return this->push(new int[2]{d0, d1}, 2); }
+    K32_modulator* push(int d0, int d1, int d2) { return this->push(new int[3]{d0, d1, d2}, 3); }
+    K32_modulator* push(int d0, int d1, int d2, int d3) { return this->push(new int[4]{d0, d1, d2, d3}, 4); }
+    K32_modulator* push(int d0, int d1, int d2, int d3, int d4) { return this->push(new int[5]{d0, d1, d2, d3, d4}, 5); }
+    K32_modulator* push(int d0, int d1, int d2, int d3, int d4, int d5) { return this->push(new int[6]{d0, d1, d2, d3, d4, d5}, 6); }
+    K32_modulator* push(int d0, int d1, int d2, int d3, int d4, int d5, int d6) { return this->push(new int[7]{d0, d1, d2, d3, d4, d5, d6}, 7); }
+    K32_modulator* push(int d0, int d1, int d2, int d3, int d4, int d5, int d6, int d7) { return this->push(new int[8]{d0, d1, d2, d3, d4, d5, d6, d7}, 8); }
 
 
   protected:
@@ -106,48 +106,48 @@ class K32_gen {
 
 #define LEDS_ANIMS_SLOTS  16
 
-#include "K32_gen_basics.h"
-#include "K32_gen_charge.h"
-#include "K32_gen_dmx.h"
+#include "K32_anim_basics.h"
+#include "K32_anim_charge.h"
+#include "K32_anim_dmx.h"
 
 //
-// NOTE: to be able to load an animation by name, it must be registered in K32_genbook
+// NOTE: to be able to load an animation by name, it must be registered in K32_modulatorbook
 //
 
-class K32_genbook {
+class K32_modulatorbook {
   public:
-    K32_genbook() {
+    K32_modulatorbook() {
 
       //
       // REGISTER AVAILABLE ANIMS HERE !
       //
-      this->add( new K32_gen_test() );
-      this->add( new K32_gen_color() );
-      // this->add( new K32_gen_strobe() );
-      // this->add( new K32_gen_hardstrobe() );
-      // this->add( new K32_gen_chaser() );
-      this->add( new K32_gen_discharge() );
-      this->add( new K32_gen_charge() );
-      this->add( new K32_gen_dmx() );
+      this->add( new K32_anim_test() );
+      this->add( new K32_anim_color() );
+      // this->add( new K32_anim_strobe() );
+      // this->add( new K32_anim_hardstrobe() );
+      // this->add( new K32_anim_chaser() );
+      this->add( new K32_anim_discharge() );
+      this->add( new K32_anim_charge() );
+      this->add( new K32_anim_dmx() );
 
     }
 
-    K32_gen* get( String name ) {
+    K32_modulator* get( String name ) {
       for (int k=0; k<this->counter; k++)
         if (this->anims[k]->name() == name) {
           // LOGINL("LEDS: "); LOG(name);
           return this->anims[k];
         }
       LOGINL("ANIM: not found "); LOG(name);
-      return new K32_gen("dummy");
+      return new K32_modulator("dummy");
     }
 
 
   private:
-    K32_gen* anims[LEDS_ANIMS_SLOTS];
+    K32_modulator* anims[LEDS_ANIMS_SLOTS];
     int counter = 0;
 
-    void add(K32_gen* anim) {
+    void add(K32_modulator* anim) {
       if (this->counter >= LEDS_ANIMS_SLOTS) {
         LOG("ERROR: no more slot available to register new animation");
         return;

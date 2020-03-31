@@ -1,13 +1,13 @@
 /*
-  K32_gen_basics.h
+  K32_anim_basics.h
   Created by Thomas BOHL, february 2019.
   Released under GPL v3.0
 */
-#ifndef K32_gen_basics_h
-#define K32_gen_basics_h
+#ifndef K32_anim_basics_h
+#define K32_anim_basics_h
 
 //
-// NOTE: to be able to load an animation by name, it must be registered in K32_genbook class
+// NOTE: to be able to load a generator by name, it must be registered in K32_animbook class
 //
 
 
@@ -16,50 +16,42 @@
 //
 
 
-class K32_gen_test : public K32_gen {
+class K32_anim_test : public K32_anim {
   public:
 
     // Set Name & init data
-    K32_gen_test() : K32_gen("test") 
+    K32_anim_test() : K32_anim("test") 
     {
-      data[0] = 50;     // brightness
-      data[1] = 250;    // step duration
+      data[0] = 50;       // brightness
+      data[1] = 250;      // step duration
+
+      this->loop(false);  // disable loop: it's a one time generator !
     }
     
 
-    // Loop
-    bool loop ( K32_ledstrip* strip ) override
+    // Image generator
+    void gener8 ( K32_ledstrip* strip )
     {
-
       uint8_t master = this->data[0];
       int stepMS = this->data[1];
 
-      LOG("LEDS: testing..");
-
       strip->all( ( CRGBW(CRGBW::Red) % master) );
       strip->show();
-      
       delay(stepMS);
 
       strip->all( ( CRGBW(CRGBW::Green) % master) );
       strip->show();
-
       delay(stepMS);
 
       strip->all( ( CRGBW(CRGBW::Blue) % master) );
       strip->show();
-
       delay(stepMS);
 
       strip->all( ( CRGBW{0,0,0,255} % master) );
       strip->show();
-
       delay(stepMS);
 
       strip->black();
-
-      return false;    // DON'T LOOP !
-
     };
 };
 
@@ -67,11 +59,11 @@ class K32_gen_test : public K32_gen {
 //
 // FULLCOLOR
 //
-class K32_gen_color : public K32_gen {
+class K32_anim_color : public K32_anim {
   public:
 
     // Set Name & init data
-    K32_gen_color() : K32_gen("color") 
+    K32_anim_color() : K32_anim("color") 
     {
       data[0] = 255;  // master
       data[1] = 255;  // red
@@ -82,17 +74,13 @@ class K32_gen_color : public K32_gen {
 
 
     // Loop
-    bool loop ( K32_ledstrip* strip ) override
+    void gener8( K32_ledstrip* strip )
     {
-      this->waitData();
-
       CRGBW color {this->data[1], this->data[2], this->data[3], this->data[4]};
       color %= this->data[0];      
 
       strip->all( color );
       strip->show();
-
-      return true;
     };
 };
 
@@ -101,11 +89,11 @@ class K32_gen_color : public K32_gen {
 //
 // SINUS
 //
-class K32_gen_sinus : public K32_gen {
+class K32_anim_sinus : public K32_anim {
   public:
 
     // Set Name
-    K32_gen_sinus() : K32_gen("sinus") {
+    K32_anim_sinus() : K32_anim("sinus") {
       this->params[0] = 2000; // period
       this->params[1] = 255;  // intensity max
       this->params[2] = 0;    // intensity min
@@ -157,9 +145,9 @@ class K32_gen_sinus : public K32_gen {
 //
 // STROBE
 //
-class K32_gen_strobe : public K32_gen {
+class K32_anim_strobe : public K32_gen {
   public:
-    K32_gen_strobe() : K32_gen("strobe") {
+    K32_anim_strobe() : K32_gen("strobe") {
       this->params[0] = 2000; // period
       this->params[1] = 50;   // % ON
     }
@@ -189,9 +177,9 @@ class K32_gen_strobe : public K32_gen {
 //
 // HARDSTROBE
 //
-class K32_gen_hardstrobe : public K32_gen {
+class K32_anim_hardstrobe : public K32_gen {
   public:
-    K32_gen_hardstrobe() : K32_gen("hardstrobe") {
+    K32_anim_hardstrobe() : K32_gen("hardstrobe") {
       this->params[0] = 2000; // period
       this->params[1] = 50;   // % ON
 
@@ -233,9 +221,9 @@ class K32_gen_hardstrobe : public K32_gen {
 //
 // CHASER
 //
-class K32_gen_chaser : public K32_gen {
+class K32_anim_chaser : public K32_gen {
   public:
-    K32_gen_chaser() : K32_gen("chaser") {
+    K32_anim_chaser() : K32_gen("chaser") {
       this->params[0] = 10; // step duration
       this->params[1] = 255;  // intensity max
       this->params[2] = 0;    // intensity min

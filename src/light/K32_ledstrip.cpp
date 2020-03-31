@@ -111,6 +111,7 @@ void K32_ledstrip::draw(void *parameter)
     xSemaphoreTake(that->draw_lock, portMAX_DELAY);   // WAIT for show()
     digitalLeds_updatePixels(that->_strand);           // PUSH LEDS TO RMT
     delay(1);
+    // LOGF("draw %i\n", that->_strand->pixels[0].r);
     xSemaphoreGive(that->show_lock);                  // READY for next show()
   }
   vTaskDelete(NULL);
