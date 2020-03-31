@@ -18,6 +18,8 @@ class K32_light {
   public:
     K32_light();
 
+    // STRIPS
+    //
     void addStrip(const int pin, led_types type, int size = 0);
 
     K32_ledstrip* strip(int s);
@@ -28,10 +30,13 @@ class K32_light {
     K32_light* all(int red, int green, int blue, int white = 0);
     K32_light* pix(int pixel, pixelColor_t color);
     K32_light* pix(int pixel, int red, int green, int blue, int white = 0);
-
     void show();
 
+
+    //  ANIM
+    //
     K32_anim* anim( String animName = "");
+    K32_anim* anim( String animName, K32_anim* anim );
 
     K32_anim* load( K32_anim* anim );
     K32_anim* load( String animName );

@@ -25,8 +25,9 @@ class K32_anim {
       this->dataInUse = xSemaphoreCreateBinary();
     }
     
-    // retrieve name (set by anim class)
+    // get/set name
     String name () { return this->_name; };
+    void name (String n) { this->_name = n; };
 
     // init called when anim starts to play (can be overloaded by anim class)
     // waiting for initdata ensure that nothing is really played before first data are seted
@@ -182,11 +183,6 @@ class K32_animbook {
       return new K32_anim("dummy");
     }
 
-
-  private:
-    K32_anim* anims[LEDS_ANIMS_SLOTS];
-    int counter = 0;
-
     void add(K32_anim* anim) {
       if (this->counter >= LEDS_ANIMS_SLOTS) {
         LOG("ERROR: no more slot available to register new animation");
@@ -196,6 +192,11 @@ class K32_animbook {
       this->counter++;
       // LOGINL("ANIM: register "); LOG(anim->name());
     };
+
+  private:
+    K32_anim* anims[LEDS_ANIMS_SLOTS];
+    int counter = 0;
+
 
 };
 

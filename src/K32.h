@@ -40,7 +40,7 @@ public:
         system->id(K32_SET_NODEID);
         system->channel(15);
     #endif
-        LOGINL("Node ID: ");
+        LOGINL("HW id:  ");
         LOG(system->id());
 
     // Save HW_REVISION in flash

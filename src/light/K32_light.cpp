@@ -74,15 +74,27 @@ void K32_light::show() {
   for (int s=0; s<this->_nstrips; s++) this->_strips[s]->show();
 }
 
+
+// ANIM
+//
+
+
 K32_anim* K32_light::anim( String animName) {
   if (animName == "") return getActiveAnim();
   return this->_book->get(animName);
+}
+
+K32_anim* K32_light::anim( String animName, K32_anim* anim ) {
+  anim->name(animName);
+  this->_book->add(anim);
+  return anim;
 }
 
 K32_anim* K32_light::getActiveAnim() {
   if (this->activeAnim != NULL) return this->activeAnim;
   else return new K32_anim("dummy");
 }
+
 
 K32_anim* K32_light::load( K32_anim* anim ) {
   this->stop();
