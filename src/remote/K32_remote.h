@@ -38,7 +38,8 @@ enum remoteState
 class K32_remote
 {
 public:
-  K32_remote(const int BTN_PIN[2]);
+  K32_remote(K32_system *system, const int BTN_PIN[2]);
+
   void setMacroMax(int macroMax);
   void setAuto_Lock();
   void setAuto();
@@ -78,6 +79,8 @@ private:
 
   static void task(void *parameter);
   static void read_btn_state(void *parameter);
+
+  K32_system *system;
 };
 
 #endif

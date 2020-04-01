@@ -133,7 +133,7 @@ public:
     {
       if (system->hw() >= 0 && system->hw() <= MAX_HW)
       {
-        remote = new K32_remote(BTN_PIN[system->hw()]);
+        remote = new K32_remote(system, BTN_PIN[system->hw()]);
         if(nbOfMacro > 0)
         {
           remote->setMacroMax(nbOfMacro);

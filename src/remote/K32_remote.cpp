@@ -17,7 +17,7 @@
 
 ////////////////////////////////////////////////////////////////////////////////////////
 
-K32_remote::K32_remote(const int BTN_PIN[NB_BTN])
+K32_remote::K32_remote(K32_system *system, const int BTN_PIN[NB_BTN]) : system(system)
 {
   LOG("REMOTE: init");
 
@@ -35,6 +35,9 @@ K32_remote::K32_remote(const int BTN_PIN[NB_BTN])
     this->mcp.pinMode(i, INPUT);
     this->mcp.pullUp(i, HIGH);
   }
+
+  // load LampGrad
+  this->_lamp_grad = system->preferences->getUInt("lamp_grad", 255);
 
   // Start main task
   xTaskCreate(this->task,    // function
@@ -306,20 +309,12 @@ void K32_remote::task(void *parameter)
 #endif
               break;
             case 1: // Button 2 : Previous
-              that->_lamp_grad--;
-              if (that->_lamp_grad < 0)
-              {
-                that->_lamp_grad = 0;
-              }
+              that->_lamp_grad = max(0, that->_lamp_grad-1);
+              system->preferences->putUint("lamp_grad", that->_lamp_grad);
               break;
             case 2: // Button 3 : Forward
-            {
-              that->_lamp_grad++;
-            }
-              if (that->_lamp_grad > 255)
-              {
-                that->_lamp_grad = 255;
-              }
+              that->_lamp_grad = min(255, that->_lamp_grad+1);
+              system->preferences->putUint("lamp_grad", that->_lamp_grad);
               break;
             case 3: // Button 4 : Go
             {
@@ -558,15 +553,10 @@ void K32_remote::task(void *parameter)
             }
             else if (that->_state == REMOTE_MANU_LAMP)
             {
-              that->_lamp_grad++;
+              that->_lamp_grad = min(255, that->_lamp_grad+1);
+              system->preferences->putUint("lamp_grad", that->_lamp_grad);
 #ifdef DEBUG_lib_btn
               LOGF("LAMP ++ that->_lamp_grad =  %d\n", that->_lamp_grad);
-#endif
-              if (that->_lamp_grad > 255)
-              {
-                that->_lamp_grad = 255;
-              }
-#ifdef DEBUG_lib_btn
               LOGF("LAMP ++ STATE =  %d\n", that->_state);
 #endif
             }
