@@ -8,7 +8,8 @@
 
 #define LEDSTRIP_MAXPIXEL 500
 
-#include "Arduino.h"
+#include <Arduino.h>
+
 #include "system/K32_log.h"
 #include "_librmt/esp32_digital_led_lib.h"
 #include "_libfast/crgbw.h"

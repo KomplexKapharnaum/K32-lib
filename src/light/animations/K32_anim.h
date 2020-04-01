@@ -23,6 +23,7 @@ class K32_anim {
       this->_name = name;
       this->newData = xSemaphoreCreateBinary();
       this->dataInUse = xSemaphoreCreateBinary();
+      xSemaphoreGive(this->dataInUse);
     }
     
     // get/set name

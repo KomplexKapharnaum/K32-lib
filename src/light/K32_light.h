@@ -10,7 +10,6 @@
 #define LEDS_ANIM8_FPS 25   // Animator minimum refresh rate (Frames per second)
 
 
-#include "Arduino.h"
 #include "K32_ledstrip.h"
 #include "animations/K32_anim.h"
 

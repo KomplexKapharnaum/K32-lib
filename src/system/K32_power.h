@@ -9,7 +9,6 @@ Released under GPL v3.0
 #include "system/K32_log.h"
 #include "system/K32_stm32.h"
 #include "system/K32_stm32_api.h"
-#include "Arduino.h"
 
 
 //#define SET_CURRENT_OFFSET 2890        // Set Current calibration offset ((necessary one time only))

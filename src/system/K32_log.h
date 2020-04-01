@@ -6,7 +6,7 @@
 #ifndef K32_log_h
 #define K32_log_h
 
-#include "Arduino.h"
+#include <Arduino.h>
 
 #define KDEBUG
 

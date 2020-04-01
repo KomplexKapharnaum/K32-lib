@@ -4,7 +4,6 @@
   Released under GPL v3.0
 */
 
-#include "Arduino.h"
 #include "light/K32_light.h"
 
 

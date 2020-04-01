@@ -10,7 +10,6 @@
 #define PWM_FREQUENCY 40000
 #define PWM_RESOLUTION 8
 
-#include "Arduino.h"
 #include "system/K32_log.h"
 
 class K32_pwm {

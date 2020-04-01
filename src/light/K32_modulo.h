@@ -10,7 +10,6 @@ Released under GPL v3.0
 */
 
 #include "system/K32_log.h"
-#include "Arduino.h"
 
 #define MODULO_PARAM_SLOTS 8
 // #define MODULO_TYPE_SLOTS 8

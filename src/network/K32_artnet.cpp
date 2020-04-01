@@ -4,7 +4,6 @@
   Released under GPL v3.0
 */
 
-#include "Arduino.h"
 #include "K32_artnet.h"
 
 /*
@@ -25,7 +24,7 @@ void K32_artnet::start(artnetconf conf)
   // LOOP client
   xTaskCreatePinnedToCore(this->check,    // function
                           "artnet_check", // name
-                          2000,           // stack memory
+                          5000,           // stack memory
                           (void *)this,   // args
                           0,              // priority
                           NULL,           // handler

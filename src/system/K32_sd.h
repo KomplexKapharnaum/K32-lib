@@ -6,7 +6,6 @@
 #ifndef K32_sd_h
 #define K32_sd_h
 
-#include "Arduino.h"
 #include "system/K32_log.h"
 
 class K32_sd {

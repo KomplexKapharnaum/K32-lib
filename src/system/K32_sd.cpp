@@ -4,7 +4,6 @@
   Released under GPL v3.0
 */
 
-#include "Arduino.h"
 #include "Wire.h"
 #include "SD.h"
 #include "K32_sd.h"

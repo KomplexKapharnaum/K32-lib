@@ -12,6 +12,7 @@
 #define max(m, n) ((m) > (n) ? (m) : (n))
 
 #include "K32_version.h"
+#include "system/K32_timer.h"
 #include "system/K32_power.h"
 #include "system/K32_log.h"
 #include "system/K32_system.h"
@@ -38,6 +39,7 @@ public:
 
         // SYSTEM
         system = new K32_system();
+        timer = new K32_timer();
 
     // Save NODE_ID in flash
     #ifdef K32_SET_NODEID
@@ -61,6 +63,8 @@ public:
 
     }
 
+
+    K32_timer* timer;
     K32_system *system = NULL;
     K32_wifi *wifi = NULL;
     K32_sd *sd = NULL;
@@ -73,15 +77,6 @@ public:
     K32_mqtt *mqtt = NULL;
     K32_artnet *artnet = NULL;
 
-    K32_modulo_sinus *modulo_sinus = NULL;
-    K32_modulo_random *modulo_random = NULL;
-    K32_modulo_linplus *modulo_linplus = NULL;
-    K32_modulo_linmoins *modulo_linmoins = NULL;
-    K32_modulo_onoff *modulo_onoff = NULL;
-    K32_modulo_triplus *modulo_triplus = NULL;
-    K32_modulo_trimoins *modulo_trimoins = NULL;
-    K32_modulo_phase *modulo_phase = NULL;
-    K32_modulo_fade *modulo_fade = NULL;
 
     void init_stm32()
     {

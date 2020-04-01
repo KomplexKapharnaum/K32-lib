@@ -9,7 +9,6 @@
 #define STM32_CHECK 200           // task loop in ms
 #define STM32_CHECK_BATT 5000     // check battery in ms
 
-#include "Arduino.h"
 #include "system/K32_log.h"
 #include "K32_stm32_api.h"
 #include "esp_task_wdt.h"

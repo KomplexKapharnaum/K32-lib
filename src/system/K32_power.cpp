@@ -6,7 +6,6 @@
 
 
 
-#include "Arduino.h"
 #include "K32_power.h"
 #include <Preferences.h>
 Preferences power_prefs; 

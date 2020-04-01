@@ -81,8 +81,8 @@
         },
         {
             "platforms": "espressif32",
-            "name": "FastLED",
-            "version": "https://github.com/FastLED/FastLED/"
+            "name": "Timer",
+            "version": "https://github.com/JChristensen/Timer"
         }
 
     ]

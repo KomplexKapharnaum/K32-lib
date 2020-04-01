@@ -12,7 +12,6 @@ Released under GPL v3.0
 
 
 #include "system/K32_log.h"
-#include "Arduino.h"
 #include "Adafruit_MCP23017.h"
 
 

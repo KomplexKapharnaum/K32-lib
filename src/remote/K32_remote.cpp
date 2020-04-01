@@ -5,7 +5,6 @@
   Released under GPL v3.0
 */
 
-#include "Arduino.h"
 #include "K32_remote.h"
 #include <Wire.h>
 

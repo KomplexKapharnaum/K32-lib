@@ -4,7 +4,6 @@
   Released under GPL v3.0
 */
 
-#include "Arduino.h"
 #include "K32_pwm.h"
 
 K32_pwm::K32_pwm()

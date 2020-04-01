@@ -31,6 +31,9 @@ K32_wifi::K32_wifi(String nameDevice) : nameDevice(nameDevice)
   this->_ssid = "";
   this->_password = "";
 
+  this->conCallback = nullptr;
+  this->disconCallback = nullptr;
+
   // LOOP task
   xTaskCreatePinnedToCore(this->task,   // function
               "wifi_task",  // task name
@@ -150,7 +153,8 @@ bool K32_wifi::isConnected()
 }
 
 long K32_wifi::getRSSI()
-{
+{ 
+  // if (!this->isConnected()) return 0;
   return WiFi.RSSI();
 }
 

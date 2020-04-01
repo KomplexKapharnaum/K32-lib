@@ -6,7 +6,6 @@
 #ifndef K32_samplermidi_h
 #define K32_samplermidi_h
 
-#include "Arduino.h"
 #include "system/K32_log.h"
 
 #define MIDI_MAX_BANK 17      //17

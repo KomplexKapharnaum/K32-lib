@@ -3,8 +3,8 @@ K32_modulo.cpp
 Created by RIRI, Mars 2020.
 Released under GPL v3.0
 */
+#include <Arduino.h>
 
-#include "Arduino.h"
 #include "K32_modulo.h"
 
 // K32_MODULO
