@@ -146,7 +146,7 @@ bool K32_wifi::ping()
 
 bool K32_wifi::isConnected()
 {
-  return (WiFi.isConnected() && K32_wifi::ok);
+  return (K32_wifi::ok && WiFi.isConnected());
 }
 
 long K32_wifi::getRSSI()
@@ -204,6 +204,15 @@ IPAddress K32_wifi::broadcastIP()
   return b;
 }
 
+void K32_wifi::onConnect( void (*callback)(void) ) {
+  this->conCallback = callback;
+}
+
+void K32_wifi::onDisconnect( void (*callback)(void) ) {
+  this->disconCallback = callback;
+}
+
+
 /*
  *   PRIVATE
  */
@@ -224,9 +233,7 @@ void K32_wifi::event(WiFiEvent_t event)
   }
   else if (event == SYSTEM_EVENT_STA_GOT_IP)
   {
-    if (K32_wifi::ok)
-      return;
-    // K32_wifi::ok = true;
+    if (K32_wifi::ok) return;
     K32_wifi::didConnect = true;
   }
 }
@@ -254,10 +261,13 @@ void K32_wifi::task(void *parameter)
       K32_wifi::ok = false;
       K32_wifi::didDisconnect = false;
       that->engageConnection = -1 * KWIFI_CONNECTION_TIMEOUT;
+
+      // Callback
+      if (that->disconCallback != nullptr) that->disconCallback();
     }
 
     // RECONNECT
-    if (that->engageConnection != 0)
+    if (that->engageConnection != 0) {
       if ((millis() - that->engageConnection) > KWIFI_CONNECTION_TIMEOUT)
       {
         ++that->retry;
@@ -271,6 +281,7 @@ void K32_wifi::task(void *parameter)
         LOGF("WIFI: reconnecting.. %i\n", that->retry);
         that->connect();
       }
+    }
 
     // CONNECTED
     if (K32_wifi::didConnect)
@@ -302,6 +313,9 @@ void K32_wifi::task(void *parameter)
 
       K32_wifi::didConnect = false;
       K32_wifi::ok = true;
+
+      // Callback
+      if (that->conCallback != nullptr) that->conCallback();
     }
 
     // OTA Loop

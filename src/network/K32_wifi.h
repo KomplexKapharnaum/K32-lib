@@ -47,6 +47,9 @@ class K32_wifi {
 
     String nameDevice;
 
+    void onConnect( void (*callback)(void) );
+    void onDisconnect( void (*callback)(void) );
+
   private:
     SemaphoreHandle_t lock;
     static void task( void * parameter );
@@ -69,6 +72,9 @@ class K32_wifi {
     
     String _ssid;
     String _password;
+
+    void (*conCallback)(void);
+    void (*disconCallback)(void);
 
 };
 

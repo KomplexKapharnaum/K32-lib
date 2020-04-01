@@ -157,6 +157,7 @@ void K32_light::stop() {
                 NULL );                 // handler
   xSemaphoreTake(this->stop_lock, portMAX_DELAY);   // wait until async_stop terminate
   xSemaphoreGive(this->stop_lock);
+  this->strip(0)->black();
   LOG("LIGHT: stop");
 }
 
@@ -223,8 +224,6 @@ void K32_light::async_stop( void * parameter ) {
   }
   if (that->activeAnim) that->activeAnim = NULL;
   that->strip(0)->unlock();
-  that->strip(0)->black();
-  delay(1);
   xSemaphoreGive(that->stop_lock);
   xSemaphoreGive(that->wait_lock);
   vTaskDelete(NULL);

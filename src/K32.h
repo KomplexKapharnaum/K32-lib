@@ -8,6 +8,9 @@
 
 #include <Arduino.h>
 
+#define min(m, n) ((m) < (n) ? (m) : (n))
+#define max(m, n) ((m) > (n) ? (m) : (n))
+
 #include "K32_version.h"
 #include "system/K32_power.h"
 #include "system/K32_log.h"
@@ -21,6 +24,7 @@
 #include "network/K32_wifi.h"
 #include "network/K32_osc.h"
 #include "network/K32_mqtt.h"
+#include "network/K32_artnet.h"
 
 class K32
 {
@@ -67,6 +71,7 @@ public:
     K32_power *power = NULL;
     K32_osc *osc = NULL;
     K32_mqtt *mqtt = NULL;
+    K32_artnet *artnet = NULL;
 
     K32_modulo_sinus *modulo_sinus = NULL;
     K32_modulo_random *modulo_random = NULL;
@@ -183,6 +188,14 @@ public:
 
         if (!wifi)
             LOG("MQTT: Warning WIFI should be initialized BEFORE mqtt");
+    }
+
+    void init_artnet(artnetconf conf) {
+        artnet = new K32_artnet();
+        artnet->start(conf);
+
+        if (!wifi)
+            LOG("MQTT: Warning WIFI should be initialized BEFORE artnet");
     }
 
     void init_modulo()
