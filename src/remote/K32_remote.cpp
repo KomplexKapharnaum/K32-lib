@@ -214,7 +214,7 @@ void K32_remote::task(void *parameter)
     /* Main loop */
 
     //////////////////////////////////////////////////////////////////////////////
-    /////////////////////////// KEY LOCK /////////////////////////////////////////
+    /////////////////////////// KEY LOCK & UNLOCK ////////////////////////////////
     //////////////////////////////////////////////////////////////////////////////
 
     if (that->_key_lock == false && that->_check_key == false) // UNLOCK
@@ -252,6 +252,10 @@ void K32_remote::task(void *parameter)
         that->_old_state = that->_state;
       }
       if (that->_old_state == REMOTE_MANU)
+      {
+        that->_state = REMOTE_MANU_LOCK;
+      }
+      else if (that->_old_state == REMOTE_MANU_LOCK)
       {
         that->_state = REMOTE_MANU_LOCK;
       }
@@ -319,7 +323,7 @@ void K32_remote::task(void *parameter)
               break;
             case 3: // Button 4 : Go
             {
-              that->_state == that->_old_state;
+              that->_state = that->_old_state;
             }
 #ifdef DEBUG_lib_btn
               LOGF("1 Escape STATE =  %d\n", that->_state);
@@ -502,6 +506,7 @@ void K32_remote::task(void *parameter)
             else if (that->_state == REMOTE_MANU_LAMP)
             {
               that->_state = REMOTE_MANU;
+              that->_lamp = - 1;
             }
             else if (that->_state == REMOTE_MANU_STM)
             {
@@ -534,6 +539,10 @@ void K32_remote::task(void *parameter)
               LOGF("LAMP -- STATE =  %d\n", that->_state);
 #endif
             }
+            else if (that->_state == REMOTE_AUTO)
+            {
+              that->_state = REMOTE_MANU;
+            }
             break;
           case 2: // Button 3 : Forward
             if (that->_state == REMOTE_MANU)
@@ -561,6 +570,10 @@ void K32_remote::task(void *parameter)
               LOGF("LAMP ++ STATE =  %d\n", that->_state);
 #endif
             }
+            else if (that->_state == REMOTE_AUTO)
+            {
+              that->_state = REMOTE_MANU;
+            }
             break;
           case 3: // Button 4 : Go
             if (that->_state == REMOTE_MANU)
@@ -570,7 +583,8 @@ void K32_remote::task(void *parameter)
             }
             else if (that->_state == REMOTE_MANU_LAMP)
             {
-              that->_state == REMOTE_MANU;
+              that->_state = REMOTE_MANU;
+              that->_lamp = - 1;
             }
 #ifdef DEBUG_lib_btn
             LOGF("Go STATE =  %d\n", that->_state);
@@ -616,7 +630,8 @@ void K32_remote::task(void *parameter)
             break;
           case 3: // Button 4 : Go Forced
             that->_activeMacro = that->_previewMacro;
-            that->_state = REMOTE_MANU;
+            that->_state = REMOTE_MANU_LOCK;
+            that->_key_lock = true;
             break;
           }
           that->buttons[i].flag = 0;
