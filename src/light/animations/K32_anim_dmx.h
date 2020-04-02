@@ -7,7 +7,7 @@
 #define K32_anim_dmx_h
 
 //
-// NOTE: to be able to load a generator by name, it must be registered in K32_animbook class
+// NOTE: to be available, add #include to this file in K32_light.h !
 //
 
 
@@ -56,12 +56,12 @@ class K32_anim_dmx : public K32_anim {
   public:
 
     // Set Name
-    K32_anim_dmx() : K32_anim("dmx") {}
+    K32_anim_dmx() : K32_anim() {}
 
 
 
     // Loop
-    void gener8 ( K32_ledstrip* strip )
+    void frame ()
     {
       
       //
@@ -70,7 +70,7 @@ class K32_anim_dmx : public K32_anim {
       
       // Mirror & Zoom -> Segment size
       int mirrorMode  = simplifyDmxRange(this->data[15]);
-      int zoomedSize  = max(1, scale255( strip->size(), this->data[16]) );
+      int zoomedSize  = max(1, scale255( this->size(), this->data[16]) );
 
       int segmentSize = zoomedSize;
       if (mirrorMode == 1 || mirrorMode == 4)       segmentSize /= 2;
@@ -101,8 +101,8 @@ class K32_anim_dmx : public K32_anim {
           CRGBW color2 {this->data[10], this->data[11], this->data[12], this->data[13]};
 
           // Dash Length + Offset
-          int dashLength  = max(1, scale255(segmentSize, data[6]) );         // pix_start
-          int dashOffset  =  scale255(segmentSize, data[7]);                // pix_pos
+          int dashLength  = max(1, scale255(segmentSize, this->data[6]) );         // pix_start
+          int dashOffset  =  scale255(segmentSize, this->data[7]);                // pix_pos
 
           // Fix = only color1
           if (pixMode == 0) 
@@ -123,7 +123,7 @@ class K32_anim_dmx : public K32_anim {
           // 01:02 = color1 + color2 dash 
           if (pixMode == 2) 
           {
-            dashLength = data[6];   // on this one, length is absolute and not relative to segementSize
+            dashLength = this->data[6];   // on this one, length is absolute and not relative to segementSize
 
             for(int i=0; i<segmentSize; i++) 
             {
@@ -203,8 +203,8 @@ class K32_anim_dmx : public K32_anim {
           };
 
           // Dash Length + Offset + Split 
-          int dashLength  = max(3, scale255(2 * segmentSize, data[6]));          
-          int dashOffset  = scale255((segmentSize-dashLength), data[7]);
+          int dashLength  = max(3, scale255(2 * segmentSize, this->data[6]));          
+          int dashOffset  = scale255((segmentSize-dashLength), this->data[7]);
           int dashSplit = pixMode % 20;
           int dashPart  = 0;
 
@@ -225,8 +225,8 @@ class K32_anim_dmx : public K32_anim {
       else if (colorMode == COLOR_PICKER) {
 
         // Hue range
-        int hueStart = this->data[10] + data[7];
-        int hueEnd = this->data[11] + data[7];
+        int hueStart = this->data[10] + this->data[7];
+        int hueEnd = this->data[11] + this->data[7];
 
         // Channel master
         CRGBW rgbwMaster {this->data[1], this->data[2], this->data[3], this->data[4]};
@@ -266,14 +266,14 @@ class K32_anim_dmx : public K32_anim {
       // DRAW ON STRIP WITH ZOOM & MIRROR
       //
 
-      // Empty the whole strip
-      strip->clear();
+      // Clear
+      this->clear();
 
       // Mirroring alternate (1 = copy, 2 = alternate)
       int mirrorAlternate = 1 + (mirrorMode == 1 || mirrorMode == 2 || mirrorMode == 3); 
 
       // Zoom offset
-      int zoomOffset = (strip->size() - zoomedSize)/2;      
+      int zoomOffset = (this->size() - zoomedSize)/2;      
 
       // Copy pixels into strip
       for(int i=0; i<zoomedSize; i++) 
@@ -284,11 +284,8 @@ class K32_anim_dmx : public K32_anim {
         if (iter && iter % mirrorAlternate)   // alternate: invert pix cursor
           pix = segmentSize - pix - 1;    
 
-        strip->pix(i+zoomOffset, segment[pix]);
+        this->pixel(i+zoomOffset, segment[pix]);
       }      
-
-      // Show !
-      strip->show();
 
     }
 

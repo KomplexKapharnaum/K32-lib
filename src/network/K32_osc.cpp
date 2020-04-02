@@ -462,12 +462,12 @@ void K32_osc::server( void * parameter ) {
 
               // BLACKOUT
               msg.dispatch("/blackout", [](K32_osc* that, K32_oscmsg &msg){
-                that->light->stop();
+                that->light->blackout();
               }, offset);
 
               // STOP
               msg.dispatch("/stop", [](K32_osc* that, K32_oscmsg &msg){
-                that->light->stop();
+                that->light->blackout();
               }, offset);
 
               // ANIMATION
@@ -484,7 +484,7 @@ void K32_osc::server( void * parameter ) {
                   }
                 LOG("");
 
-                that->light->play(anim);
+                anim->play();
 
               }, offset);
 

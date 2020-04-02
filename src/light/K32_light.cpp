@@ -7,17 +7,20 @@
 #include "light/K32_light.h"
 
 
-K32_light::K32_light() {
-  // ANIMATOR
-  this->activeAnim = NULL;
-  this->_book = new K32_animbook();
-
-  this->stop_lock = xSemaphoreCreateBinary();
-  this->wait_lock = xSemaphoreCreateBinary();
-  xSemaphoreGive(this->stop_lock);
-  xSemaphoreGive(this->wait_lock);
-
+K32_light::K32_light() 
+{
   digitalLeds_init();
+
+}
+
+void K32_light::start() {
+  LOG("start light");
+   xTaskCreate( this->refresh,           // function
+                    "modulate_task",            // task name
+                    10000,                   // stack memory
+                    (void*)this,            // args
+                    3,                      // priority
+                    NULL );                 // handler
 }
 
 void K32_light::addStrip(const int pin, led_types type, int size)
@@ -74,116 +77,65 @@ void K32_light::show() {
 }
 
 
-// ANIM
-//
-
-
-K32_anim* K32_light::anim( String animName) {
-  if (animName == "") return getActiveAnim();
-  return this->_book->get(animName);
-}
-
-K32_anim* K32_light::anim( String animName, K32_anim* anim ) {
-  anim->name(animName);
-  this->_book->add(anim);
-  return anim;
-}
-
-K32_anim* K32_light::getActiveAnim() {
-  if (this->activeAnim != NULL) return this->activeAnim;
-  else return new K32_anim("dummy");
-}
-
-
-K32_anim* K32_light::load( K32_anim* anim ) {
-  this->stop();
-  this->activeAnim = anim;
-  this->activeAnim->flush();
-  xSemaphoreTake(this->wait_lock, portMAX_DELAY);
-  xTaskCreate( this->animate,           // function
-                "leds_anim_task",       // task name
-                10000,                   // stack memory
-                (void*)this,            // args
-                3,                      // priority
-                &this->animateHandle ); // handler
-  LOGINL("LIGHT: play ");
-  LOG(anim->name());
-  
-  return this->activeAnim;
-}
-
-K32_anim* K32_light::load( String animName ) {
-  if (this->isPlaying() && animName == this->activeAnim->name())
-    return this->activeAnim;
-    
-  return this->load( this->anim( animName ) );
-}
-
-K32_light* K32_light::play(int timeout) {
-  if(this->activeAnim) {
-    this->_stopAt = (timeout>0) ? (millis()+timeout) : 0;
-    this->activeAnim->refresh();
-  }
-  return this;
-}
-
-K32_light* K32_light::play( K32_anim* anim, int timeout ) {
-  this->load(anim);
-  this->play(timeout);
-  return this;
-}
-
-K32_light* K32_light::play() {
-  this->play(0);
-  return this;
-}
-
-K32_light* K32_light::play( K32_anim* anim ) {
-  this->load(anim);
-  this->play(anim, 0);
-  return this;
-}
-
-
-void K32_light::stop() {
-  if (!this->isPlaying()) return;
-  xSemaphoreTake(this->stop_lock, portMAX_DELAY);
-  xTaskCreate( this->async_stop,              // function
-                "leds_stop_task",           // task name
-                2000,                      // stack memory
-                (void*)this,              // args
-                10,                      // priority
-                NULL );                 // handler
-  xSemaphoreTake(this->stop_lock, portMAX_DELAY);   // wait until async_stop terminate
-  xSemaphoreGive(this->stop_lock);
-  this->strip(0)->black();
-  LOG("LIGHT: stop");
-}
-
-bool K32_light::wait(int timeout) {
-  TickType_t xTicksToWait = portMAX_DELAY;
-  if (timeout > 0) xTicksToWait = pdMS_TO_TICKS(timeout);
-
-  if ( xSemaphoreTake(this->wait_lock, xTicksToWait) == pdTRUE) {
-    xSemaphoreGive(this->wait_lock);
-    return true;
-  }
-  return false;
-}
-
 void K32_light::blackout() {
   this->stop();
   this->strips()->black();
 }
 
-bool K32_light::isPlaying() {
-  return (this->activeAnim != NULL);
+
+
+// ANIM
+//
+
+// register new anim
+K32_anim* K32_light::anim( String animName, K32_anim* anim, int stripN, int size, int offset ) 
+{
+
+  if (stripN >= this->_nstrips) {
+    LOGF("ERROR: strip %i does not exist\n", stripN);
+    return anim;
+  }
+
+  if (this->_animcounter >= LEDS_ANIMS_SLOTS) {
+    LOG("ERROR: no more slot available to register new animation");
+    return anim;
+  }
+
+  anim->name(animName);
+  anim->setup( this->strip(stripN), size, offset );
+
+  this->_anims[ this->_animcounter ] = anim;
+  this->_animcounter++;
+  // LOGINL("ANIM: register "); LOG(anim->name());
+
+  return anim;
 }
 
+// get registered anim
+K32_anim* K32_light::anim( String animName) 
+{
+  for (int k=0; k<this->_animcounter; k++)
+    if (this->_anims[k]->name() == animName) {
+      // LOGINL("LIGHT: "); LOG(name);
+      return this->_anims[k];
+    }
+  LOGINL("ANIM: not found "); LOG(animName);
+  return new K32_anim();
+
+}
+
+// stop all
+void K32_light::stop() {
+  for (int k=0; k<this->_animcounter; k++) this->_anims[k]->stop();
+}
+
+// Set FPS
 void K32_light::fps(int f) {
   if (f >= 0) _fps = f;
   else _fps = LEDS_ANIM8_FPS;
 }
+
+
 
 
 /*
@@ -193,40 +145,25 @@ void K32_light::fps(int f) {
 
 int K32_light::_nstrips = 0;
 
-void K32_light::animate( void * parameter ) {
+// thread function
+void K32_light::refresh( void * parameter ) 
+{
   K32_light* that = (K32_light*) parameter;
-  if (that->activeAnim)
+  while(true) 
   {
-    that->activeAnim->init();
-    do {
-      that->activeAnim->waitData( 1000/that->_fps );
-      that->activeAnim->modul8();
-      that->activeAnim->gener8( that->strip(0) );
-      
-      // duration set at play()
-      if (that->_stopAt && millis() >= that->_stopAt) break;
-    } 
-    while(that->activeAnim->loop());
+    vTaskDelay( pdMS_TO_TICKS(33) );
+    
+    for (int k=0; k<that->_animcounter; k++)
+      that->_anims[k]->data_lock();   // PB: data_unlock on stop / data_lock on play !
+    
+    that->show();
+
+    for (int k=0; k<that->_animcounter; k++)
+      that->_anims[k]->data_unlock();
+
   }
-  LOG("LIGHT: end");
-  that->stop();                                   // trigger async_stop
-  xSemaphoreTake(that->wait_lock, portMAX_DELAY); // wait async_stop to kill me
+  
   vTaskDelete(NULL);
 }
-
-void K32_light::async_stop( void * parameter ) {
-  K32_light* that = (K32_light*) parameter;
-  that->strip(0)->lock();
-  if (that->animateHandle) {
-    vTaskDelete( that->animateHandle );
-    that->animateHandle = NULL;
-  }
-  if (that->activeAnim) that->activeAnim = NULL;
-  that->strip(0)->unlock();
-  xSemaphoreGive(that->stop_lock);
-  xSemaphoreGive(that->wait_lock);
-  vTaskDelete(NULL);
-} 
-
 
  /////////////////////////////////////////////

@@ -107,9 +107,10 @@ public:
         if (system->hw() >= 0 && system->hw() <= MAX_HW)
         {
             light = new K32_light();
-            for(int k=0; k<LED_N_STRIPS; k++) 
-                if(LEDS_PIN[system->hw()][k] > 0) 
-                    light->strips()->addStrip(LEDS_PIN[system->hw()][k], (led_types)rubanType, rubanSize);
+            for(int k=0; k<LED_N_STRIPS; k++)
+                if(LEDS_PIN[system->hw()][k] > 0)
+                    light->addStrip(LEDS_PIN[system->hw()][k], (led_types)rubanType, rubanSize);
+            light->start();
         }
         else
             LOG("LIGHT: Error HWREVISION not valid please define K32_SET_HWREVISION or HW_REVISION");
@@ -193,21 +194,6 @@ public:
             LOG("MQTT: Warning WIFI should be initialized BEFORE artnet");
     }
 
-    void init_modulo()
-    {
-        modulo_sinus = new K32_modulo_sinus(0,0,0);
-        modulo_random = new K32_modulo_random(0,0);
-        modulo_linplus = new K32_modulo_linplus(0,0,0);
-        modulo_linmoins = new K32_modulo_linmoins(0,0,0);
-        modulo_onoff = new K32_modulo_onoff(0,0,0);
-        modulo_triplus = new K32_modulo_triplus(0,0,0);
-        modulo_trimoins = new K32_modulo_trimoins(0,0,0);
-        modulo_phase = new K32_modulo_phase(0,0,0);
-        modulo_fade = new K32_modulo_fade(0,0,0);
-    }
-
-
-private:
 };
 
 #endif

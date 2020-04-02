@@ -416,6 +416,7 @@ void K32_mqtt::dispatch(char *topic, char *payload, size_t length)
 
       char anim_name[16];
       splitString(payload, "§", 0, anim_name);
+      
       K32_anim *anim = this->light->anim(anim_name);
       LOGINL("MQTT: leds play ");
       LOGINL(anim_name);
@@ -433,7 +434,7 @@ void K32_mqtt::dispatch(char *topic, char *payload, size_t length)
       }
       LOG("");
 
-      this->light->play(anim);
+      anim->play();
     }
 
     // STOP

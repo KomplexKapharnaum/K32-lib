@@ -7,7 +7,7 @@
 #define K32_anim_basics_h
 
 //
-// NOTE: to be able to load a generator by name, it must be registered in K32_animbook class
+// NOTE: to be available, add #include to this file in K32_light.h !
 //
 
 
@@ -20,7 +20,7 @@ class K32_anim_test : public K32_anim {
   public:
 
     // Set Name & init data
-    K32_anim_test() : K32_anim("test") 
+    K32_anim_test() : K32_anim() 
     {
       data[0] = 50;       // brightness
       data[1] = 250;      // step duration
@@ -30,28 +30,33 @@ class K32_anim_test : public K32_anim {
     
 
     // Image generator
-    void gener8 ( K32_ledstrip* strip )
+    void frame ()
     {
       uint8_t master = this->data[0];
       int stepMS = this->data[1];
 
-      strip->all( ( CRGBW(CRGBW::Red) % master) );
-      strip->show();
+      this->all( ( CRGBW(CRGBW::Red) % master) );
+      // LOG("show frame");
+      this->show(); 
       delay(stepMS);
 
-      strip->all( ( CRGBW(CRGBW::Green) % master) );
-      strip->show();
+      this->all( ( CRGBW(CRGBW::Green) % master) );
+      // LOG("show frame");
+      this->show(); 
       delay(stepMS);
 
-      strip->all( ( CRGBW(CRGBW::Blue) % master) );
-      strip->show();
+      this->all( ( CRGBW(CRGBW::Blue) % master) );
+      // LOG("show frame");
+      this->show(); 
       delay(stepMS);
 
-      strip->all( ( CRGBW{0,0,0,255} % master) );
-      strip->show();
+      this->all( ( CRGBW{0,0,0,255} % master) );
+      // LOG("show frame");
+      this->show(); 
       delay(stepMS);
 
-      strip->black();
+      this->clear();
+      this->show();
     };
 };
 
@@ -63,7 +68,7 @@ class K32_anim_color : public K32_anim {
   public:
 
     // Set Name & init data
-    K32_anim_color() : K32_anim("color") 
+    K32_anim_color() : K32_anim() 
     {
       data[0] = 255;  // master
       data[1] = 255;  // red
@@ -74,13 +79,12 @@ class K32_anim_color : public K32_anim {
 
 
     // Loop
-    void gener8( K32_ledstrip* strip )
+    void frame()
     {
       CRGBW color {this->data[1], this->data[2], this->data[3], this->data[4]};
       color %= this->data[0];      
 
-      strip->all( color );
-      strip->show();
+      this->all( color );
     };
 };
 
@@ -121,7 +125,7 @@ class K32_anim_sinus : public K32_anim {
         factor = ((0.5f + 0.5f * sin( 2 * PI * progress / this->params[0] - 0.5f * PI ) ) * (this->params[1]-this->params[2]) + this->params[2]) / 255;
         color = pixelFromRGBW( (int)(this->params[3]*factor),  (int)(this->params[4]*factor),  (int)(this->params[5]*factor),  (int)(this->params[6]*factor) ); 
         
-        strip->all( color )->show();
+        this->all( color )->show();
 
         vTaskDelay(pdMS_TO_TICKS(1));
         progress = millis() - start;
@@ -160,7 +164,7 @@ class K32_anim_strobe : public K32_gen {
       TickType_t xOn = max(1, (int)pdMS_TO_TICKS( (this->params[0]*this->params[1]/100) ));
       TickType_t xOff = max(1, (int)pdMS_TO_TICKS( this->params[0] - (this->params[0]*this->params[1]/100) ));
 
-      strip->all( color )->show();
+      this->all( color )->show();
     
       vTaskDelay( xOn );
 
@@ -199,7 +203,7 @@ class K32_anim_hardstrobe : public K32_gen {
           this->nextEvent = millis() + (this->params[0]*this->params[1]/100) ;
           
           
-          strip->all( color )->show();
+          this->all( color )->show();
           
         }
         // ON -> OFF
@@ -251,7 +255,7 @@ class K32_anim_chaser : public K32_gen {
             if (i > progress - this->params[7]) strip->pix(i,color);
             else strip->pix(i, black);
           }
-          strip->show();
+          this->show();
           
         vTaskDelay(pdMS_TO_TICKS(this->params[0]));
       }

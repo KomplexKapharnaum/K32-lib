@@ -7,7 +7,7 @@
 #define K32_anim_charge_h
 
 //
-// NOTE: to be able to load a generator by name, it must be registered in K32_animbook class
+// NOTE: to be available, add #include to this file in K32_light.h !
 //
 
 
@@ -16,7 +16,7 @@
 //
 class K32_anim_discharge : public K32_anim {
   public:
-    K32_anim_discharge() : K32_anim("discharge") {
+    K32_anim_discharge() : K32_anim() {
       this->data[0] = 0;    // duration (seconds) 0 = infinite
       this->data[1] = 100;  // intensity max
       this->data[2] = 0;    // intensity min
@@ -35,35 +35,35 @@ class K32_anim_discharge : public K32_anim {
       this->data[13] = LEDSTRIP_MAXPIXEL;  // Length of Led strip
     }
 
-    void gener8 ( K32_ledstrip* strip ){
+    void frame (){
 
       int length = data[13] ;
-      pixelColor_t color1 = pixelFromRGBW(data[3],data[4],data[5],data[6]);
-      pixelColor_t color2 = pixelFromRGBW(data[7],data[8],data[9],data[10]);
+      CRGBW color1 {data[3],data[4],data[5],data[6]};
+      CRGBW color2 {data[7],data[8],data[9],data[10]};
 
       
       for (int i=0; i<length; i ++)
       {
         /* First color below SOC */
         if(i<((data[11]*length/100)/4))
-          strip->pix(i,color1);
+          this->pixel(i,color1);
   
         else if ((i>=length/2-(data[11]*length/100)/4)&&(i<length/2 + (data[11]*length/100)/4))
-          strip->pix(i,color1);
+          this->pixel(i,color1);
          
         else if (i>=length-(data[11]*length/100)/4)
-          strip->pix(i,color1);
+          this->pixel(i,color1);
         
         else /* Second color */
-          strip->pix(i,color2);
+          this->pixel(i,color2);
         
       }
 
       /* Fleche Mode */
-      strip->pix( (data[11]*length/100)/4, color1);
-      strip->pix( length - (data[11]*length/100)/4 - 1, color1);
+      this->pixel( (data[11]*length/100)/4, color1);
+      this->pixel( length - (data[11]*length/100)/4 - 1, color1);
 
-      strip->show();
+      this->show();
       
 
       vTaskDelay(pdMS_TO_TICKS(max(400 - data[12]*2,50) ));
@@ -74,17 +74,16 @@ class K32_anim_discharge : public K32_anim {
         
 
         /* Normal mode */
-        // strip->pix( (data[11]*length/100)/4-1 - i , color2);
-        // strip->pix( length - (data[11]*length/100)/4+i, color2);
+        // this->pixel( (data[11]*length/100)/4-1 - i , color2);
+        // this->pixel( length - (data[11]*length/100)/4+i, color2);
 
         /* Fleche mode */
-        strip->pix( (data[11]*length/100)/4 - i , color2);
-        strip->pix( length - (data[11]*length/100)/4-1+i, color2);
-        strip->pix( length/2-(data[11]*length/100)/4 + i, color2);
-        strip->pix( length/2 + (data[11]*length/100)/4-1-i, color2);
+        this->pixel( (data[11]*length/100)/4 - i , color2);
+        this->pixel( length - (data[11]*length/100)/4-1+i, color2);
+        this->pixel( length/2-(data[11]*length/100)/4 + i, color2);
+        this->pixel( length/2 + (data[11]*length/100)/4-1-i, color2);
 
-        strip->show();
-        
+        this->show();
 
         vTaskDelay(pdMS_TO_TICKS(max(400 - data[12]*2,50) ));
       }
@@ -92,7 +91,7 @@ class K32_anim_discharge : public K32_anim {
       /* Leds OFFs */
       if (this->data[0] > 0) {
         if (millis() > (this->startTime+this->data[0]*1000)) {
-          strip->black();
+          this->clear();
           this->loop(false);
         }
       }
@@ -105,7 +104,7 @@ class K32_anim_discharge : public K32_anim {
 //
 class K32_anim_charge : public K32_anim {
   public:
-    K32_anim_charge() : K32_anim("charge") {
+    K32_anim_charge() : K32_anim() {
       this->data[0] = 0;    // Animation Timeout in sec
       this->data[1] = 100;  // intensity max
       this->data[2] = 0;    // intensity min
@@ -124,36 +123,36 @@ class K32_anim_charge : public K32_anim {
       this->data[13] = LEDSTRIP_MAXPIXEL;  // Length of Led strip
     }
 
-    void gener8 ( K32_ledstrip* strip ){
+    void frame (){
 
       int length = data[13] ;
 
-      pixelColor_t color1 = pixelFromRGBW(data[3],data[4],data[5],data[6]);
-      pixelColor_t color2 = pixelFromRGBW(data[7],data[8],data[9],data[10]);
+      CRGBW color1 {data[3],data[4],data[5],data[6]};
+      CRGBW color2 {data[7],data[8],data[9],data[10]};
 
       
       for (int i=0; i<length; i ++)
       {
         /* First color below SOC */
         if(i<(data[11]*length/100)/4)
-          strip->pix(i,color1);
+          this->pixel(i,color1);
         
         else if ((i>=length/2-(data[11]*length/100)/4)&&(i<length/2 + (data[11]*length/100)/4))
-          strip->pix(i,color1);
+          this->pixel(i,color1);
         
         else if (i>=length-(data[11]*length/100)/4)
-          strip->pix(i,color1);
+          this->pixel(i,color1);
         
         else /* Second color */
-          strip->pix(i,color2);
+          this->pixel(i,color2);
         
       }
 
       /* Fleche mode */
-      strip->pix( (data[11]*length/100)/4 -1, color2);
-      strip->pix( length - (data[11]*length/100)/4, color2);
+      this->pixel( (data[11]*length/100)/4 -1, color2);
+      this->pixel( length - (data[11]*length/100)/4, color2);
 
-      strip->show();
+      this->show();
       
 
       vTaskDelay(pdMS_TO_TICKS(max(800 - data[12]*2,50) ));
@@ -162,16 +161,16 @@ class K32_anim_charge : public K32_anim {
       for (int i=0; i<=data[12]/100+1; i ++)
       {
         /* Normal mode */
-        // strip->pix( (data[11]*length/100)/4 + i, color1);
-        // strip->pix( length - (data[11]*length/100)/4 -1 - i, color1);
+        // this->pixel( (data[11]*length/100)/4 + i, color1);
+        // this->pixel( length - (data[11]*length/100)/4 -1 - i, color1);
 
         /* Fleche mode */
-        strip->pix( (data[11]*length/100)/4 -1 + i, color1);
-        strip->pix( length - (data[11]*length/100)/4  - i, color1);
-        strip->pix( length/2-(data[11]*length/100)/4 - 1 - i, color1);
-        strip->pix( length/2 + (data[11]*length/100)/4 + i, color1);
+        this->pixel( (data[11]*length/100)/4 -1 + i, color1);
+        this->pixel( length - (data[11]*length/100)/4  - i, color1);
+        this->pixel( length/2-(data[11]*length/100)/4 - 1 - i, color1);
+        this->pixel( length/2 + (data[11]*length/100)/4 + i, color1);
 
-        strip->show();
+        this->show();
         
 
         vTaskDelay(pdMS_TO_TICKS(max(800 - data[12]*2,50)));
@@ -180,7 +179,7 @@ class K32_anim_charge : public K32_anim {
       /* Leds OFFs */
       if (this->data[0] > 0) {
         if (millis() > (this->startTime+this->data[0]*1000)) {
-          strip->black();
+          this->clear();
           this->loop(false);
         }
       }
