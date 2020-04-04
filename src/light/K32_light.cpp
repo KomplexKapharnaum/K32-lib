@@ -151,16 +151,8 @@ void K32_light::refresh( void * parameter )
   K32_light* that = (K32_light*) parameter;
   while(true) 
   {
-    vTaskDelay( pdMS_TO_TICKS(33) );
-    
-    for (int k=0; k<that->_animcounter; k++)
-      that->_anims[k]->data_lock();   // PB: data_unlock on stop / data_lock on play !
-    
+    vTaskDelay( pdMS_TO_TICKS( 1000/that->_fps ) );
     that->show();
-
-    for (int k=0; k<that->_animcounter; k++)
-      that->_anims[k]->data_unlock();
-
   }
   
   vTaskDelete(NULL);

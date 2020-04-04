@@ -22,41 +22,32 @@ class K32_anim_test : public K32_anim {
     // Set Name & init data
     K32_anim_test() : K32_anim() 
     {
-      data[0] = 50;       // brightness
-      data[1] = 250;      // step duration
+      this->setdata(0, 50);   // brightness
+      this->setdata(1, 250);  // step duration
 
       this->loop(false);  // disable loop: it's a one time generator !
     }
     
 
     // Image generator
-    void frame ()
+    void frame (int data[LEDS_DATA_SLOTS])
     {
-      uint8_t master = this->data[0];
-      int stepMS = this->data[1];
+      uint8_t master = data[0];
+      int stepMS = data[1];
 
       this->all( ( CRGBW(CRGBW::Red) % master) );
-      // LOG("show frame");
-      this->show(); 
       delay(stepMS);
 
       this->all( ( CRGBW(CRGBW::Green) % master) );
-      // LOG("show frame");
-      this->show(); 
       delay(stepMS);
 
       this->all( ( CRGBW(CRGBW::Blue) % master) );
-      // LOG("show frame");
-      this->show(); 
       delay(stepMS);
 
       this->all( ( CRGBW{0,0,0,255} % master) );
-      // LOG("show frame");
-      this->show(); 
       delay(stepMS);
 
       this->clear();
-      this->show();
     };
 };
 
@@ -70,19 +61,19 @@ class K32_anim_color : public K32_anim {
     // Set Name & init data
     K32_anim_color() : K32_anim() 
     {
-      data[0] = 255;  // master
-      data[1] = 255;  // red
-      data[2] = 255;  // green
-      data[3] = 255;  // blue
-      data[4] = 255;  // white
+      this->setdata(0, 255);  // master
+      this->setdata(1, 255);  // red
+      this->setdata(2, 255);  // green
+      this->setdata(3, 255);  // blue
+      this->setdata(4, 255);  // white
     }
 
 
     // Loop
-    void frame()
+    void frame(int data[LEDS_DATA_SLOTS])
     {
-      CRGBW color {this->data[1], this->data[2], this->data[3], this->data[4]};
-      color %= this->data[0];      
+      CRGBW color {data[1], data[2], data[3], data[4]};
+      color %= data[0];      
 
       this->all( color );
     };

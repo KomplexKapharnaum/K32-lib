@@ -61,7 +61,7 @@ class K32_anim_dmx : public K32_anim {
 
 
     // Loop
-    void frame ()
+    void frame (int data[LEDS_DATA_SLOTS])
     {
       
       //
@@ -69,8 +69,8 @@ class K32_anim_dmx : public K32_anim {
       //
       
       // Mirror & Zoom -> Segment size
-      int mirrorMode  = simplifyDmxRange(this->data[15]);
-      int zoomedSize  = max(1, scale255( this->size(), this->data[16]) );
+      int mirrorMode  = simplifyDmxRange(data[15]);
+      int zoomedSize  = max(1, scale255( this->size(), data[16]) );
 
       int segmentSize = zoomedSize;
       if (mirrorMode == 1 || mirrorMode == 4)       segmentSize /= 2;
@@ -81,8 +81,8 @@ class K32_anim_dmx : public K32_anim {
       CRGBW segment[segmentSize];
 
       // Modes
-      int colorMode   = simplifyDmxRange(this->data[14]);
-      int pixMode     = simplifyDmxRange(this->data[5]);
+      int colorMode   = simplifyDmxRange(data[14]);
+      int pixMode     = simplifyDmxRange(data[5]);
 
       //
       // GENERATE BASE SEGMENT
@@ -97,12 +97,12 @@ class K32_anim_dmx : public K32_anim {
         if (pixMode < 23) {
           
           // Colors
-          CRGBW color1 {this->data[1], this->data[2], this->data[3], this->data[4]};
-          CRGBW color2 {this->data[10], this->data[11], this->data[12], this->data[13]};
+          CRGBW color1 {data[1], data[2], data[3], data[4]};
+          CRGBW color2 {data[10], data[11], data[12], data[13]};
 
           // Dash Length + Offset
-          int dashLength  = max(1, scale255(segmentSize, this->data[6]) );         // pix_start
-          int dashOffset  =  scale255(segmentSize, this->data[7]);                // pix_pos
+          int dashLength  = max(1, scale255(segmentSize, data[6]) );         // pix_start
+          int dashOffset  =  scale255(segmentSize, data[7]);                // pix_pos
 
           // Fix = only color1
           if (pixMode == 0) 
@@ -123,7 +123,7 @@ class K32_anim_dmx : public K32_anim {
           // 01:02 = color1 + color2 dash 
           if (pixMode == 2) 
           {
-            dashLength = this->data[6];   // on this one, length is absolute and not relative to segementSize
+            dashLength = data[6];   // on this one, length is absolute and not relative to segementSize
 
             for(int i=0; i<segmentSize; i++) 
             {
@@ -195,16 +195,16 @@ class K32_anim_dmx : public K32_anim {
           
           // Colors
           CRGBW color[5] = {
-            {this->data[10], this->data[11], this->data[12], this->data[13]}, // background
-            colorPreset[ simplifyDmxRange(this->data[1]) ],                   // color1
-            colorPreset[ simplifyDmxRange(this->data[2]) ],                   // color2
-            colorPreset[ simplifyDmxRange(this->data[3]) ],                   // color3
-            colorPreset[ simplifyDmxRange(this->data[4]) ]                    // color4
+            {data[10], data[11], data[12], data[13]}, // background
+            colorPreset[ simplifyDmxRange(data[1]) ],                   // color1
+            colorPreset[ simplifyDmxRange(data[2]) ],                   // color2
+            colorPreset[ simplifyDmxRange(data[3]) ],                   // color3
+            colorPreset[ simplifyDmxRange(data[4]) ]                    // color4
           };
 
           // Dash Length + Offset + Split 
-          int dashLength  = max(3, scale255(2 * segmentSize, this->data[6]));          
-          int dashOffset  = scale255((segmentSize-dashLength), this->data[7]);
+          int dashLength  = max(3, scale255(2 * segmentSize, data[6]));          
+          int dashOffset  = scale255((segmentSize-dashLength), data[7]);
           int dashSplit = pixMode % 20;
           int dashPart  = 0;
 
@@ -225,11 +225,11 @@ class K32_anim_dmx : public K32_anim {
       else if (colorMode == COLOR_PICKER) {
 
         // Hue range
-        int hueStart = this->data[10] + this->data[7];
-        int hueEnd = this->data[11] + this->data[7];
+        int hueStart = data[10] + data[7];
+        int hueEnd = data[11] + data[7];
 
         // Channel master
-        CRGBW rgbwMaster {this->data[1], this->data[2], this->data[3], this->data[4]};
+        CRGBW rgbwMaster {data[1], data[2], data[3], data[4]};
         
         // Color wheel
         CRGBW colorWheel;
@@ -249,9 +249,9 @@ class K32_anim_dmx : public K32_anim {
       //
       // APPLY STROBE
       //
-      // int strobeMode  = simplifyDmxRange(this->data[8]);
-      // int strobeSeuil = (this->data[8] - 10*strobeMode)*4;
-      // int strobeSpeed = this->data[9];
+      // int strobeMode  = simplifyDmxRange(data[8]);
+      // int strobeSeuil = (data[8] - 10*strobeMode)*4;
+      // int strobeSpeed = data[9];
       
       // TODO: use MODULATOR      
 
@@ -259,7 +259,7 @@ class K32_anim_dmx : public K32_anim {
       //
       // APPLY MASTER
       //
-      uint8_t master = this->data[0];
+      uint8_t master = data[0];
       for(int i=0; i<segmentSize; i++) segment[i] %= master;
 
       //

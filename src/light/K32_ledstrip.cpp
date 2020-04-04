@@ -45,10 +45,13 @@ void K32_ledstrip::unlock() {
 }
 
 K32_ledstrip *K32_ledstrip::clear() {
+
   xSemaphoreTake(this->buffer_lock, portMAX_DELAY);
   memset(this->_buffer, 0, this->size() * sizeof(pixelColor_t));
+  // for(int i=0; i < this->size(); i++) this->_buffer[i] = {0,0,0};
   this->dirty = true;
   xSemaphoreGive(this->buffer_lock);
+
   return this;
 }
 
@@ -58,10 +61,12 @@ K32_ledstrip *K32_ledstrip::black() {
 }
 
 K32_ledstrip* K32_ledstrip::all(pixelColor_t color) {
+
   xSemaphoreTake(this->buffer_lock, portMAX_DELAY);
   for(int k= 0; k<this->size(); k++) this->_buffer[k] = color;
   this->dirty = true;
   xSemaphoreGive(this->buffer_lock);
+
   return this;
 }
 
@@ -69,8 +74,20 @@ K32_ledstrip* K32_ledstrip::all(int red, int green, int blue, int white) {
   return this->all( pixelFromRGBW(red, green, blue, white) );
 }
 
+K32_ledstrip* K32_ledstrip::pix(int pixelStart, int count, pixelColor_t color) {
+    
+  xSemaphoreTake(this->buffer_lock, portMAX_DELAY);
+  for(int i = pixelStart; i<pixelStart+count; i++)
+    if (i < this->size()) this->_buffer[i] = color;
+  this->dirty = true;
+  xSemaphoreGive(this->buffer_lock);
+
+  return this;
+}
+
 K32_ledstrip* K32_ledstrip::pix(int pixel, pixelColor_t color) {
-  if (pixel < this->size()) {
+  if (pixel < this->size()) 
+  {
     xSemaphoreTake(this->buffer_lock, portMAX_DELAY);
     this->_buffer[pixel] = color;
     this->dirty = true;
@@ -84,16 +101,26 @@ K32_ledstrip* K32_ledstrip::pix(int pixel, int red, int green, int blue, int whi
 }
 
 void K32_ledstrip::show() {
-  
   // LOG("LIGHT: show in");
-
+  
   // COPY Buffers to STRAND
   xSemaphoreTake(this->show_lock, portMAX_DELAY);
   xSemaphoreTake(this->buffer_lock, portMAX_DELAY);
   if (this->dirty) {
+    
+    // LOGINL("show buffer // ");
+    // for(int i=0; i < this->size(); i++) LOGF(" %i", this->_buffer[i].r);
+    // LOG();
+    
     memcpy(&this->_strand->pixels, &this->_buffer, sizeof(this->_buffer));
+    // for(int i=0; i < this->size(); i++) this->_strand->pixels[i] = this->_buffer[i];
     this->dirty = false;
     // LOG("LIGHT: show dirty");
+
+    // LOGINL("show strand // ");
+    // for(int i=0; i < this->size(); i++) LOGF(" %i", this->_strand->pixels[i].r);
+    // LOG();
+
     xSemaphoreGive(this->draw_lock);
   }
   else xSemaphoreGive(this->show_lock);
@@ -111,9 +138,16 @@ void K32_ledstrip::draw(void *parameter)
   // run
   while (true) {
     xSemaphoreTake(that->draw_lock, portMAX_DELAY);   // WAIT for show()
+    
+    // LOGINL("draw strand // ");
+    // for(int i=0; i < that->size(); i++) LOGF(" %i", that->_strand->pixels[i].r);
+    // LOG();
+
     digitalLeds_updatePixels(that->_strand);           // PUSH LEDS TO RMT
     delay(1);
-    LOGF("draw %i\n", that->_strand->pixels[0].r);
+
+    
+
     xSemaphoreGive(that->show_lock);                  // READY for next show()
   }
   vTaskDelete(NULL);
