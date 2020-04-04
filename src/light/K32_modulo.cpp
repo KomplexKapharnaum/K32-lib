@@ -47,7 +47,6 @@ void K32_modulo::stop()
 
 K32_modulo_sinus::K32_modulo_sinus(int period, int min, int max)
 {
-
     this->params[0] = period; //period
     this->params[1] = max;    //value max
     this->params[2] = min;    //value min
@@ -55,7 +54,6 @@ K32_modulo_sinus::K32_modulo_sinus(int period, int min, int max)
 
 int K32_modulo_sinus::getValue()
 {
-
     unsigned long time;
     if (freezeTime == 0)
         time = millis();

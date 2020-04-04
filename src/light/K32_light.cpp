@@ -100,7 +100,7 @@ K32_anim* K32_light::anim( String animName, K32_anim* anim, int stripN, int size
     LOG("ERROR: no more slot available to register new animation");
     return anim;
   }
-
+  
   anim->name(animName);
   anim->setup( this->strip(stripN), size, offset );
 
@@ -132,7 +132,7 @@ void K32_light::stop() {
 // Set FPS
 void K32_light::fps(int f) {
   if (f >= 0) _fps = f;
-  else _fps = LEDS_ANIM8_FPS;
+  else _fps = LEDS_SHOW_FPS;
 }
 
 

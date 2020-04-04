@@ -1,7 +1,6 @@
 # ESP32 framework for KXKM board
 
 ## TODO
-- show in K32_light instead of K32_anim
 - attach anim to segment of strip
 - multiple running anim
 - modulator in each anim

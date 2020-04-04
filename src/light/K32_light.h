@@ -6,8 +6,9 @@
 #ifndef K32_light_h
 #define K32_light_h
 
-#define LEDS_MAXSTRIPS 8    // There is 8 RMT channels on ESP32
-#define LEDS_ANIM8_FPS 25   // Animator minimum refresh rate (Frames per second)
+#define LEDS_MAXSTRIPS    8    // There is 8 RMT channels on ESP32
+#define LEDS_ANIM8_FPS    30   // Anims modulation FPS
+#define LEDS_SHOW_FPS     50   // Show RMT push FPS
 #define LEDS_ANIMS_SLOTS  16
 
 
@@ -15,12 +16,18 @@
 #include "K32_anim.h"
 
 //
-// NOTE: to be able to use an animation by name, it must be included here
+// NOTE: to be able to use an animation, it must be included here
 //
 
 #include "animations/K32_anim_basics.h"
 #include "animations/K32_anim_charge.h"
 #include "animations/K32_anim_dmx.h"
+
+//
+// NOTE: to be able to use a modulator, it must be included here
+//
+
+#include "modulators/K32_mod_basics.h"
 
 
 class K32_light {
@@ -64,7 +71,7 @@ class K32_light {
     int _animcounter = 0;
 
     static void refresh( void * parameter ) ;
-    int _fps = LEDS_ANIM8_FPS;
+    int _fps = LEDS_SHOW_FPS;
 
 };
 

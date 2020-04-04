@@ -7,8 +7,10 @@
 #define K32_anim_h
 
 #define LEDS_DATA_SLOTS  64
+#define LEDS_MOD_SLOTS  16
 
 #include "K32_ledstrip.h"
+#include "K32_modulator.h"
 
 //
 // BASE ANIM
@@ -43,12 +45,8 @@ class K32_anim {
     //
 
     // get/set name
-    String name () { 
-      return this->_name; 
-    }
-    void name (String n) { 
-      this->_name = n; 
-    }
+    String name () {  return this->_name;  }
+    void name (String n) {  this->_name = n; }
 
     int size() {
       return this->_size;
@@ -98,7 +96,7 @@ class K32_anim {
                     (void*)this,            // args
                     3,                      // priority
                     &this->animateHandle ); // handler
-      LOGF("ANIM: %s play \n", this->name() );
+      LOGF("ANIM: %s play \n", this->name().c_str() );
       
       return this;
     }
@@ -118,17 +116,9 @@ class K32_anim {
       return this;
     }
 
-    void release() 
-    {
-      this->animateHandle = NULL;
-      xSemaphoreTake(this->newData, 1);
-      xSemaphoreGive(this->dataInUse);
-      xSemaphoreGive(this->wait_lock);
-      this->clear();
-    }
-
     // wait until anim end (or timeout)
-    bool wait(int timeout = 0) {
+    bool wait(int timeout = 0) 
+    {
       TickType_t xTicksToWait = portMAX_DELAY;
       if (timeout > 0) xTicksToWait = pdMS_TO_TICKS(timeout);
 
@@ -139,30 +129,35 @@ class K32_anim {
       return false;
     }
 
-    // ANIM LOGIC
-    //
+    // register new modulator
+    K32_modulator* modulate( int dataslot, String modName, K32_modulator* mod ) 
+    {
+      if (this->_modcounter >= LEDS_MOD_SLOTS) {
+        LOG("ERROR: no more slot available to register new modulator");
+        return mod;
+      }
+      
+      mod->name(modName);
+      mod->attach(dataslot);
 
-    // init called when anim starts to play (can be overloaded by anim class)
-    // waiting for data ensure that nothing is really played before first data are set
-    // setting startTime can be usefull..
-    virtual void init() { 
-      xSemaphoreTake(this->newData, portMAX_DELAY);   // wait for new data before starting
-      xSemaphoreGive(this->newData);
-      this->startTime = millis();
+      this->_mods[ this->_modcounter ] = mod;
+      this->_modcounter++;
+      // LOGINL("ANIM: register "); LOG(mod->name());
+
+      return mod;
     }
 
-    // generate frame from data, called by update
-    // this is a prototype, must be defined in specific anim class
-    virtual void frame (int data[LEDS_DATA_SLOTS]) {
-      LOG("ANIM: nothing to do..");
-    };
-    
-
-    // modul8 called by dedicated xtask
-    // execute all registered modulators to change data (external data) and idata (internal data)
-    virtual void modulate () {
-      // this->refresh();
-    };
+    // get registered mod
+    K32_modulator* modulate( String modName) 
+    {
+      for (int k=0; k<this->_modcounter; k++)
+        if (this->_mods[k]->name() == modName) {
+          // LOGINL("LIGHT: "); LOG(name);
+          return this->_mods[k];
+        }
+      LOGINL("MOD: not found "); LOG(modName);
+      return new K32_modulator();
+    }
 
 
     // ANIM DATA
@@ -182,8 +177,8 @@ class K32_anim {
       return this;
     }
 
-    // new data set 
-    K32_anim* set(int* frame, int size) {
+    // new data push 
+    K32_anim* push(int* frame, int size) {
       size = min(size, LEDS_DATA_SLOTS);
       xSemaphoreTake(this->dataInUse, portMAX_DELAY);     // data can be modified only during anim waitData
       for(int k=0; k<size; k++) this->data[k] = frame[k]; 
@@ -192,31 +187,30 @@ class K32_anim {
       return this;
     }
     
-    // new data set 
-    K32_anim* set(uint8_t* frame, int size) {
-      size = min(size, LEDS_DATA_SLOTS);
-      xSemaphoreTake(this->dataInUse, portMAX_DELAY);     // data can be modified only during anim waitData
-      for(int k=0; k<size; k++) this->data[k] = frame[k]; 
-      xSemaphoreGive(this->dataInUse);
-      this->refresh();
-      return this;
+    // new data push 
+    K32_anim* push(uint8_t* frame, int size) {
+      int dframe[size];
+      for(int i=0; i<size; i++) dframe[i] = frame[i];
+      return this->push(dframe, size);
     } 
 
-    // Helper to set and refresh various amount of data
-    K32_anim* set(int d0) { return this->set(new int[1]{d0}, 1); }
-    K32_anim* set(int d0, int d1) { return this->set(new int[2]{d0, d1}, 2); }
-    K32_anim* set(int d0, int d1, int d2) { return this->set(new int[3]{d0, d1, d2}, 3); }
-    K32_anim* set(int d0, int d1, int d2, int d3) { return this->set(new int[4]{d0, d1, d2, d3}, 4); }
-    K32_anim* set(int d0, int d1, int d2, int d3, int d4) { return this->set(new int[5]{d0, d1, d2, d3, d4}, 5); }
-    K32_anim* set(int d0, int d1, int d2, int d3, int d4, int d5) { return this->set(new int[6]{d0, d1, d2, d3, d4, d5}, 6); }
-    K32_anim* set(int d0, int d1, int d2, int d3, int d4, int d5, int d6) { return this->set(new int[7]{d0, d1, d2, d3, d4, d5, d6}, 7); }
-    K32_anim* set(int d0, int d1, int d2, int d3, int d4, int d5, int d6, int d7) { return this->set(new int[8]{d0, d1, d2, d3, d4, d5, d6, d7}, 8); }
+    K32_anim* push(int d0) { return this->push(new int[1]{d0}, 1); }
+    K32_anim* push(int d0, int d1) { return this->push(new int[2]{d0, d1}, 2); }
+    K32_anim* push(int d0, int d1, int d2) { return this->push(new int[3]{d0, d1, d2}, 3); }
+    K32_anim* push(int d0, int d1, int d2, int d3) { return this->push(new int[4]{d0, d1, d2, d3}, 4); }
+    K32_anim* push(int d0, int d1, int d2, int d3, int d4) { return this->push(new int[5]{d0, d1, d2, d3, d4}, 5); }
+    K32_anim* push(int d0, int d1, int d2, int d3, int d4, int d5) { return this->push(new int[6]{d0, d1, d2, d3, d4, d5}, 6); }
+    K32_anim* push(int d0, int d1, int d2, int d3, int d4, int d5, int d6) { return this->push(new int[7]{d0, d1, d2, d3, d4, d5, d6}, 7); }
+    K32_anim* push(int d0, int d1, int d2, int d3, int d4, int d5, int d6, int d7) { return this->push(new int[8]{d0, d1, d2, d3, d4, d5, d6, d7}, 8); }
 
 
 
   // PROTECTED
   //
   protected:
+
+    // DRAW ON STRIP
+    //
 
     // draw pix
     void pixel(int pix, CRGBW color)  {
@@ -241,6 +235,24 @@ class K32_anim {
     
     unsigned long startTime = 0;
 
+    // ANIM LOGIC
+    //
+
+    // init called when anim starts to play (can be overloaded by anim class)
+    // waiting for data ensure that nothing is really played before first data are push
+    // pushting startTime can be usefull..
+    virtual void init() { 
+      xSemaphoreTake(this->newData, portMAX_DELAY);   // wait for new data before starting
+      xSemaphoreGive(this->newData);
+      this->startTime = millis();
+    }
+
+    // generate frame from data, called by update
+    // this is a prototype, must be defined in specific anim class
+    virtual void frame (int data[LEDS_DATA_SLOTS]) {
+      LOG("ANIM: nothing to do..");
+    };
+
 
   // PRIVATE
   //
@@ -259,34 +271,45 @@ class K32_anim {
 
       do 
       {
-        xSemaphoreGive(that->dataInUse);                                          // allow set & setdata to modify data
+        xSemaphoreGive(that->dataInUse);                                          // allow push & pushdata to modify data
         yield();                                                                          
-        timeout = pdMS_TO_TICKS( 1000/that->_fps );                               // set timeout according to FPS
+        timeout = pdMS_TO_TICKS( 1000/that->_fps );                               // push timeout according to FPS
         
         if (xSemaphoreTake(that->newData, timeout) == pdTRUE)                     // Wait external DATA refresh or FPS timeout
           xSemaphoreGive(that->newData);
 
         xSemaphoreTake(that->dataInUse, portMAX_DELAY);                           // lock data to prevent new change until next loop
         
-        if (that->_stopAt && millis() >= that->_stopAt) break;                    // check duration, set at play()
+        if (that->_stopAt && millis() >= that->_stopAt) break;                    // check duration, push at play()
 
-        that->modulate();           // data are locked, can not use set() or setdata(), if change applied must call refresh !
+        for (int k=0; k<that->_modcounter; k++)       
+          if (that->_mods[k]->run( that->data )) that->refresh();                 // run modulators
 
         if (xSemaphoreTake(that->newData, 0) == pdTRUE)                           // new data available
         {
           int datacopy[LEDS_DATA_SLOTS];
           memcpy(datacopy, that->data, LEDS_DATA_SLOTS*sizeof(int));
           xSemaphoreTake(that->newData, 1);     // consume newdata
-          xSemaphoreGive(that->dataInUse);      // let data be set by others
+          xSemaphoreGive(that->dataInUse);      // let data be push by others
           that->frame(datacopy);                // draw on strip
         }
 
       } 
       while(that->loop());
 
-      LOGF("ANIM: %s end \n", that->name());
+      LOGF("ANIM: %s end \n", that->name().c_str());
       that->release();
       vTaskDelete(NULL);
+    }
+
+    // end of animation
+    void release() 
+    {
+      this->animateHandle = NULL;
+      xSemaphoreTake(this->newData, 1);
+      xSemaphoreGive(this->dataInUse);
+      xSemaphoreGive(this->wait_lock);
+      this->clear();
     }
     
     // identity
@@ -310,6 +333,9 @@ class K32_anim {
     SemaphoreHandle_t stop_lock;
     SemaphoreHandle_t wait_lock;
 
+    // Modulator
+    K32_modulator* _mods[LEDS_MOD_SLOTS];
+    int _modcounter = 0;
 };
 
 
