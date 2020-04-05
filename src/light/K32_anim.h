@@ -130,7 +130,7 @@ class K32_anim {
     }
 
     // register new modulator
-    K32_modulator* modulate( int dataslot, String modName, K32_modulator* mod ) 
+    K32_modulator* modulate( int dataslot, String modName, K32_modulator* mod) 
     {
       if (this->_modcounter >= LEDS_MOD_SLOTS) {
         LOG("ERROR: no more slot available to register new modulator");
@@ -139,6 +139,7 @@ class K32_anim {
       
       mod->name(modName);
       mod->attach(dataslot);
+      mod->play();
 
       this->_mods[ this->_modcounter ] = mod;
       this->_modcounter++;
