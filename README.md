@@ -1,9 +1,8 @@
 # ESP32 framework for KXKM board
 
 ## TODO
-- attach anim to segment of strip
-- multiple running anim
-- modulator in each anim
+- strobe on anim_dmx
+- modulator calling modulator (tri-sinus)
 
 ## INSTALL
 

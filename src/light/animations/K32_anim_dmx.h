@@ -55,15 +55,10 @@ inline int scale255(int a, uint8_t value) {
 class K32_anim_dmx : public K32_anim {
   public:
 
-    // Set Name
-    K32_anim_dmx() : K32_anim() {
-      
-    }
-
-
+    
 
     // Loop
-    void frame (int data[LEDS_DATA_SLOTS])
+    void draw ()
     {
       //
       // ONDMXFRAME PUSH

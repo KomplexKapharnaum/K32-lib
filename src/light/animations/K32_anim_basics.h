@@ -19,18 +19,17 @@
 class K32_anim_test : public K32_anim {
   public:
 
-    // Set Name & init data
-    K32_anim_test() : K32_anim() 
+    // Constructor
+    K32_anim_test() : K32_anim()  
     {
-      this->setdata(0, 50);   // brightness
-      this->setdata(1, 250);  // step duration
-
       this->loop(false);  // disable loop: it's a one time generator !
     }
     
+    // Setup
+    void init() {}
 
     // Image generator
-    void frame (int data[LEDS_DATA_SLOTS])
+    void draw ()
     {
       uint8_t master = data[0];
       int stepMS = data[1];
@@ -52,25 +51,25 @@ class K32_anim_test : public K32_anim {
 };
 
 
+
+
 //
 // FULLCOLOR
 //
 class K32_anim_color : public K32_anim {
   public:
+    
+    int& master = data[0];
+    int& red    = data[1];
+    int& green  = data[2];
+    int& blue   = data[3];
+    int& white  = data[4];
 
-    // Set Name & init data
-    K32_anim_color() : K32_anim() 
-    {
-      this->setdata(0, 255);  // master
-      this->setdata(1, 255);  // red
-      this->setdata(2, 255);  // green
-      this->setdata(3, 255);  // blue
-      this->setdata(4, 255);  // white
-    }
-
+    // Setup
+    void init() {}
 
     // Loop
-    void frame(int data[LEDS_DATA_SLOTS])
+    void draw()
     {
       CRGBW color {data[1], data[2], data[3], data[4]};
       color %= data[0];      

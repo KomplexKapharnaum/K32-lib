@@ -27,7 +27,8 @@
 // NOTE: to be able to use a modulator, it must be included here
 //
 
-#include "modulators/K32_mod_basics.h"
+#include "modulators/K32_mod_waves.h"
+#include "modulators/K32_mod_fades.h"
 
 
 class K32_light {
