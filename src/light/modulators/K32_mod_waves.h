@@ -112,13 +112,13 @@ class K32_mod_pulse : public K32_modulator {
   public:  
 
     // named link to params 
-    int& width = params[0]; // 0 -> 100% 
+    int& widthMS = params[0]; // 0 -> 1000
 
     void modulate ( int& data )
     {
       applyPhase360();
 
-      data = ( progress() <= width/100 ) * amplitude() + mini();
+      data = ( progress() <= 1.0*widthMS/period() ) * amplitude() + mini();
     };
 
 };

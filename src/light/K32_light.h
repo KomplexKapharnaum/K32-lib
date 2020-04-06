@@ -7,13 +7,20 @@
 #define K32_light_h
 
 #define LEDS_MAXSTRIPS    8    // There is 8 RMT channels on ESP32
-#define LEDS_ANIM8_FPS    30   // Anims modulation FPS
-#define LEDS_SHOW_FPS     50   // Show RMT push FPS
+#define LEDS_ANIM8_FPS    100   // Anims modulation FPS
+#define LEDS_SHOW_FPS     100   // Show RMT push FPS
 #define LEDS_ANIMS_SLOTS  16
 
 
 #include "K32_ledstrip.h"
 #include "K32_anim.h"
+
+//
+// NOTE: to be able to use a modulator, it must be included here
+//
+
+#include "modulators/K32_mod_waves.h"
+#include "modulators/K32_mod_fades.h"
 
 //
 // NOTE: to be able to use an animation, it must be included here
@@ -23,12 +30,6 @@
 #include "animations/K32_anim_charge.h"
 #include "animations/K32_anim_dmx.h"
 
-//
-// NOTE: to be able to use a modulator, it must be included here
-//
-
-#include "modulators/K32_mod_waves.h"
-#include "modulators/K32_mod_fades.h"
 
 
 class K32_light {

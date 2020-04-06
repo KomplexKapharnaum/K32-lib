@@ -42,7 +42,7 @@ public:
   {
     this->isRunning = true;
     this->freezeTime = 0;
-    this->trigTime = this->time();
+    this->trigTime = millis();
     LOGF2("ANIM: %s modulate param %i \n", this->name(), this->dataslot);
   }
 
@@ -115,17 +115,8 @@ public:
     return this;
   }
 
-protected:
-  virtual void modulate(int &data)
-  {
-    LOG("MOD: full data, doing nothing !");
-  };
-
   // TOOLS
   //
-
-  int params[MOD_PARAMS_SLOTS];
-  int *anim_data;
 
   int mini() { return this->_mini; }
   int maxi() { return this->_maxi; }
@@ -154,6 +145,17 @@ protected:
   int timePeriod() { return time() % period(); }
   float progress() { return 1.0 * timePeriod() / period(); }
   int periodCount() { return time() / period(); }
+  
+
+protected:
+  virtual void modulate(int &data)
+  {
+    LOG("MOD: full data, doing nothing !");
+  };
+
+
+  int params[MOD_PARAMS_SLOTS];
+  int *anim_data;
 
 
 private:
