@@ -280,7 +280,8 @@ class K32_anim_dmx : public K32_anim {
       else if (strobeMode == 11 || btw(strobeMode, 12, 19)) 
       {
         K32_modulator* strobe = this->modulate("strobe");
-        int count = strobe->periodCount() % 3;
+        int count = strobe->periodCount() % 3;  // ERROR: periodCount is moving.. -> count is not linear !
+        // LOG(count);
 
         if (count == 0)       strobe->period( strobePeriod*100/225 );
         else if (count == 1)  strobe->period( strobePeriod/4 );
