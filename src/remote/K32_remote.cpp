@@ -8,11 +8,15 @@
 #include "K32_remote.h"
 #include <Wire.h>
 
-/*
- * //////////////////////////////// PUBLIC ////////////////////////////////
- */
+////////////////////////////////////////////////////////////////////////////////////////
 
-K32_remote::K32_remote(const int BTN_PIN[NB_BTN])
+////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////// PUBLIC /////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////////////////////////////////////////
+
+K32_remote::K32_remote(K32_system *system, const int BTN_PIN[NB_BTN]) : system(system)
 {
   LOG("REMOTE: init");
 
@@ -30,6 +34,9 @@ K32_remote::K32_remote(const int BTN_PIN[NB_BTN])
     this->mcp.pinMode(i, INPUT);
     this->mcp.pullUp(i, HIGH);
   }
+
+  // load LampGrad
+  this->_lamp_grad = system->preferences.getUInt("lamp_grad", 30);
 
   // Start main task
   xTaskCreate(this->task,    // function
@@ -57,20 +64,30 @@ void K32_remote::_unlock()
 {
   xSemaphoreGive(this->lock);
 }
+////////////////////////////////////////////////////////////////////////////////////////
 
-//////////////////////////////// SET ////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////// SET ///////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////////////////////////////////////////
 
 void K32_remote::setMacroMax(int macroMax)
 {
-
   this->_lock();
   this->_macroMax = macroMax;
   this->_unlock();
 }
 
+void K32_remote::setAuto_Lock()
+{
+  this->_lock();
+  this->_state = REMOTE_AUTO_LOCK;
+  this->_unlock();
+}
+
 void K32_remote::setAuto()
 {
-
   this->_lock();
   this->_state = REMOTE_AUTO;
   this->_unlock();
@@ -78,7 +95,6 @@ void K32_remote::setAuto()
 
 void K32_remote::setManu()
 {
-
   this->_lock();
   this->_state = REMOTE_MANU;
   this->_unlock();
@@ -86,41 +102,48 @@ void K32_remote::setManu()
 
 void K32_remote::setManu_Stm()
 {
-
   this->_lock();
   this->_state = REMOTE_MANU_STM;
   this->_unlock();
 }
 
-void K32_remote::setManuLock()
+void K32_remote::setManu_Stm_lock()
 {
-
   this->_lock();
-  this->_state = REMOTE_MANULOCK;
+  this->_state = REMOTE_MANU_STM_LOCK;
+  this->_unlock();
+}
+
+void K32_remote::setManu_Lock()
+{
+  this->_lock();
+  this->_state = REMOTE_MANU_LOCK;
   this->_unlock();
 }
 
 void K32_remote::setManu_Lamp()
 {
-
   this->_lock();
   this->_state = REMOTE_MANU_LAMP;
   this->_unlock();
 }
 
-void K32_remote::setManuLock_Lamp()
+void K32_remote::setSendMacro()
 {
-
   this->_lock();
-  this->_state = REMOTE_MANULOCK_LAMP;
+  this->_send_active_macro = false;
   this->_unlock();
 }
+////////////////////////////////////////////////////////////////////////////////////////
 
-//////////////////////////////// GET ////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////// GET //////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////////////////////////////////////////
 
 remoteState K32_remote::getState()
 {
-
   this->_lock();
   remoteState data = this->_state;
   this->_unlock();
@@ -129,7 +152,6 @@ remoteState K32_remote::getState()
 
 int K32_remote::getActiveMacro()
 {
-
   this->_lock();
   int data = this->_activeMacro;
   this->_unlock();
@@ -138,7 +160,6 @@ int K32_remote::getActiveMacro()
 
 int K32_remote::getPreviewMacro()
 {
-
   this->_lock();
   int data = this->_previewMacro;
   this->_unlock();
@@ -147,18 +168,43 @@ int K32_remote::getPreviewMacro()
 
 int K32_remote::getLamp()
 {
-
   this->_lock();
   int data = this->_lamp;
   this->_unlock();
   return data;
 }
 
-/*
- *   //////////////////////////////// PRIVATE ////////////////////////////////
- */
+int K32_remote::getLampGrad()
+{
+  this->_lock();
+  int data = this->_lamp_grad;
+  this->_unlock();
+  return data;
+}
 
-//////////////////////////////// TASK ////////////////////////////////
+int K32_remote::getSendMacro()
+{
+  this->_lock();
+  int data = this->_send_active_macro;
+  this->_unlock();
+  return data;
+}
+
+////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////
+/*
+ * /////////////////////////////////////// PRIVATE /////////////////////////////////////
+ */
+////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////// TASK /////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////////////////////////////////////////
 
 void K32_remote::task(void *parameter)
 {
@@ -169,231 +215,531 @@ void K32_remote::task(void *parameter)
   {
     /* Main loop */
 
-    /* Check flags for each button */
+    //////////////////////////////////////////////////////////////////////////////
+    /////////////////////////// KEY LOCK & UNLOCK ////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////////
 
+    if (that->_key_lock == false && that->_check_key == false) // UNLOCK
+    {
+      that->_check_key = true;
+      that->_send_active_macro = false;
+#ifdef DEBUG_lib_btn
+      LOG(":REMOTE key UNLOCK");
+      LOGF("that->_state %d\n", that->_state);
+      LOGF("that->_old_state %d\n", that->_old_state);
+#endif
+      if (that->_old_state < 3)
+      {
+        that->_state = REMOTE_MANU;
+      }
+      else if (that->_old_state == REMOTE_MANU_STM_LOCK)
+      {
+        that->_state = REMOTE_MANU_STM;
+      }
+#ifdef DEBUG_lib_btn
+      LOGF("NEW that->_old_state %d\n", that->_old_state);
+      LOGF("NEW that->_state %d\n", that->_state);
+#endif
+    }
+    else if (that->_key_lock == true && that->_check_key == true) // LOCK
+    {
+      that->_check_key = false;
+#ifdef DEBUG_lib_btn
+      LOG(":REMOTE key LOCKED");
+      LOGF("that->_state %d\n", that->_state);
+      LOGF("that->_old_state %d\n", that->_old_state);
+#endif
+      if (that->_old_state != that->_state)
+      {
+        that->_old_state = that->_state;
+      }
+      if (that->_old_state == REMOTE_MANU)
+      {
+        that->_state = REMOTE_MANU_LOCK;
+      }
+      else if (that->_old_state == REMOTE_MANU_LOCK)
+      {
+        that->_state = REMOTE_MANU_LOCK;
+      }
+      else if (that->_old_state == REMOTE_MANU_STM)
+      {
+        that->_state = REMOTE_MANU_STM_LOCK;
+      }
+      else if (that->_old_state == REMOTE_AUTO)
+      {
+        that->_state = REMOTE_AUTO_LOCK;
+      }
+      else
+      {
+        that->_state = REMOTE_AUTO_LOCK;
+      }
+#ifdef DEBUG_lib_btn
+      LOGF("NEW that->_old_state %d\n", that->_old_state);
+      LOGF("NEW that->_state %d\n", that->_state);
+#endif
+    }
+
+    //////////////////////////////////////////////////////////////////////////////
+    ////////////////////* Check flags for each button *///////////////////////////
+    //////////////////////////////////////////////////////////////////////////////
     for (int i = 0; i < NB_BTN; i++)
     {
-
       that->_lock();
 
-      if (that->_key_lock != true)
-      {
+      ///////////////////////////////////////////////////////////////////////////
+      /////////////////////// Remote control is locked //////////////////////////
+      ///////////////////////////////////////////////////////////////////////////
 
-        if (that->buttons[i].flag == 1)
+      if (that->_key_lock == true) // Remote control is locked
+      {
+        if (that->buttons[i].flag == 1) ////////// Short push //////////
         {
-          LOGF("REMOTE: Short push on button %d\n", i);
+#ifdef DEBUG_lib_btn
+          LOGF("LOCK REMOTE: Short push on button %d\n", i);
+#endif
+          if (that->_state == REMOTE_MANU_LAMP)
+          {
+            switch (i)
+            {
+            case 0: // Button 1 : Escape
+              that->system->preferences.putUInt("lamp_grad", that->_lamp_grad);
+              that->_state = that->_old_state;
+#ifdef DEBUG_lib_btn
+              LOGF("1 Escape STATE =  %d\n", that->_state);
+#endif
+              break;
+            case 1: // Button 2 : Previous
+              that->_lamp_grad = max(0, that->_lamp_grad - 1);
+              break;
+            case 2: // Button 3 : Forward
+              that->_lamp_grad = min(255, that->_lamp_grad + 1);
+              break;
+            case 3: // Button 4 : Go
+              that->system->preferences.putUInt("lamp_grad", that->_lamp_grad);
+              that->_state = that->_old_state;
+#ifdef DEBUG_lib_btn
+              LOGF("1 Escape STATE =  %d\n", that->_state);
+#endif
+              break;
+            }
+          }
+          /* Do nothing */
+          that->buttons[i].flag = 0;
+        }
+        if (that->buttons[i].flag == 2) ////////// Long push //////////
+        {
+#ifdef DEBUG_lib_btn
+          LOGF("LOCK REMOTE: Long push on button %d\n", i);
+#endif
+          switch (i)
+          {
+          case 1: // Button 2 : lamp on/off
+            if (that->_lamp == -1)
+            {
+              that->_lamp = that->_lamp_grad;
+            }
+            else
+            {
+              that->_lamp = -1;
+            }
+            break;
+          case 2: // Button 3 : lamp on/off
+            if (that->_lamp == -1)
+            {
+              that->_lamp = 255;
+            }
+            else
+            {
+              that->_lamp = -1;
+            }
+            break;
+          }
+          /* Do nothing */
+          that->buttons[i].flag = 0;
+        }
+        if (that->buttons[i].flag >= 10) ////////// Combined push //////////
+        {
+#ifdef DEBUG_lib_btn
+          LOGF("LOCK REMOTE: Combined short push on button %d\n", that->buttons[i].flag);
+#endif
+          switch (that->buttons[i].flag)
+          {
+          case 10: // Button 1 and 2
+                   /* */
+                   /* Do actions */
+                   /* */
+            that->buttons[0].flag = 0;
+            that->buttons[1].flag = 0; // reset flags after action
+            break;
+          case 20: // Button 1 and 3
+                   /* */
+                   /* Do actions */
+                   /* */
+            that->buttons[0].flag = 0;
+            that->buttons[2].flag = 0; // reset flags after action
+            break;
+          case 30: // Button 1 and 4                                // LOCK & UNLOCK
+            /* */
+            that->_key_lock = false;
+            /* */
+            that->buttons[0].flag = 0;
+            that->buttons[3].flag = 0; // reset flags after action
+            break;
+          case 21: // Button 2 and 3                                // LAMP_GRAD
+            /* */
+            if (that->_state == that->_old_state)
+            {
+              that->_state = REMOTE_MANU_LAMP;
+            }
+            else if (that->_state == REMOTE_MANU_LAMP)
+            {
+              that->_state = that->_old_state;
+            }
+            /* */
+            that->buttons[1].flag = 0;
+            that->buttons[2].flag = 0; // reset flags after action
+            break;
+          case 31: // Button 2 and 4
+            /* */
+            if (that->_key_lock == true)
+            {
+              that->_key_lock = false;
+            }
+            else
+            {
+              that->_key_lock = true;
+            }
+#ifdef DEBUG_lib_btn
+            LOGF("that->_key_lock %d\n", that->_key_lock);
+            LOGF("_check_key %d\n", that->_check_key);
+#endif
+            /* */
+            that->buttons[1].flag = 0;
+            that->buttons[3].flag = 0; // reset flags after action
+            break;
+          case 32: // Button 3 and 4
+                   /* */
+                   /* Do actions */
+                   /* */
+            that->buttons[2].flag = 0;
+            that->buttons[3].flag = 0; // reset flags after action
+            break;
+          case 210: // Button 1, 2, 3
+                    /* */
+                    /* Do actions */
+                    /* */
+            that->buttons[0].flag = 0;
+            that->buttons[1].flag = 0;
+            that->buttons[2].flag = 0; // reset flags after action
+            break;
+          case 310: // Button 1, 2, 4
+                    /* */
+                    /* Do actions */
+                    /* */
+            that->buttons[0].flag = 0;
+            that->buttons[1].flag = 0;
+            that->buttons[3].flag = 0; // reset flags after action
+            break;
+          case 320: // Button 1, 3, 4
+                    /* */
+                    /* Do actions */
+                    /* */
+            that->buttons[0].flag = 0;
+            that->buttons[2].flag = 0;
+            that->buttons[3].flag = 0; // reset flags after action
+            break;
+          case 321: // Button 2, 3, 4
+                    /* */
+                    /* Do actions */
+                    /* */
+            that->buttons[1].flag = 0;
+            that->buttons[2].flag = 0;
+            that->buttons[3].flag = 0; // reset flags after action
+            break;
+          case 3210: // Button 1,2,3,4
+                     /* */
+                     /* Do actions */
+                     /* */
+            that->buttons[0].flag = 0;
+            that->buttons[1].flag = 0;
+            that->buttons[2].flag = 0;
+            that->buttons[3].flag = 0; // reset flags after action
+            break;
+          }
+        }
+      }
+      else
+
+      ///////////////////////////////////////////////////////////////////////////
+      ////////////////// Remote unlocked (_key_lock == false) ///////////////////
+      ///////////////////////////////////////////////////////////////////////////
+
+      {
+        if (that->buttons[i].flag == 1) ////////// Short push //////////
+        {
+#ifdef DEBUG_lib_btn
+          LOGF("UNLOCK REMOTE: Short push on button %d\n", i);
+          LOGF("UNLOCK REMOTE: that->_state %d\n", that->_state);
+#endif
 
           /* Instructions for the different buttons */
           switch (i)
           {
           case 0: // Button 1 : Escape
-            if (that->_state == REMOTE_MANU)
+            if (that->_state == REMOTE_AUTO)
+            {
+              that->_state = REMOTE_AUTO_LOCK;
+              that->_key_lock = true;
+            }
+            else if (that->_state == REMOTE_MANU)
+            {
               that->_state = REMOTE_AUTO;
-            else if (that->_state == REMOTE_MANULOCK)
-              that->_state = REMOTE_MANU;
+            }
             else if (that->_state == REMOTE_MANU_LAMP)
+            {
+              that->system->preferences.putUInt("lamp_grad", that->_lamp_grad);
               that->_state = REMOTE_MANU;
-            else if (that->_state == REMOTE_MANULOCK_LAMP)
-              that->_state = REMOTE_MANULOCK;
+              that->_lamp = -1;
+            }
             else if (that->_state == REMOTE_MANU_STM)
-              that->_state = REMOTE_AUTO;
-            LOG("Escape");
+            {
+              that->_state = REMOTE_MANU;
+            }
+#ifdef DEBUG_lib_btn
+            LOGF("Escape STATE =  %d\n", that->_state);
+#endif
             break;
           case 1: // Button 2 : Previous
-            if (that->_state == REMOTE_MANU || that->_state != REMOTE_MANULOCK)
+            if (that->_state == REMOTE_MANU)
             {
               that->_previewMacro--;
               if (that->_previewMacro < 0)
+              {
                 that->_previewMacro = that->_macroMax - 1;
-              LOG("Preview --");
+              }
+#ifdef DEBUG_lib_btn
+              LOGF("Preview -- STATE =  %d\n", that->_state);
+#endif
             }
-            else if (that->_state == REMOTE_MANU_LAMP || that->_state == REMOTE_MANULOCK_LAMP)
+            else if (that->_state == REMOTE_MANU_LAMP)
             {
-              that->_lamp_grad--;
-              if (that->_lamp_grad < 0)
-                that->_lamp_grad = 0;
-              LOG("LAMP --");
+              that->_lamp_grad = max(0, that->_lamp_grad - 1);
+#ifdef DEBUG_lib_btn
+              LOGF("LAMP -- STATE =  %d\n", that->_state);
+#endif
+            }
+            else if (that->_state == REMOTE_AUTO)
+            {
+              that->_state = REMOTE_MANU;
             }
             break;
           case 2: // Button 3 : Forward
-            if (that->_state == REMOTE_MANU || that->_state != REMOTE_MANULOCK)
+            if (that->_state == REMOTE_MANU)
             {
               that->_previewMacro++;
               if (that->_previewMacro >= that->_macroMax)
+              {
                 that->_previewMacro = 0;
-              LOG("Preview ++");
+              }
+#ifdef DEBUG_lib_btn
+              LOGF("Preview ++  STATE =  %d\n", that->_state);
+#endif
             }
-            else if (that->_state == REMOTE_MANU_LAMP || that->_state == REMOTE_MANULOCK_LAMP)
+            else if (that->_state == REMOTE_MANU_LAMP)
             {
-              that->_lamp_grad++;
-              if (that->_lamp_grad > 255)
-                that->_lamp_grad = 255;
-              LOG("LAMP ++");
+              that->_lamp_grad = min(255, that->_lamp_grad + 1);
+#ifdef DEBUG_lib_btn
+              LOGF("LAMP ++ that->_lamp_grad =  %d\n", that->_lamp_grad);
+              LOGF("LAMP ++ STATE =  %d\n", that->_state);
+#endif
+            }
+            else if (that->_state == REMOTE_AUTO)
+            {
+              that->_state = REMOTE_MANU;
             }
             break;
           case 3: // Button 4 : Go
-            if (that->_state == REMOTE_MANU || that->_state != REMOTE_MANULOCK)
+            if (that->_state == REMOTE_MANU)
             {
               that->_activeMacro = that->_previewMacro;
-              if (that->_state == REMOTE_AUTO)
-                that->_state = REMOTE_MANU;
-              LOG("Go");
-              break;
+              that->_send_active_macro = true;
             }
-            else if (that->_state == REMOTE_MANU_LAMP || that->_state == REMOTE_MANULOCK_LAMP)
+            else if (that->_state == REMOTE_MANU_LAMP)
             {
-              that->_state == REMOTE_MANU;
+              that->system->preferences.putUInt("lamp_grad", that->_lamp_grad);
+              that->_state = REMOTE_MANU;
+              that->_lamp = -1;
             }
+#ifdef DEBUG_lib_btn
+            LOGF("Go STATE =  %d\n", that->_state);
+#endif
+            break;
           }
           that->buttons[i].flag = 0;
-        } //if (that->buttons[i].flag == 1)
-
-        else if (that->buttons[i].flag == 2)
+        }
+        else if (that->buttons[i].flag == 2) ////////// Long push //////////
         {
-          LOGF("REMOTE: Long push on button %d\n", i);
+#ifdef DEBUG_lib_btn
+          LOGF("UNLOCK REMOTE: Long push on button %d\n", i);
+#endif
 
           /* Instructions for the different buttons */
           switch (i)
           {
           case 0: // Button 1 : BlackOut Forced
             that->_activeMacro = that->_macroMax - 1;
-            that->_state = REMOTE_MANULOCK;
+            that->_previewMacro = that->_macroMax - 1;
+            that->_send_active_macro = true;
+            that->_state = REMOTE_MANU;
             break;
           case 1: // Button 2 : lamp on/off
             if (that->_lamp == -1)
+            {
               that->_lamp = that->_lamp_grad;
+            }
             else
+            {
               that->_lamp = -1;
+            }
             break;
           case 2: // Button 3 : lamp on/off
             if (that->_lamp == -1)
+            {
               that->_lamp = 255;
+            }
             else
+            {
               that->_lamp = -1;
+            }
             break;
           case 3: // Button 4 : Go Forced
             that->_activeMacro = that->_previewMacro;
-            if (that->_state == REMOTE_MANULOCK)
-              that->_state = REMOTE_MANU;
-            else
-              that->_state = REMOTE_MANULOCK;
+            that->_state = REMOTE_MANU_LOCK;
+            that->_key_lock = true;
             break;
           }
           that->buttons[i].flag = 0;
-        } //else if (that->buttons[i].flag == 2)
-      }   //if (that->_key_lock != true)
-
-      else if (that->buttons[i].flag >= 10)
-      {
-        LOGF("REMOTE: Combined short push on button %d\n", that->buttons[i].flag);
-        switch (that->buttons[i].flag)
+        }
+        else if (that->buttons[i].flag >= 10) ////////// Combined push //////////
         {
-        case 10: // Button 1 and 2
-                 /* */
-                 /* Do actions */
-                 /* */
-          that->buttons[0].flag = 0;
-          that->buttons[1].flag = 0; // reset flags after action
-          break;
-        case 20: // Button 1 and 3
-                 /* */
-                 /* Do actions */
-                 /* */
-          that->buttons[0].flag = 0;
-          that->buttons[2].flag = 0; // reset flags after action
-          break;
-        case 30: // Button 1 and 4                                // LOCK & UNLOCK
-          /* */
-          if (that->_key_lock == true)
-            that->_key_lock = false;
-          else
-            that->_key_lock = true;
-          /* */
-          that->buttons[0].flag = 0;
-          that->buttons[3].flag = 0; // reset flags after action
-          break;
-        case 21: // Button 2 and 3                                // LAMP_GRAD
-          /* */
-          if (that->_state == REMOTE_MANU)
-            that->_state = REMOTE_MANU_LAMP;
-          else if (that->_state == REMOTE_MANULOCK)
-            that->_state = REMOTE_MANULOCK_LAMP;
-          /* */
-          that->buttons[1].flag = 0;
-          that->buttons[2].flag = 0; // reset flags after action
-          break;
-        case 31: // Button 2 and 4
-                 /* */
-                 /* Do actions */
-                 /* */
-          that->buttons[1].flag = 0;
-          that->buttons[3].flag = 0; // reset flags after action
-          break;
-        case 32: // Button 3 and 4
-                 /* */
-                 /* Do actions */
-                 /* */
-          that->buttons[2].flag = 0;
-          that->buttons[3].flag = 0; // reset flags after action
-          break;
-        case 210: // Button 1, 2, 3
-                  /* */
-                  /* Do actions */
-                  /* */
-          that->buttons[0].flag = 0;
-          that->buttons[1].flag = 0;
-          that->buttons[2].flag = 0; // reset flags after action
-          break;
-        case 310: // Button 1, 2, 4
-                  /* */
-                  /* Do actions */
-                  /* */
-          that->buttons[0].flag = 0;
-          that->buttons[1].flag = 0;
-          that->buttons[3].flag = 0; // reset flags after action
-          break;
-        case 320: // Button 1, 3, 4
-                  /* */
-                  /* Do actions */
-                  /* */
-          that->buttons[0].flag = 0;
-          that->buttons[2].flag = 0;
-          that->buttons[3].flag = 0; // reset flags after action
-          break;
-        case 321: // Button 2, 3, 4
-                  /* */
-                  /* Do actions */
-                  /* */
-          that->buttons[1].flag = 0;
-          that->buttons[2].flag = 0;
-          that->buttons[3].flag = 0; // reset flags after action
-          break;
-        case 3210: // Button 1,2,3,4
+#ifdef DEBUG_lib_btn
+          LOGF("UNLOCK REMOTE: Combined short push on button %d\n", that->buttons[i].flag);
+#endif
+          switch (that->buttons[i].flag)
+          {
+          case 10: // Button 1 and 2
                    /* */
                    /* Do actions */
                    /* */
-          that->buttons[0].flag = 0;
-          that->buttons[1].flag = 0;
-          that->buttons[2].flag = 0;
-          that->buttons[3].flag = 0; // reset flags after action
-          break;
+            that->buttons[0].flag = 0;
+            that->buttons[1].flag = 0; // reset flags after action
+            break;
+          case 20: // Button 1 and 3
+                   /* */
+                   /* Do actions */
+                   /* */
+            that->buttons[0].flag = 0;
+            that->buttons[2].flag = 0; // reset flags after action
+            break;
+          case 30: // Button 1 and 4                                // LOCK & UNLOCK
+            /* */
+            that->_key_lock = true;
+            /* */
+            that->buttons[0].flag = 0;
+            that->buttons[3].flag = 0; // reset flags after action
+            break;
+          case 21: // Button 2 and 3                                // LAMP_GRAD
+                   /* */
+            that->_state = REMOTE_MANU_LAMP;
+            /* */
+            that->buttons[1].flag = 0;
+            that->buttons[2].flag = 0; // reset flags after action
+            break;
+          case 31: // Button 2 and 4
+            /* */
+            if (that->_key_lock == true)
+            {
+              that->_key_lock = false;
+            }
+            else
+            {
+              that->_key_lock = true;
+            }
+#ifdef DEBUG_lib_btn
+            LOGF("that->_key_lock %d\n", that->_key_lock);
+            LOGF("_check_key %d\n", that->_check_key);
+#endif
+            /* */
+            that->buttons[1].flag = 0;
+            that->buttons[3].flag = 0; // reset flags after action
+            break;
+          case 32: // Button 3 and 4
+                   /* */
+                   /* Do actions */
+                   /* */
+            that->buttons[2].flag = 0;
+            that->buttons[3].flag = 0; // reset flags after action
+            break;
+          case 210: // Button 1, 2, 3
+                    /* */
+                    /* Do actions */
+                    /* */
+            that->buttons[0].flag = 0;
+            that->buttons[1].flag = 0;
+            that->buttons[2].flag = 0; // reset flags after action
+            break;
+          case 310: // Button 1, 2, 4
+                    /* */
+                    /* Do actions */
+                    /* */
+            that->buttons[0].flag = 0;
+            that->buttons[1].flag = 0;
+            that->buttons[3].flag = 0; // reset flags after action
+            break;
+          case 320: // Button 1, 3, 4
+                    /* */
+                    /* Do actions */
+                    /* */
+            that->buttons[0].flag = 0;
+            that->buttons[2].flag = 0;
+            that->buttons[3].flag = 0; // reset flags after action
+            break;
+          case 321: // Button 2, 3, 4
+                    /* */
+                    /* Do actions */
+                    /* */
+            that->buttons[1].flag = 0;
+            that->buttons[2].flag = 0;
+            that->buttons[3].flag = 0; // reset flags after action
+            break;
+          case 3210: // Button 1,2,3,4
+                     /* */
+                     /* Do actions */
+                     /* */
+            that->buttons[0].flag = 0;
+            that->buttons[1].flag = 0;
+            that->buttons[2].flag = 0;
+            that->buttons[3].flag = 0; // reset flags after action
+            break;
+          }
         }
-      } //else if (that->buttons[i].flag >= 10)
-
-      if (that->buttons[i].flag != 3)
-        that->buttons[i].flag = 0;
+      }
 
       that->_unlock();
       yield();
-    } //for (int i = 0; i < NB_BTN; i++)
-
+    }
     /********/
-
     vTaskDelay(xFrequency);
   } //while (true)
 } //void K32_remote::task(void *parameter)
 
-//////////////////////////////// STATE ////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////// STATE ////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////////////////////////////////////////
 
 void K32_remote::read_btn_state(void *parameter)
 {
@@ -445,7 +791,7 @@ void K32_remote::read_btn_state(void *parameter)
             {
               if (j != i)
               {
-                if ((that->buttons[j].state == LOW) || (that->buttons[j].flag = 3))
+                if ((that->buttons[j].state == LOW) || (that->buttons[j].flag == 3))
                 {
                   nbOtherPush++;
                 }
@@ -467,7 +813,7 @@ void K32_remote::read_btn_state(void *parameter)
                 {
                   if (that->buttons[j].flag == 3)
                   {
-                    newFlag += j * 10 ^ power;
+                    newFlag += j * pow(10, power);
                     power++;
                   }
                 }
@@ -475,6 +821,9 @@ void K32_remote::read_btn_state(void *parameter)
                 {
                   if (that->buttons[j].flag == 3)
                   {
+#ifdef DEBUG_lib_btn
+                    LOGF("newflag %d\n", newFlag);
+#endif
                     that->buttons[j].flag = newFlag;
                   }
                 }
