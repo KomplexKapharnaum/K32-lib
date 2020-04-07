@@ -300,15 +300,13 @@ class K32_anim_dmx : public K32_anim {
         K32_modulator* smooth = this->modulate("smooth");
         smooth->period( strobePeriod * 10 );
 
-        int smoothValue = data[LEDS_DATA_SLOTS-2];
-
         for(int i=0; i<segmentSize; i++) segment[i] %= data[LEDS_DATA_SLOTS-2];
       }
 
       // random w/ threshold
       if (btw(strobeMode, 3, 10) || btw(strobeMode, 12, 19) || btw(strobeMode, 20, 25)) 
       {
-        int strobeSeuil; 
+        int strobeSeuil = 1000; 
         if (btw(strobeMode, 3, 10))       strobeSeuil = (data[8] - 31)*1000/69;         // 0->1000    strobeMode >= 3 && strobeMode <= 10
         else if (btw(strobeMode, 12, 19)) strobeSeuil = (data[8] - 121)*1000/79;        // 0->1000    strobeMode >= 12 && strobeMode <= 19
         else if (btw(strobeMode, 20, 25)) strobeSeuil = (data[8] - 201)*1000/54;        // 0->1000    strobeMode >= 20
