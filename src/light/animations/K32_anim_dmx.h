@@ -6,7 +6,7 @@
 #ifndef K32_anim_dmx_h
 #define K32_anim_dmx_h
 
-#define STROB_ON_MS 15
+#define STROB_ON_MS  2000/LEDS_SHOW_FPS
 
 //
 // NOTE: to be available, add #include to this file in K32_light.h !
@@ -262,13 +262,12 @@ class K32_anim_dmx : public K32_anim {
       // STROBE: modulators on master
     
       int strobeMode  = simplifyDmxRange(data[8]);
-      int strobePeriod = data[9]*data[9]/33;
+      int strobePeriod = map(data[9]*data[9], 0, 255*255, STROB_ON_MS*4, 1000);
 
       // strobe
       if (strobeMode == 1 || btw(strobeMode, 3, 10)) 
       { 
-        K32_modulator* strobe = this->modulate("strobe");
-        strobe->period( strobePeriod+STROB_ON_MS);
+        this->modulate("strobe")->period( strobePeriod );
 
         // OFF
         if (data[LEDS_DATA_SLOTS-1] == 0) {
@@ -283,9 +282,9 @@ class K32_anim_dmx : public K32_anim {
         K32_modulator* strobe = this->modulate("strobe");
         int count = strobe->periodCount() % 3;
 
-        if (count == 0)       strobe->period( strobePeriod*100/225 + STROB_ON_MS);
-        else if (count == 1)  strobe->period( strobePeriod/4 + STROB_ON_MS);
-        else if (count == 2)  strobe->period( strobePeriod*116/100 + 1000 + STROB_ON_MS);
+        if (count == 0)       strobe->period( strobePeriod*100/225 );
+        else if (count == 1)  strobe->period( strobePeriod/4 );
+        else if (count == 2)  strobe->period( strobePeriod*116/100 + 1000 );
         
         // OFF
         if (data[LEDS_DATA_SLOTS-1] == 0) {

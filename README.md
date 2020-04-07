@@ -2,7 +2,8 @@
 
 ## TODO
 - strobe on anim_dmx
-- modulator calling modulator (tri-sinus)
+- modulator calling modulator (tri-sinus) ?
+- stop modulator when not in use (dmx)
 
 ## INSTALL
 
