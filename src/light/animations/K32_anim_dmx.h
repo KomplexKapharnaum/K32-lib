@@ -17,9 +17,11 @@
 //
 
 enum color_mode { 
-  COLOR_NORM    = 0,      
-  COLOR_PICKER  = 1,    
-  COLOR_SD      = 2        
+  COLOR_BI,
+  COLOR_TRI,
+  COLOR_QUAD,      
+  COLOR_PICKER,    
+  COLOR_SD        
 };
 
 static  CRGBW colorPreset[25] = {
@@ -31,7 +33,7 @@ static  CRGBW colorPreset[25] = {
   {CRGBW::Yellow},        // 5
   {CRGBW::Magenta},       // 6
   {CRGBW::Cyan},          // 7
-  {CRGBW::Orange}        // 8
+  {CRGBW::Orange}         // 8
 };
 
 
@@ -81,156 +83,36 @@ class K32_anim_dmx : public K32_anim {
       //
       
       // Mirror & Zoom -> Segment size
-      int mirrorMode  = simplifyDmxRange(data[15]);
-      int zoomedSize  = max(1, scale255( size(), data[16]) );
+      int mirrorMode  = simplifyDmxRange(data[14]);
+      int zoomedSize  = max(1, scale255( size(), data[15]) );
 
       int segmentSize = zoomedSize;
       if (mirrorMode == 1 || mirrorMode == 4)       segmentSize /= 2;
       else if (mirrorMode == 2 || mirrorMode == 5)  segmentSize /= 3;
       else if (mirrorMode == 3 || mirrorMode == 6)  segmentSize /= 4;
 
-      // Create Segment Buffer
-      CRGBW segment[segmentSize];
-
       // Modes
-      int colorMode   = simplifyDmxRange(data[14]);
       int pixMode     = simplifyDmxRange(data[5]);
 
-      //
-      // GENERATE BASE SEGMENT
-      //
+      int colorMode = COLOR_BI;
+      if (pixMode == 23) colorMode = COLOR_TRI;
+      else if (pixMode == 24) colorMode = COLOR_QUAD;
+      else if (btw(pixMode, 6, 11)) colorMode = COLOR_PICKER; 
+      else if (btw(pixMode, 12, 17)) colorMode = COLOR_SD;
 
-      // Color mode NORM
-      //
-      if (colorMode == COLOR_NORM) {
 
-        // Bi-color
-        //
-        if (pixMode < 23) {
-          
-          // Colors
-          CRGBW color1 {data[1], data[2], data[3], data[4]};
-          CRGBW color2 {data[10], data[11], data[12], data[13]};
+      // Segment Buffer
+      CRGBW segment[segmentSize];
 
-          // Dash Length + Offset
-          int dashLength  = max(1, scale255(segmentSize, data[6]) );         // pix_start
-          int dashOffset  =  scale255(segmentSize, data[7]);                // pix_pos
 
-          // Fix = only color1
-          if (pixMode == 0) 
-          {
-            for(int i=0; i<segmentSize; i++) segment[i] = color1;
-          }
+      // PRIMARY COLOR
+      /////////////////////////////////////////////////////////////////////////
 
-          // Ruban = color1 one-dash / color2 background
-          else if (pixMode == 1) 
-          {
-            for(int i=0; i<segmentSize; i++) 
-            {
-              if (i >= dashOffset && i < dashOffset+dashLength) segment[i] = color1;
-              else segment[i] = color2;
-            }
-          }
-
-          // 01:02 = color1 + color2 dash 
-          if (pixMode == 2) 
-          {
-            dashLength = data[6];   // on this one, length is absolute and not relative to segementSize
-
-            for(int i=0; i<segmentSize; i++) 
-            {
-              if ( (i+dashOffset)/dashLength % 2 == 0 ) segment[i] = color1;
-              else segment[i] = color2;
-            }
-          }
-
-          // rus> + rusf> = color1 one-dash fade or blend R / color2 background
-          else if (pixMode == 3 || pixMode == 9) 
-          {
-            for(int i=0; i<segmentSize; i++) 
-            {
-              if (i >= dashOffset && i < dashOffset+dashLength) 
-              {
-                int coef = ((dashOffset+dashLength-1-i) * 255 ) / (dashLength-1);
-
-                segment[i] = color1 % (uint8_t)coef;
-                if (pixMode == 9) segment[i] += color2 % (uint8_t)(255-coef);
-              }
-              else segment[i] = color2;
-            }
-          }
-
-          // rus< + rusf< = color1 one-dash fade or blend L / color2 background
-          else if (pixMode == 4 || pixMode == 10) 
-          {
-            for(int i=0; i<segmentSize; i++) 
-            {
-              if (i >= dashOffset && i < dashOffset+dashLength) 
-              {
-                int coef = ((i-dashOffset) * 255 ) / (dashLength-1);
-
-                segment[i] = color1 % (uint8_t)coef;
-                if (pixMode == 10) segment[i] += color2 % (uint8_t)(255-coef);
-              }
-              else segment[i] = color2;
-            }
-          }
-
-          // rus<> + rusf<> = color1 one-dash fade or blend LR / color2 background
-          else if (pixMode == 5 || pixMode == 11) 
-          {
-            for(int i=0; i<segmentSize; i++) 
-            {    
-              if (i >= dashOffset && i < dashOffset+dashLength/2) 
-              {
-                int coef = ((i-dashOffset) * 255 ) / (dashLength/2);
-
-                segment[i] = color1 % (uint8_t)coef;
-                if (pixMode == 11) segment[i] += color2 % (uint8_t)(255-coef); 
-              }
-              else if (i >= dashOffset+dashLength/2 && i < dashOffset+dashLength) 
-              {
-                int coef = ((dashOffset+dashLength-1-i) * 255 ) / (dashLength/2);
-
-                segment[i] = color1 % (uint8_t)coef;
-                if (pixMode == 11) segment[i] += color2 % (uint8_t)(255-coef); 
-              }
-              else segment[i] = color2;
-            }
-          }
-
-        }
-
-        // Tri-color + Quadri-color 
-        //
-        else if (pixMode == 23 || pixMode == 24) {
-          
-          // Colors
-          CRGBW color[5] = {
-            {data[10], data[11], data[12], data[13]}, // background
-            colorPreset[ simplifyDmxRange(data[1]) ],                   // color1
-            colorPreset[ simplifyDmxRange(data[2]) ],                   // color2
-            colorPreset[ simplifyDmxRange(data[3]) ],                   // color3
-            colorPreset[ simplifyDmxRange(data[4]) ]                    // color4
-          };
-
-          // Dash Length + Offset + Split 
-          int dashLength  = max(3, scale255(2 * segmentSize, data[6]));          
-          int dashOffset  = scale255((segmentSize-dashLength), data[7]);
-          int dashSplit = pixMode % 20;
-          int dashPart  = 0;
-
-          // Multi-color dash / color0 backgound
-          for(int i=0; i<segmentSize; i++) 
-          {
-            dashPart = (i-dashOffset)*dashSplit/dashLength + 1;       // find in which part of the dash we are
-            if (dashPart < 0 || dashPart > dashSplit) dashPart = 0;   // use 0 if outside of the dash
-
-            segment[i] = color[ dashPart ];
-          }          
-
-        }       
-
+      // Color mode BI
+      if (colorMode == COLOR_BI)
+      {
+        CRGBW color1 {data[1], data[2], data[3], data[4]};
+        for(int i=0; i<segmentSize; i++) segment[i] = color1;
       }
 
       // Color mode PICKER
@@ -255,16 +137,134 @@ class K32_anim_dmx : public K32_anim {
       // Color mode SD
       else if (colorMode == COLOR_SD) {
         // TODO: load image from SD !
+
+
+      }
+      
+      // Color mode TRI / QUADRI
+      else if (colorMode == COLOR_TRI || colorMode == COLOR_QUAD) {
+        
+        // Colors
+        CRGBW color[5] = {
+          {data[10], data[11], data[12], data[13]}, // background     // color[0]
+          colorPreset[ simplifyDmxRange(data[1]) ],                   // color[1]
+          colorPreset[ simplifyDmxRange(data[2]) ],                   // color[2]
+          colorPreset[ simplifyDmxRange(data[3]) ],                   // color[3]
+          colorPreset[ simplifyDmxRange(data[4]) ]                    // color[4]
+        };
+
+        // Dash Length + Offset + Split 
+        int dashLength  = max(3, scale255(2 * segmentSize, data[6]));          
+        int dashOffset  = scale255((segmentSize-dashLength), data[7]);
+        int dashSplit = (colorMode == COLOR_QUAD) ? 4 : 3;
+        int dashPart  = 0;
+
+        // Multi-color dash / color0 backgound
+        for(int i=0; i<segmentSize; i++) 
+        {
+          dashPart = (i-dashOffset)*dashSplit/dashLength + 1;       // find in which part of the dash we are
+          if (dashPart < 0 || dashPart > dashSplit) dashPart = 0;   // use 0 if outside of the dash (=> background)
+
+          segment[i] = color[ dashPart ];
+        }          
+
+      }   
+
+
+      // APPLY PIX MOD BACKGROUND
+      /////////////////////////////////////////////////////////////////////////
+
+      if (colorMode == COLOR_BI || colorMode == COLOR_PICKER) {
+
+        // Background Color
+        CRGBW backColor {CRGBW::Black};
+        if (colorMode == COLOR_BI) backColor = CRGBW{data[10], data[11], data[12], data[13]};
+
+        // Dash Length + Offset
+        int dashLength  = max(1, scale255(segmentSize, data[6]) );          // pix_start
+        int dashOffset  =  scale255(segmentSize, data[7]);                  // pix_pos
+
+        // 2 colors = color1 one-dash / backColor background
+        if (pixMode == 1 || pixMode == 7) 
+        {
+          for(int i=0; i<segmentSize; i++) 
+            if (i < dashOffset && i >= dashOffset+dashLength) segment[i] = backColor;
+        }
+
+        // 01:02 = color1 + backColor dash 
+        if (pixMode == 2 || pixMode == 8) 
+        {
+          dashLength = data[6];   // on this one, length is absolute and not relative to segementSize
+
+          for(int i=0; i<segmentSize; i++) 
+            if ( (i+dashOffset)/dashLength % 2 == 1 ) segment[i] = backColor;
+        }
+
+        // rusf>  = color1 one-dash fade R / backColor background
+        else if (pixMode == 3 || pixMode == 9) 
+        {
+          for(int i=0; i<segmentSize; i++) 
+          {
+            if (i >= dashOffset && i < dashOffset+dashLength) 
+            {
+              int coef = ((dashOffset+dashLength-1-i) * 255 ) / (dashLength-1);
+
+              segment[i] %= (uint8_t)coef;
+              segment[i] += backColor % (uint8_t)(255-coef);
+            }
+            else segment[i] = backColor;
+          }
+        }
+
+        // rusf<  = color1 one-dash fade L / color2 background
+        else if (pixMode == 4 || pixMode == 10) 
+        {
+          for(int i=0; i<segmentSize; i++) 
+          {
+            if (i >= dashOffset && i < dashOffset+dashLength) 
+            {
+              int coef = ((i-dashOffset) * 255 ) / (dashLength-1);
+
+              segment[i] %= (uint8_t)coef;
+              segment[i] += backColor % (uint8_t)(255-coef);
+            }
+            else segment[i] = backColor;
+          }
+        }
+
+        // rusf<>  = color1 one-dash fade LR / color2 background
+        else if (pixMode == 5 || pixMode == 11) 
+        {
+          for(int i=0; i<segmentSize; i++) 
+          { 
+            if (i >= dashOffset && i < dashOffset+dashLength/2) 
+            {
+              int coef = ((i-dashOffset) * 255 ) / (dashLength/2);
+
+              segment[i] %= (uint8_t)coef;
+              segment[i] += backColor % (uint8_t)(255-coef);
+            }
+            else if (i >= dashOffset+dashLength/2 && i < dashOffset+dashLength) 
+            {
+              int coef = ((dashOffset+dashLength-1-i) * 255 ) / (dashLength/2);
+
+              segment[i] %= (uint8_t)coef;
+              segment[i] += backColor % (uint8_t)(255-coef);
+            }
+            else segment[i] = backColor;
+          }
+        }
+
       }
 
 
-      //
-      // STROBE: modulator
+      // STROBE
+      /////////////////////////////////////////////////////////////////////////
     
       int strobeMode  = simplifyDmxRange(data[8]);
       int strobePeriod = map(data[9]*data[9], 0, 255*255, STROB_ON_MS*4, 1000);
 
-      // strobe
+      // strobe modulator
       if (strobeMode == 1 || btw(strobeMode, 3, 10)) 
       { 
         this->mod("strobe")->period( strobePeriod );
@@ -296,10 +296,10 @@ class K32_anim_dmx : public K32_anim {
       }
 
 
-      //
-      // SMOOTH: modulator
+      // SMOOTH
+      /////////////////////////////////////////////////////////////////////////
 
-      // smooth
+      // smooth modulator
       if (strobeMode == 2) 
       {
         this->mod("smooth")->period( strobePeriod * 10 );
@@ -307,8 +307,9 @@ class K32_anim_dmx : public K32_anim {
         for(int i=0; i<segmentSize; i++) segment[i] %= this->mod("smooth")->value();
       }
 
-      //
+      
       // RANDOM
+      /////////////////////////////////////////////////////////////////////////
 
       // random w/ threshold
       if (btw(strobeMode, 3, 10) || btw(strobeMode, 12, 19) || btw(strobeMode, 20, 25)) 
@@ -325,16 +326,16 @@ class K32_anim_dmx : public K32_anim {
       }
 
 
-
-      //
       // MASTER
-      //
+      /////////////////////////////////////////////////////////////////////////
+
       uint8_t master = data[0];
       for(int i=0; i<segmentSize; i++) segment[i] %= master;
 
-      //
+
+
       // DRAW ON STRIP WITH ZOOM & MIRROR
-      //
+      /////////////////////////////////////////////////////////////////////////
 
       // Clear
       this->clear();
@@ -348,13 +349,13 @@ class K32_anim_dmx : public K32_anim {
       // Copy pixels into strip
       for(int i=0; i<zoomedSize; i++) 
       {
-        int pix  = i % segmentSize;           // pix cursor into segment
-        int iter = i / segmentSize;           // count of mirror copy 
+        int pix  = i % segmentSize;               // pix cursor into segment
+        int iter = i / segmentSize;               // count of mirror copy 
         
-        if (iter && iter % mirrorAlternate)   // alternate: invert pix cursor
+        if (iter && iter % mirrorAlternate)       // alternate: invert pix cursor
           pix = segmentSize - pix - 1;    
 
-        this->pixel(i+zoomOffset, segment[pix]);
+        this->pixel(i+zoomOffset, segment[pix]);  // draw on strip
       }      
 
     }
