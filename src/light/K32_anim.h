@@ -6,8 +6,8 @@
 #ifndef K32_anim_h
 #define K32_anim_h
 
-#define LEDS_DATA_SLOTS  64
-#define LEDS_MOD_SLOTS  16
+#define ANIM_DATA_SLOTS  32
+#define ANIM_MOD_SLOTS  16
 
 #include "K32_ledstrip.h"
 #include "K32_modulator.h"
@@ -19,19 +19,16 @@ class K32_anim {
   public:
     K32_anim()
     {
+      this->_strip = NULL;
+      memset(this->_dataBuffer, 0, sizeof this->_dataBuffer);
+
       this->newData = xSemaphoreCreateBinary();
       this->bufferInUse = xSemaphoreCreateBinary();
       xSemaphoreTake(this->newData, 1);
       xSemaphoreGive(this->bufferInUse);
 
-      this->stop_lock = xSemaphoreCreateBinary();
       this->wait_lock = xSemaphoreCreateBinary();
-      xSemaphoreGive(this->stop_lock);
       xSemaphoreGive(this->wait_lock);
-
-      this->_strip = NULL;
-
-      memset(this->_dataBuffer, 0, sizeof this->_dataBuffer);
     }
 
     K32_anim* setup(K32_ledstrip* strip, int size = 0, int offset = 0) {
@@ -52,29 +49,20 @@ class K32_anim {
       return this->_size;
     }
 
-    // Set FPS
-    void fps(int f = -1) {
-      if (f >= 0) _fps = f;
-      else _fps = LEDS_ANIM8_FPS;
-    }
-
     // loop get
     bool loop() { 
-      return _loop;
+      return this->_loop;
     }
 
     // loop set
     K32_anim* loop(bool doLoop) { 
-      _loop = doLoop;
+      this->_loop = doLoop;
       return this;
     }
 
     // is playing ?
     bool isPlaying() {
-      xSemaphoreTake(this->stop_lock, portMAX_DELAY);
-      bool r = (this->animateHandle != NULL);
-      xSemaphoreGive(this->stop_lock);
-      return r;
+      return this->animateHandle != NULL;
     }
 
     // start animate thread
@@ -85,12 +73,12 @@ class K32_anim {
         return this;
       }
       this->_stopAt = (timeout>0) ? millis() + timeout : 0;
+
       if (this->isPlaying()) return this;
-      this->stop();
 
       xSemaphoreTake(this->wait_lock, portMAX_DELAY);
       xSemaphoreTake(this->bufferInUse, portMAX_DELAY);
-      xTaskCreate( this->draw,           // function
+      xTaskCreate( this->animate,           // function
                     "anim_task",            // task name
                     5000,                   // stack memory
                     (void*)this,            // args
@@ -101,19 +89,9 @@ class K32_anim {
       return this;
     }
 
-    // stop thread
-    K32_anim* stop() {
-      if (!this->isPlaying()) return this;
-      this->_strip->lock();
-      xSemaphoreTake(this->stop_lock, portMAX_DELAY);
-      if (this->animateHandle != NULL) {
-        vTaskDelete( this->animateHandle );
-      }
-      this->_strip->unlock();
-      this->release();
-      xSemaphoreGive(this->stop_lock);
-      LOG("LIGHT: stop");
-      return this;
+    // stop animation
+    void stop() { 
+      this->_stopAt = 1; 
     }
 
     // wait until anim end (or timeout)
@@ -132,14 +110,14 @@ class K32_anim {
     // register new modulator
     K32_modulator* mod( String modName, K32_modulator* mod, bool playNow = true) 
     {
-      if (this->_modcounter >= LEDS_MOD_SLOTS) {
+      if (this->_modcounter >= ANIM_MOD_SLOTS) {
         LOG("ERROR: no more slot available to register new modulator");
         return mod;
       }
       
       mod->name(modName);
 
-      this->_mods[ this->_modcounter ] = mod;
+      this->_modulators[ this->_modcounter ] = mod;
       this->_modcounter++;
       // LOGINL("ANIM: register "); LOG(mod->name());
       
@@ -148,13 +126,13 @@ class K32_anim {
       return mod;
     }
 
-    // get registered mod
+    // get registered modulator
     K32_modulator* mod( String modName) 
     {
       for (int k=0; k<this->_modcounter; k++)
-        if (this->_mods[k]->name() == modName) {
+        if (this->_modulators[k]->name() == modName) {
           // LOGINL("LIGHT: "); LOG(name);
-          return this->_mods[k];
+          return this->_modulators[k];
         }
       LOGINL("MOD: not found "); LOG(modName);
       return new K32_modulator();
@@ -164,24 +142,18 @@ class K32_anim {
     // ANIM DATA
     //
 
-    // signal that data has been updated -> unblock waitData
-    K32_anim* refresh() {
-      xSemaphoreGive(this->newData);
-      return this;
-    }
-
     // change one element in data
     K32_anim* set(int k, int value) { 
       xSemaphoreTake(this->bufferInUse, portMAX_DELAY);     // data can be modified only during anim waitData
-      if (k < LEDS_DATA_SLOTS) this->_dataBuffer[k] = value; 
+      if (k < ANIM_DATA_SLOTS) this->_dataBuffer[k] = value; 
       xSemaphoreGive(this->bufferInUse);
       return this;
     }
 
-    // new data push (int[])
+    // new data push (int[], size)
     K32_anim* push(int* frame, int size) {
       bool didChange = false;
-      size = min(size, LEDS_DATA_SLOTS);
+      size = min(size, ANIM_DATA_SLOTS);
       xSemaphoreTake(this->bufferInUse, portMAX_DELAY);     // data can be modified only during anim waitData
       for(int k=0; k<size; k++) 
         if (this->_dataBuffer[k] != frame[k]) {
@@ -189,17 +161,24 @@ class K32_anim {
           didChange = true;
         }
       xSemaphoreGive(this->bufferInUse);
-      if (didChange) this->refresh();
+      if (didChange) xSemaphoreGive(this->newData);
       return this;
     }
     
-    // new data push (uint8_t)
+    // new data push (uint8_t[], size)
     K32_anim* push(uint8_t* frame, int size) {
       int dframe[size];
       for(int i=0; i<size; i++) dframe[i] = frame[i];
       return this->push(dframe, size);
-    } 
+    }
 
+    // refresh data 
+    K32_anim* push() {
+      xSemaphoreGive(this->newData);
+      return this;
+    }
+
+    // data push simplified
     K32_anim* push(int d0) { return this->push(new int[1]{d0}, 1); }
     K32_anim* push(int d0, int d1) { return this->push(new int[2]{d0, d1}, 2); }
     K32_anim* push(int d0, int d1, int d2) { return this->push(new int[3]{d0, d1, d2}, 3); }
@@ -215,13 +194,11 @@ class K32_anim {
   //
   protected:
 
-
     // ANIM LOGIC
     //
 
     // init called when anim starts to play (can be overloaded by anim class)
-    // waiting for data ensure that nothing is really played before first data are push
-    // pushting startTime can be usefull..
+    // this is a prototype, must be defined in specific anim class
     virtual void init() {}
 
     // generate frame from data, called by update
@@ -229,8 +206,7 @@ class K32_anim {
     virtual void draw () { LOG("ANIM: nothing to do.."); };
 
     // frozen data: can be accessed in draw, do net set anything in it !
-    int data[LEDS_DATA_SLOTS];
-
+    int data[ANIM_DATA_SLOTS];
 
     // DRAW ON STRIP
     //
@@ -258,31 +234,29 @@ class K32_anim {
     
     unsigned long startTime = 0;
 
-    
-
 
   // PRIVATE
   //
   private:
 
     // input data
-    int _dataBuffer[LEDS_DATA_SLOTS];
+    int _dataBuffer[ANIM_DATA_SLOTS];
 
     // THREAD: draw frame on new data
-    static void draw( void * parameter ) 
+    static void animate( void * parameter ) 
     {
       K32_anim* that = (K32_anim*) parameter;
       TickType_t timeout;
       
       that->startTime = millis();
 
-      that->init();   // Subclass init hook
+      that->init();                                                                 // Subclass init hook
 
       do 
       {
         xSemaphoreGive(that->bufferInUse);                                          // allow push & pushdata to modify data
         yield();                                                                          
-        timeout = pdMS_TO_TICKS( 1000/that->_fps );                                 // push timeout according to FPS
+        timeout = pdMS_TO_TICKS( 1000/LEDS_ANIMATE_FPS );                             // push timeout according to FPS
         
         if (xSemaphoreTake(that->newData, timeout) == pdTRUE) {                     // Wait external DATA refresh or FPS timeout
           xSemaphoreGive(that->newData);
@@ -290,40 +264,38 @@ class K32_anim {
         }
 
         if (!that->_firstDataReceived) continue;                                    // check if data has been set at least one time 
-        if (that->_stopAt && millis() >= that->_stopAt) break;                      // check duration, set at play()
+        if (that->_stopAt && millis() >= that->_stopAt) break;                      // check if we should stop now
 
         xSemaphoreTake(that->bufferInUse, portMAX_DELAY);                           // lock buffer to prevent external change
         
         for (int k=0; k<that->_modcounter; k++)       
-          if  ( that->_mods[k]->run(that->_dataBuffer) ) that->refresh();           // run modulators on data buffer
+          if (that->_modulators[k]->run(that->_dataBuffer))                               // run modulators on data buffer
+            xSemaphoreGive(that->newData);;                                         // trigger new data if data has been changed 
 
         if (xSemaphoreTake(that->newData, 0) == pdTRUE)                             // new data available in buffer
         {
-          memcpy(that->data, that->_dataBuffer, LEDS_DATA_SLOTS*sizeof(int));       // copy buffer into data
-          xSemaphoreTake(that->newData, 1);        // consume newdata
-          xSemaphoreGive(that->bufferInUse);      // let data be push by others
+          memcpy(that->data, that->_dataBuffer, ANIM_DATA_SLOTS*sizeof(int));       // copy buffer into data
+          xSemaphoreTake(that->newData, 1);                                         // consume newdata
+          xSemaphoreGive(that->bufferInUse);                                        // let data be push by others
 
-          that->draw();                         // Subclass draw on strip hook
+          that->draw();                                                             // Subclass draw hook
         }
-        // LOGF("frame call %d \n", millis());
-
 
       } 
       while(that->loop());
 
-      LOGF("ANIM: %s end \n", that->name().c_str());
-      that->release();
-      vTaskDelete(NULL);
-    }
+      
+      // stop and clear
+      xSemaphoreTake(that->newData, 1);
+      xSemaphoreGive(that->bufferInUse);
 
-    // end of animation
-    void release() 
-    {
-      this->animateHandle = NULL;
-      xSemaphoreTake(this->newData, 1);
-      xSemaphoreGive(this->bufferInUse);
-      xSemaphoreGive(this->wait_lock);
-      this->clear();
+      that->clear();
+      that->animateHandle = NULL;
+  
+      xSemaphoreGive(that->wait_lock);
+
+      LOGF("ANIM: %s end \n", that->name().c_str());
+      vTaskDelete(NULL);
     }
     
     // identity
@@ -338,18 +310,15 @@ class K32_anim {
     // internal logic
     SemaphoreHandle_t newData;  
     SemaphoreHandle_t bufferInUse;  
-    bool _isRunning = false;
     bool _firstDataReceived = false;
 
     // Animation
     TaskHandle_t animateHandle = NULL;
-    int _fps = LEDS_ANIM8_FPS;
-    unsigned long _stopAt = 0;
-    SemaphoreHandle_t stop_lock;
     SemaphoreHandle_t wait_lock;
+    uint32_t _stopAt = 0;
 
     // Modulator
-    K32_modulator* _mods[LEDS_MOD_SLOTS];
+    K32_modulator* _modulators[ANIM_MOD_SLOTS];
     int _modcounter = 0;
 };
 

@@ -31,11 +31,12 @@ Modulator has access to this helper methods:
                                       
   float progress()                = % of progress in period between 0.0 and 1.0 
   int periodCount()               = count the number of period iteration since esp start
+  bool fresh()                    = returns true at first call after trigger()
 
 Modulator can also access / modify those attributes:
 
   int params[MOD_PARAMS_SLOTS]    = modulator parameters, set by external users, can be renamed for convenience usint local int& attribute
-  int anim_data[LEDS_DATA_SLOTS]  = pointer to animation data, can be used for calculation. It can also manipulate this data, use carefully !
+  int anim_data[ANIM_DATA_SLOTS]  = pointer to animation data, can be used for calculation. It can also manipulate this data, use carefully !
 
 */
 
@@ -46,8 +47,6 @@ Modulator can also access / modify those attributes:
 class K32_mod_fadein : public K32_modulator_trigger {
   public:  
     
-    bool engage = false;
-
     void modulate( int& data )
     {   
       // not yet ready
@@ -58,13 +57,11 @@ class K32_mod_fadein : public K32_modulator_trigger {
       {
         data = maxi();
         stop();
+        return;
       }
       
-      // set initial data value as fadein start
-      if (!engage) {        
-        engage = true; 
-        mini(data); 
-      }
+      // first run (since trigger): set current data value as fadein start
+      if ( fresh() ) mini(data); 
       
       data = time() * amplitude() / period() + mini();
 
@@ -77,8 +74,6 @@ class K32_mod_fadein : public K32_modulator_trigger {
 class K32_mod_fadeout : public K32_modulator_trigger {
   public:  
     
-    bool engage = false;
-
     void modulate( int& data )
     { 
       // not yet ready
@@ -89,13 +84,11 @@ class K32_mod_fadeout : public K32_modulator_trigger {
       {
         data = mini();
         stop();
+        return;
       }
       
-      // set initial data value as fadeout start
-      if (!engage) {        
-        engage = true; 
-        maxi(data); 
-      }
+      // first run (since trigger): set current data value as fadeout start
+      if ( fresh() ) maxi(data); 
       
       data = maxi() - time() * amplitude() / period();
       

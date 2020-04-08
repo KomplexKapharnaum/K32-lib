@@ -7,7 +7,7 @@
 #define K32_light_h
 
 #define LEDS_MAXSTRIPS    8    // There is 8 RMT channels on ESP32
-#define LEDS_ANIM8_FPS    200   // Anims modulation FPS
+#define LEDS_ANIMATE_FPS    200   // Anims modulation FPS
 #define LEDS_SHOW_FPS     200   // Show RMT push FPS
 #define LEDS_ANIMS_SLOTS  16
 

@@ -424,7 +424,7 @@ void K32_mqtt::dispatch(char *topic, char *payload, size_t length)
       char val[128];
       byte inc = 1;
       splitString(payload, "§", inc, val);
-      while (strcmp(val, "") != 0 && (inc - 1) < LEDS_DATA_SLOTS)
+      while (strcmp(val, "") != 0 && (inc - 1) < ANIM_DATA_SLOTS)
       {
         LOGINL(" ");
         LOGINL(atoi(val));

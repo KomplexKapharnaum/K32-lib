@@ -35,7 +35,7 @@ Modulator has access to this helper methods:
 Modulator can also access / modify those attributes:
 
   int params[MOD_PARAMS_SLOTS]    = modulator parameters, set by external users, can be renamed for convenience usint local int& attribute
-  int anim_data[LEDS_DATA_SLOTS]  = pointer to animation data, can be used for calculation. It can also manipulate this data, use carefully !
+  int anim_data[ANIM_DATA_SLOTS]  = pointer to animation data, can be used for calculation. It can also manipulate this data, use carefully !
 
 */
 
