@@ -479,7 +479,7 @@ void K32_osc::server( void * parameter ) {
 
                 for (int k=0; k<LEDS_DATA_SLOTS; k++) 
                   if (msg.isInt(k+1)) {
-                    anim->setdata(k, msg.getInt(k+1));
+                    anim->set(k, msg.getInt(k+1));
                     LOGINL(" "); LOGINL(msg.getInt(k+1));
                   }
                 LOG("");

@@ -428,7 +428,7 @@ void K32_mqtt::dispatch(char *topic, char *payload, size_t length)
       {
         LOGINL(" ");
         LOGINL(atoi(val));
-        anim->setdata(inc - 1, atoi(val));
+        anim->set(inc - 1, atoi(val));
         ++inc;
         splitString(payload, "§", inc, val);
       }

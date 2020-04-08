@@ -32,28 +32,41 @@ public:
   String name() { return this->_name; }
   void name(String n) { this->_name = n; }
 
-  void attach(int slot)
+  K32_modulator* at(int slot)
   {
-    if (slot < LEDS_DATA_SLOTS)
-      this->dataslot = slot;
+    if (slot < LEDS_DATA_SLOTS) this->dataslot = slot;
+    return this;
   }
 
-  void play()
+  K32_modulator* play()
   {
+    if (!this->isRunning) {
+      this->trigger();
+      if (this->dataslot >= 0) LOGF2("ANIM: %s modulate param %i \n", this->name(), this->dataslot);
+    }
+      
     this->isRunning = true;
     this->freezeTime = 0;
-    this->trigTime = millis();
-    LOGF2("ANIM: %s modulate param %i \n", this->name(), this->dataslot);
+    
+    return this;
   }
 
-  void pause()
+  K32_modulator* trigger() 
+  {
+    this->triggerTime = millis();
+    return this;
+  }
+
+  K32_modulator* pause()
   {
     this->freezeTime = millis();
+    return this;
   }
 
-  void stop()
+  K32_modulator* stop()
   {
     this->isRunning = false;
+    return this;
   }
 
   // Execute modulation function
@@ -71,6 +84,13 @@ public:
       return before != mData;
     }
     return false;
+  }
+
+  // Direct value
+  int value(int sourceData = 0) 
+  {
+    this->modulate(sourceData);
+    return sourceData;
   }
 
   // change one Params
@@ -123,40 +143,35 @@ public:
   int amplitude() { return this->_maxi - this->_mini; }
   int period() { return max(1, this->_period); }
   int phase() { return this->_phase; }
-  int phaseTime360() { return ((this->_phase % 360) * this->_period) / 360; }
 
-  void useTriggerTime() { this->useRelativeTimeRef = true; }
-  void useAbsoluteTime() { this->useRelativeTimeRef = false; }
-  void applyPhase360() { this->applyPhaseCorrectionDeg = true; }
-
-  uint32_t time() {  
-    uint32_t t = (this->freezeTime > 0) ? this->freezeTime : millis();
-    if (this->useRelativeTimeRef) {
-      if (t > this->trigTime) t -= this->trigTime;
-      else t = 0;
-    }
-    if (this->applyPhaseCorrectionDeg)  {
-      if (t > phaseTime360()) t -= phaseTime360();
-      else t = 0;
-    }
-    return t; 
+  virtual int time() {  
+    return (this->freezeTime > 0) ? this->freezeTime : millis();
   }
 
-  int timePeriod() { return time() % period(); }
-  float progress() { return 1.0 * timePeriod() / period(); }
+  float progress() { return 1.0 * (time() % period()) / period(); }
   int periodCount() { return time() / period(); }
   
 
 protected:
   virtual void modulate(int &data)
   {
-    LOG("MOD: full data, doing nothing !");
+    LOG("MOD: doing nothing !");
   };
 
 
-  int params[MOD_PARAMS_SLOTS];
   int *anim_data;
+  int params[MOD_PARAMS_SLOTS];
 
+  // common params
+  int _period = 1000;
+  int _phase = 0;
+  int _mini = 0;
+  int _maxi = 255;
+
+  // time refs
+  unsigned long freezeTime = 0;
+  unsigned long triggerTime = 0;
+  
 
 private:
   // init on construcion
@@ -170,20 +185,43 @@ private:
   }
 
   SemaphoreHandle_t paramInUse;
-  unsigned long freezeTime = 0;
-  unsigned long trigTime = 0;
-  bool useRelativeTimeRef = false;
-  bool applyPhaseCorrectionDeg = true;
   String _name = "?";
   bool isRunning = false;
 
   int dataslot = -1;
 
-  // common params
-  int _period = 1000;
-  int _phase = 0;
-  int _mini = 0;
-  int _maxi = 255;
 };
+
+
+//  PERIODIC MODULATORS (LFO)
+//
+class K32_modulator_periodic : public K32_modulator {
+  public:
+
+    // Time is shifted with phase (0->360°) * period()
+    virtual int time() 
+    {
+      return K32_modulator::time() - ((this->_phase % 360) * this->_period) / 360;
+    }
+
+};
+
+
+//  TRIGGER MODULATORS
+//
+class K32_modulator_trigger : public K32_modulator {
+  public:
+
+    // Time is referenced to triggerTime (play)
+    // Time is shifted with phase as fixed delay
+    virtual int time() 
+    {
+      return K32_modulator::time() - this->triggerTime - this->_phase;
+    }
+
+};
+
+
+
 
 #endif

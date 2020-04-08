@@ -130,7 +130,7 @@ class K32_anim {
     }
 
     // register new modulator
-    K32_modulator* modulate( int dataslot, String modName, K32_modulator* mod) 
+    K32_modulator* mod( String modName, K32_modulator* mod, bool playNow = true) 
     {
       if (this->_modcounter >= LEDS_MOD_SLOTS) {
         LOG("ERROR: no more slot available to register new modulator");
@@ -138,18 +138,18 @@ class K32_anim {
       }
       
       mod->name(modName);
-      mod->attach(dataslot);
-      mod->play();
 
       this->_mods[ this->_modcounter ] = mod;
       this->_modcounter++;
       // LOGINL("ANIM: register "); LOG(mod->name());
+      
+      if (playNow) mod->play();
 
       return mod;
     }
 
     // get registered mod
-    K32_modulator* modulate( String modName) 
+    K32_modulator* mod( String modName) 
     {
       for (int k=0; k<this->_modcounter; k++)
         if (this->_mods[k]->name() == modName) {
@@ -171,24 +171,29 @@ class K32_anim {
     }
 
     // change one element in data
-    K32_anim* setdata(int k, int value) { 
+    K32_anim* set(int k, int value) { 
       xSemaphoreTake(this->bufferInUse, portMAX_DELAY);     // data can be modified only during anim waitData
       if (k < LEDS_DATA_SLOTS) this->_dataBuffer[k] = value; 
       xSemaphoreGive(this->bufferInUse);
       return this;
     }
 
-    // new data push 
+    // new data push (int[])
     K32_anim* push(int* frame, int size) {
+      bool didChange = false;
       size = min(size, LEDS_DATA_SLOTS);
       xSemaphoreTake(this->bufferInUse, portMAX_DELAY);     // data can be modified only during anim waitData
-      for(int k=0; k<size; k++) this->_dataBuffer[k] = frame[k]; 
+      for(int k=0; k<size; k++) 
+        if (this->_dataBuffer[k] != frame[k]) {
+          this->_dataBuffer[k] = frame[k]; 
+          didChange = true;
+        }
       xSemaphoreGive(this->bufferInUse);
-      this->refresh();
+      if (didChange) this->refresh();
       return this;
     }
     
-    // new data push 
+    // new data push (uint8_t)
     K32_anim* push(uint8_t* frame, int size) {
       int dframe[size];
       for(int i=0; i<size; i++) dframe[i] = frame[i];

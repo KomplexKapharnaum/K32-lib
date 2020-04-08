@@ -64,12 +64,12 @@ class K32_anim_dmx : public K32_anim {
 
     K32_anim_dmx() {
       
-      // Strobe use data channel LEDS_DATA_SLOTS-1 to modulate
+      // Strobe modulator (pulse)
       // param 0: width of pulse in ms (time strobe ON)
-      this->modulate( LEDS_DATA_SLOTS-1, "strobe", new K32_mod_pulse)->mini(0)->param(0, STROB_ON_MS);  
+      this->mod("strobe", new K32_mod_pulse, false)->param(0, STROB_ON_MS);  
 
-      // Smooth use data channel LEDS_DATA_SLOTS-2 to modulate
-      this->modulate( LEDS_DATA_SLOTS-2, "smooth", new K32_mod_sinus)->mini(0)->maxi(255);  
+      // Smooth modulator
+      this->mod("smooth", new K32_mod_sinus, false);
 
     }
 
@@ -82,7 +82,7 @@ class K32_anim_dmx : public K32_anim {
       
       // Mirror & Zoom -> Segment size
       int mirrorMode  = simplifyDmxRange(data[15]);
-      int zoomedSize  = max(1, scale255( this->size(), data[16]) );
+      int zoomedSize  = max(1, scale255( size(), data[16]) );
 
       int segmentSize = zoomedSize;
       if (mirrorMode == 1 || mirrorMode == 4)       segmentSize /= 2;
@@ -259,7 +259,7 @@ class K32_anim_dmx : public K32_anim {
 
 
       //
-      // STROBE: modulators on master
+      // STROBE: modulator
     
       int strobeMode  = simplifyDmxRange(data[8]);
       int strobePeriod = map(data[9]*data[9], 0, 255*255, STROB_ON_MS*4, 1000);
@@ -267,10 +267,10 @@ class K32_anim_dmx : public K32_anim {
       // strobe
       if (strobeMode == 1 || btw(strobeMode, 3, 10)) 
       { 
-        this->modulate("strobe")->period( strobePeriod );
+        this->mod("strobe")->period( strobePeriod );
 
         // OFF
-        if (data[LEDS_DATA_SLOTS-1] == 0) {
+        if ( this->mod("strobe")->value() == 0) {
           this->clear();
           return;
         }
@@ -279,38 +279,47 @@ class K32_anim_dmx : public K32_anim {
       // strobe blink (3xstrobe -> blind 1+s)
       else if (strobeMode == 11 || btw(strobeMode, 12, 19)) 
       {
-        K32_modulator* strobe = this->modulate("strobe");
-        int count = strobe->periodCount() % 3;  // ERROR: periodCount is moving.. -> count is not linear !
-        // LOG(count);
+        // int count = this->mod("strobe")->periodCount() % 3;  // ERROR: periodCount is moving.. -> count is not linear !
+        // // LOG(count);
 
-        if (count == 0)       strobe->period( strobePeriod*100/225 );
-        else if (count == 1)  strobe->period( strobePeriod/4 );
-        else if (count == 2)  strobe->period( strobePeriod*116/100 + 1000 );
+        // if (count == 0)       this->mod("strobe")->period( strobePeriod*100/225 );
+        // else if (count == 1)  this->mod("strobe")->period( strobePeriod/4 );
+        // else if (count == 2)  this->mod("strobe")->period( strobePeriod*116/100 + 1000 );
         
-        // OFF
-        if (data[LEDS_DATA_SLOTS-1] == 0) {
-          this->clear();
-          return;
-        }
+        // // OFF
+        // if (this->mod("strobe")->value() == 0) {
+        //   this->clear();
+        //   return;
+        // }
+
+        // TODO: make a special "multi-pulse" modulator
       }
+
+
+      //
+      // SMOOTH: modulator
 
       // smooth
       if (strobeMode == 2) 
       {
-        K32_modulator* smooth = this->modulate("smooth");
-        smooth->period( strobePeriod * 10 );
+        this->mod("smooth")->period( strobePeriod * 10 );
 
-        for(int i=0; i<segmentSize; i++) segment[i] %= data[LEDS_DATA_SLOTS-2];
+        for(int i=0; i<segmentSize; i++) segment[i] %= this->mod("smooth")->value();
       }
+
+      //
+      // RANDOM
 
       // random w/ threshold
       if (btw(strobeMode, 3, 10) || btw(strobeMode, 12, 19) || btw(strobeMode, 20, 25)) 
       {
+        // Seuil calculation depends of mode
         int strobeSeuil = 1000; 
         if (btw(strobeMode, 3, 10))       strobeSeuil = (data[8] - 31)*1000/69;         // 0->1000    strobeMode >= 3 && strobeMode <= 10
         else if (btw(strobeMode, 12, 19)) strobeSeuil = (data[8] - 121)*1000/79;        // 0->1000    strobeMode >= 12 && strobeMode <= 19
         else if (btw(strobeMode, 20, 25)) strobeSeuil = (data[8] - 201)*1000/54;        // 0->1000    strobeMode >= 20
 
+        // apply random Seuil
         for(int i=0; i<segmentSize; i++) 
           if (random(1000) > strobeSeuil) segment[i] = {CRGBW::Black};
       }
@@ -331,10 +340,10 @@ class K32_anim_dmx : public K32_anim {
       this->clear();
 
       // Mirroring alternate (1 = copy, 2 = alternate)
-      int mirrorAlternate = 1 + (mirrorMode == 1 || mirrorMode == 2 || mirrorMode == 3); 
+      int mirrorAlternate = 1 + btw(mirrorMode, 1, 3); 
 
       // Zoom offset
-      int zoomOffset = (this->size() - zoomedSize)/2;      
+      int zoomOffset = (size() - zoomedSize)/2;      
 
       // Copy pixels into strip
       for(int i=0; i<zoomedSize; i++) 

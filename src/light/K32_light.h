@@ -19,7 +19,7 @@
 // NOTE: to be able to use a modulator, it must be included here
 //
 
-#include "modulators/K32_mod_waves.h"
+#include "modulators/K32_mod_lfo.h"
 #include "modulators/K32_mod_fades.h"
 
 //

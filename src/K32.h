@@ -20,7 +20,6 @@
 #include "system/K32_pwm.h"
 #include "audio/K32_audio.h"
 #include "light/K32_light.h"
-#include "light/K32_modulo.h"
 #include "remote/K32_remote.h"
 #include "network/K32_wifi.h"
 #include "network/K32_osc.h"

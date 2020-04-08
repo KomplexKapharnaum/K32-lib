@@ -26,13 +26,9 @@ Modulator has access to this helper methods:
   int mini()                      = minimum value
   int amplitude()                 = maxi-mini
 
-  void useAbsoluteTime()          = time reference boot time
-  void useTriggerTime()           = time reference is modulator play() call
-  void applyPhase360()            = apply phase shift to time calculation, phase shift is equal to period*phase/360
-
-  uint32_t time()                 = current time if modulator is playing or freezeTime if mod is paused.
-  int phaseTime()                 = time for phase as deg angle (360°), relative to period 
-  uint32_t timePeriod()           = time ellapsed relative to current period
+  uint32_t time()                 = current time if modulator is playing or freezeTime if mod is paused. 
+                                      if using K32_modulator_trigger: time is based on play() time and corrected with phase as fixed delay (ms)
+                                      
   float progress()                = % of progress in period between 0.0 and 1.0 
   int periodCount()               = count the number of period iteration since esp start
 
@@ -47,60 +43,61 @@ Modulator can also access / modify those attributes:
 //
 // FADE IN
 //
-class K32_mod_fadein : public K32_modulator {
+class K32_mod_fadein : public K32_modulator_trigger {
   public:  
     
     bool engage = false;
 
     void modulate( int& data )
-    { 
-      useTriggerTime();
-      int delay = phase();
+    {   
+      // not yet ready
+      if (time() < 0) return; 
 
-      if (time() < delay) return;
-  
-      else if (time() >= period()+delay) {
+      // end of modulation
+      if (time() >= period()) 
+      {
         data = maxi();
         stop();
-        return;
       }
       
-      if (!engage) {        // set initial data value as fadein start
+      // set initial data value as fadein start
+      if (!engage) {        
         engage = true; 
         mini(data); 
       }
       
-      data = (time()-delay) * amplitude() / period() + mini();
+      data = time() * amplitude() / period() + mini();
+
     };
 };
 
 //
 // FADE OUT
 //
-class K32_mod_fadeout : public K32_modulator {
+class K32_mod_fadeout : public K32_modulator_trigger {
   public:  
     
     bool engage = false;
 
     void modulate( int& data )
     { 
-      useTriggerTime();
-      int delay = phase();
+      // not yet ready
+      if (time() < 0) return; 
 
-      if (time() < delay) return;
-  
-      else if (time() >= period()+delay) {
+      // end of modulation
+      if (time() >= period()) 
+      {
         data = mini();
         stop();
-        return;
       }
       
-      if (!engage) {        // set initial data value as fadeout start
+      // set initial data value as fadeout start
+      if (!engage) {        
         engage = true; 
         maxi(data); 
       }
-        
-      data = maxi() - (time()-delay) * amplitude() / period();
+      
+      data = maxi() - time() * amplitude() / period();
       
     };
 };

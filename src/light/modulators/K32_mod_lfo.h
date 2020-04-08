@@ -1,10 +1,10 @@
 /*
-  K32_mod_waves.h
+  K32_mod_lfo.h
   Created by Thomas BOHL, March 2020.
   Released under GPL v3.0
 */
-#ifndef K32_mod_waves_h
-#define K32_mod_waves_h
+#ifndef K32_mod_lfo_h
+#define K32_mod_lfo_h
 
 #include "../K32_anim.h"
 
@@ -26,13 +26,9 @@ Modulator has access to this helper methods:
   int mini()                      = minimum value
   int amplitude()                 = maxi-mini
 
-  void useAbsoluteTime()          = time reference boot time
-  void useTriggerTime()           = time reference is modulator play() call
-  void applyPhase360()            = apply phase shift to time calculation, phase shift is equal to period*phase/360
-
-  uint32_t time()                 = current time if modulator is playing or freezeTime if mod is paused.
-  int phaseTime()                 = time for phase as deg angle (360°), relative to period 
-  uint32_t timePeriod()           = time ellapsed relative to current period
+  uint32_t time()                 = current time if modulator is playing or freezeTime if mod is paused. 
+                                      if using K32_modulator_periodic: time is corrected with phase (1/360 of period)
+                                      
   float progress()                = % of progress in period between 0.0 and 1.0 
   int periodCount()               = count the number of period iteration since esp start
 
@@ -43,15 +39,15 @@ Modulator can also access / modify those attributes:
 
 */
 
+
 //
 // SINUS
 //
-class K32_mod_sinus : public K32_modulator {
+class K32_mod_sinus : public K32_modulator_periodic {
   public:  
     
     void modulate( int& data )
     {
-      applyPhase360();
       data = (0.5f + 0.5f * sin(2 * PI * progress())) * amplitude() + mini();
     };
   
@@ -60,13 +56,11 @@ class K32_mod_sinus : public K32_modulator {
 //
 // TRIANGLE
 //
-class K32_mod_triangle : public K32_modulator {
+class K32_mod_triangle : public K32_modulator_periodic {
   public:  
 
     void modulate ( int& data )
     { 
-      applyPhase360();
-
       float percent = progress();
       if (percent > 0.5) percent = 1 - percent;
 
@@ -78,13 +72,11 @@ class K32_mod_triangle : public K32_modulator {
 //
 // SAW TOOTH
 //
-class K32_mod_sawtooth : public K32_modulator {
+class K32_mod_sawtooth : public K32_modulator_periodic {
   public:  
 
     void modulate ( int& data )
     {
-      applyPhase360();
-
       data = progress() * amplitude() + mini();
     };
   
@@ -93,13 +85,11 @@ class K32_mod_sawtooth : public K32_modulator {
 //
 // SAW TOOTH INVERTED
 //
-class K32_mod_isawtooth : public K32_modulator {
+class K32_mod_isawtooth : public K32_modulator_periodic {
   public:  
 
     void modulate ( int& data )
     {
-      applyPhase360();
-
       data = maxi() - progress() * amplitude();
     };
 
@@ -108,7 +98,7 @@ class K32_mod_isawtooth : public K32_modulator {
 //
 // PULSE
 //
-class K32_mod_pulse : public K32_modulator {
+class K32_mod_pulse : public K32_modulator_periodic {
   public:  
 
     // named link to params 
@@ -116,9 +106,8 @@ class K32_mod_pulse : public K32_modulator {
 
     void modulate ( int& data )
     {
-      applyPhase360();
-
-      data = ( progress() <= 1.0*widthMS/period() ) * amplitude() + mini();
+      if ( time() % period() < widthMS) data = maxi();
+      else data = mini();
     };
 
 };
@@ -127,7 +116,7 @@ class K32_mod_pulse : public K32_modulator {
 //
 // RANDOM
 //
-class K32_mod_random : public K32_modulator {
+class K32_mod_random : public K32_modulator_periodic {
   public:  
 
     // internal attribute
@@ -135,8 +124,6 @@ class K32_mod_random : public K32_modulator {
 
     void modulate( int& data )
     {
-      applyPhase360();
-
       int newPeriod = periodCount();
       if (newPeriod != lastPeriod) {
         lastPeriod = newPeriod;
