@@ -64,16 +64,12 @@ inline bool btw(int value, int min, int max) {
 class K32_anim_dmx : public K32_anim {
   public:
 
-    K32_anim_dmx() {
-      
-      // Strobe modulator (pulse)
-      // param 0: width of pulse in ms (time strobe ON)
-      this->mod("strobe", new K32_mod_pulse, false)->param(0, STROB_ON_MS);  
+    // Strobe modulator (pulse)
+    K32_mod_pulse* strobe{};
 
-      // Smooth modulator
-      this->mod("smooth", new K32_mod_sinus, false);
+    // Smooth modulator (sinus)
+    K32_mod_sinus* smooth{};
 
-    }
 
     // Loop
     void draw ()
@@ -267,10 +263,12 @@ class K32_anim_dmx : public K32_anim {
       // strobe modulator
       if (strobeMode == 1 || btw(strobeMode, 3, 10)) 
       { 
-        this->mod("strobe")->period( strobePeriod );
+        this->strobe
+                ->period( strobePeriod )
+                ->param(0, STROB_ON_MS);
 
         // OFF
-        if ( this->mod("strobe")->value() == 0) {
+        if ( this->strobe->value() == 0) {
           this->clear();
           return;
         }
@@ -279,15 +277,15 @@ class K32_anim_dmx : public K32_anim {
       // strobe blink (3xstrobe -> blind 1+s)
       else if (strobeMode == 11 || btw(strobeMode, 12, 19)) 
       {
-        // int count = this->mod("strobe")->periodCount() % 3;  // ERROR: periodCount is moving.. -> count is not linear !
+        // int count = this->strobe->periodCount() % 3;  // ERROR: periodCount is moving.. -> count is not linear !
         // // LOG(count);
 
-        // if (count == 0)       this->mod("strobe")->period( strobePeriod*100/225 );
-        // else if (count == 1)  this->mod("strobe")->period( strobePeriod/4 );
-        // else if (count == 2)  this->mod("strobe")->period( strobePeriod*116/100 + 1000 );
+        // if (count == 0)       this->strobe->period( strobePeriod*100/225 );
+        // else if (count == 1)  this->strobe->period( strobePeriod/4 );
+        // else if (count == 2)  this->strobe->period( strobePeriod*116/100 + 1000 );
         
         // // OFF
-        // if (this->mod("strobe")->value() == 0) {
+        // if (this->strobe->value() == 0) {
         //   this->clear();
         //   return;
         // }
@@ -302,9 +300,9 @@ class K32_anim_dmx : public K32_anim {
       // smooth modulator
       if (strobeMode == 2) 
       {
-        this->mod("smooth")->period( strobePeriod * 10 );
+        this->smooth->period( strobePeriod * 10 );
 
-        for(int i=0; i<segmentSize; i++) segment[i] %= this->mod("smooth")->value();
+        for(int i=0; i<segmentSize; i++) segment[i] %= this->smooth->value();
       }
 
       
@@ -329,8 +327,7 @@ class K32_anim_dmx : public K32_anim {
       // MASTER
       /////////////////////////////////////////////////////////////////////////
 
-      uint8_t master = data[0];
-      for(int i=0; i<segmentSize; i++) segment[i] %= master;
+      this->master(data[0]);
 
 
 

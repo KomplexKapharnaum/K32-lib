@@ -88,7 +88,7 @@ void K32_light::blackout() {
 //
 
 // register new anim
-K32_anim* K32_light::anim( String animName, K32_anim* anim, int stripN, int size, int offset ) 
+K32_anim* K32_light::anim( int stripN, String animName, K32_anim* anim, int size, int offset ) 
 {
 
   if (stripN >= this->_nstrips) {

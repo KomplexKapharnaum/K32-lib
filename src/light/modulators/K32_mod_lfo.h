@@ -102,11 +102,15 @@ class K32_mod_pulse : public K32_modulator_periodic {
   public:  
 
     // named link to params 
-    int& widthMS = params[0]; // 0 -> 1000
+    int& widthMS  = params[0];  // pulse ON width in milliseconds
+    int& widthPCT = params[1];  // pulse ON width in percentage (activated if widthMS = 0)
 
     void modulate ( int& data )
-    {
-      if ( time() % period() < widthMS) data = maxi();
+    {  
+      int width = widthMS;
+      if (widthMS == 0) width = period()*widthPCT/100;
+
+      if ( time() % period() < width) data = maxi();
       else data = mini();
     };
 

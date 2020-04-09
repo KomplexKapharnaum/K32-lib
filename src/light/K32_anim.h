@@ -141,6 +141,11 @@ class K32_anim {
 
     // ANIM DATA
     //
+    K32_anim* master(uint8_t m) {
+      this->_master = m;
+      return this;
+    }
+
 
     // change one element in data
     K32_anim* set(int k, int value) { 
@@ -214,17 +219,17 @@ class K32_anim {
     // draw pix
     void pixel(int pix, CRGBW color)  {
       if (pix < this->_size)
-        this->_strip->pix( pix + this->_offset, color);
+        this->_strip->pix( pix + this->_offset, color % this->_master);
     }
 
     // draw multiple pix
     void pixel(int pixStart, int count, CRGBW color)  {
-      this->_strip->pix( pixStart + this->_offset, count, color);
+      this->_strip->pix( pixStart + this->_offset, count, color % this->_master);
     }
 
     // draw all
     void all(CRGBW color) {
-      this->_strip->pix( this->_offset, this->_size, color);
+      this->_strip->pix( this->_offset, this->_size, color % this->_master);
     }
 
     // clear
@@ -304,6 +309,7 @@ class K32_anim {
 
     // output
     K32_ledstrip* _strip = NULL;
+    uint8_t _master = 255;
     int _size = 0;
     int _offset = 0; 
 

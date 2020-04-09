@@ -57,7 +57,7 @@ class K32_light {
     //  ANIM
     //
     K32_anim* anim( String animName = "");
-    K32_anim* anim( String animName, K32_anim* anim, int stripN = 0, int size = 0, int offset = 0);
+    K32_anim* anim( int stripN, String animName, K32_anim* anim, int size = 0, int offset = 0);
     void stop();
 
     // Set FPS
