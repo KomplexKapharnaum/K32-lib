@@ -63,18 +63,6 @@ Preferences power_prefs;
  };
 
 
- void K32_power::_lock()
- {
-   //LOG("lock");
-   xSemaphoreTake(this->lock, portMAX_DELAY);
- }
-
- void K32_power::_unlock()
- {
-   //LOG("unlock");
-   xSemaphoreGive(this->lock);
- }
-
  int K32_power::power() {
    if (CURRENT_SENSOR_TYPE != 0)
    {
@@ -111,11 +99,114 @@ Preferences power_prefs;
    this->_unlock(); 
  }
 
+  void K32_power::setAdaptiveGauge(bool adaptiveOn, batteryType type, int nbOfCell)
+  {
+    if (adaptiveOn) LOG("POWER : Switch on adaptive gauge") ; 
+    else LOG("POWER : Switch off adaptive gauge") ; 
+
+    if (nbOfCell == 0)
+    {
+      /* Auto determination of number of Cell*/
+      int v = this->_stm32->voltage();  
+      switch (type)
+        {
+          case LIPO : //LiPo
+            v = this->_stm32->voltage(); 
+            nbOfCell = findCellCount(v, LIPO_VOLTAGE_BREAKS[0], LIPO_VOLTAGE_BREAKS[6]);
+            break;
+          case LIFE : // Life
+            v = this->_stm32->voltage(); 
+            nbOfCell = findCellCount(v, LIFE_VOLTAGE_BREAKS[0], LIFE_VOLTAGE_BREAKS[6]);
+            break;
+        }
+
+    LOGF("POWER : Auto nb of cell : %d", nbOfCell);
+
+    }
+    this->_lock();  
+    this->adaptiveGaugeOn = adaptiveOn ; 
+    this->nbOfCell = nbOfCell ; 
+    this->battType = type ; 
+    this->_unlock(); 
+
+  }
+
+  void K32_power::addVoltageProfile (unsigned int profile[7] , unsigned int minOutputCurrent, unsigned int maxOutputCurrent ) 
+  {
+    bool currentCheck = true ; 
+    /* Check consistency of output current values */ 
+    for (int i = 0 ; i<this->profileIdx; i++)
+    {
+      if ( (minOutputCurrent<=this->profiles[i].outputCurrent[1]) && (minOutputCurrent>=this->profiles[i].outputCurrent[0]) ) // min current is inside interval of another profile
+      {
+        LOG("POWER: Error min current value for new profile not consistent");
+        currentCheck = false; 
+      } else if ((maxOutputCurrent<=this->profiles[i].outputCurrent[1]) && (maxOutputCurrent>=this->profiles[i].outputCurrent[0]) ) // min current is inside interval of another profile
+      {
+        LOG("POWER: Error max current value for new profile not consistent");
+        currentCheck = false; 
+      } else if ((minOutputCurrent<=this->profiles[i].outputCurrent[0]) && (maxOutputCurrent>=this->profiles[i].outputCurrent[1]) ) // current values are inside interval of another profile
+      {
+        LOG("POWER: Error current values for new profile not consistent");
+        currentCheck = false; 
+      } else if ((minOutputCurrent>=this->profiles[i].outputCurrent[0]) && (maxOutputCurrent<=this->profiles[i].outputCurrent[1]) ) // current interval surronds interval of another profile
+      {
+        LOG("POWER: Error current values for new profile not consistent");
+        currentCheck = false; 
+      }
+    }
+    /* End of check */ 
+    if (currentCheck){
+          for (int i = 0; i<7; i++)
+    {
+          this->profiles[this->profileIdx].profile[i] = profile[i] ; 
+    }
+    this->profiles[this->profileIdx].outputCurrent[0] = minOutputCurrent; 
+    this->profiles[this->profileIdx].outputCurrent[1] =  maxOutputCurrent; 
+    this->profileIdx ++ ; 
+    LOGF("POWER: New profile added, now %d profiles available \n", this->profileIdx) ;
+    }
+
+  }
 
 
  /*
   *   PRIVATE
   */
+
+  void K32_power::_lock()
+ {
+   //LOG("lock");
+   xSemaphoreTake(this->lock, portMAX_DELAY);
+ }
+
+ void K32_power::_unlock()
+ {
+   //LOG("unlock");
+   xSemaphoreGive(this->lock);
+ }
+
+  /* Determine the number of cells based on the battery voltage and the given min and max cell voltages.
+ * Return 0 if the voltage doesn't match any number of cells.
+ *
+ * 2, 3, 4 and 7 cells are supported.
+ */
+uint8_t K32_power::findCellCount(unsigned int voltage, unsigned int cellMin, unsigned int cellMax)
+{      
+  for (int i = 2; i <= 7; i++)
+  {
+    if (i == 5 || i == 6)
+      continue;
+
+    if ((voltage > i * cellMin) && (voltage <= i * (cellMax + INITIAL_CELL_VOLTAGE_TOLERANCE)))
+    {
+      return i;
+    }
+  }
+}
+
+
+
 
   void K32_power::task(void * parameter) 
   {
@@ -135,15 +226,18 @@ Preferences power_prefs;
       {
 
  /* Averaging*/
-        if (counter == 50)
-        {
-          that-> _current = currentMeas / 50;
-          that-> _current = (that->_current - that->currentOffset ) *1000 / that->currentFactor ; // Curent in mA
-          counter = 0;
-          currentMeas = 0;
-        }
-        currentMeas = currentMeas + analogRead(that->currentPin) ;
-        counter ++;
+        // if (counter == 50)
+        // {
+        //   that-> _current = currentMeas / 50;
+        //   that-> _current = (that->_current - that->currentOffset ) *1000 / that->currentFactor ; // Curent in mA
+        //   counter = 0;
+        //   currentMeas = 0;
+        // }
+        // currentMeas = currentMeas + analogRead(that->currentPin) ;
+        // counter ++;
+
+        currentMeas = analogRead(that->currentPin) ; 
+        that-> _current = (currentMeas - that->currentOffset ) *1000 / that->currentFactor ; // Curent in mA
 
       } else
       {
@@ -158,6 +252,62 @@ Preferences power_prefs;
         {
           that->charge = false;
         }
+
+      /* Adaptive profile */ 
+      if (that->adaptiveGaugeOn)
+      {
+        bool defaultMode = true ; // Will be set to file if a profile corresponds to actual current value
+        for (int i = 0 ; i<that->profileIdx; i++)
+        {
+          if((that->_current>=that->profiles[i].outputCurrent[0]) && (that->_current<=that->profiles[i].outputCurrent[1])) // Current in the interval of a profile
+          {
+            if(i != that->profileOn) 
+            {
+              /* Set new profile according to current value */ 
+              that->_stm32->custom( that->profiles[i].profile[0] * that->nbOfCell ,
+                                    that->profiles[i].profile[1] * that->nbOfCell ,
+                                    that->profiles[i].profile[2] * that->nbOfCell ,
+                                    that->profiles[i].profile[3] * that->nbOfCell ,
+                                    that->profiles[i].profile[4] * that->nbOfCell ,
+                                    that->profiles[i].profile[5] * that->nbOfCell ,
+                                    that->profiles[i].profile[6] * that->nbOfCell );
+              /* Update value of operating profile */ 
+              that->profileOn = i ; 
+              i = that->profileIdx; // no need to check other profiles
+              LOGF("POWER: Switched to another profile : %d \n", that->profileOn) ;
+            }
+            defaultMode = false ; 
+          }
+        }
+        if ((defaultMode) && ( that->profileOn != -1 ))
+        {
+          if (that->battType == LIPO)
+          {
+            that->_stm32->custom(   LIPO_VOLTAGE_BREAKS[0] * that->nbOfCell ,
+                                    LIPO_VOLTAGE_BREAKS[1] * that->nbOfCell ,
+                                    LIPO_VOLTAGE_BREAKS[2] * that->nbOfCell ,
+                                    LIPO_VOLTAGE_BREAKS[3] * that->nbOfCell ,
+                                    LIPO_VOLTAGE_BREAKS[4] * that->nbOfCell ,
+                                    LIPO_VOLTAGE_BREAKS[5] * that->nbOfCell ,
+                                    LIPO_VOLTAGE_BREAKS[6] * that->nbOfCell );
+
+          } else if (that->battType == LIFE)
+          {
+            that->_stm32->custom(   LIFE_VOLTAGE_BREAKS[0] * that->nbOfCell ,
+                                    LIFE_VOLTAGE_BREAKS[1] * that->nbOfCell ,
+                                    LIFE_VOLTAGE_BREAKS[2] * that->nbOfCell ,
+                                    LIFE_VOLTAGE_BREAKS[3] * that->nbOfCell ,
+                                    LIFE_VOLTAGE_BREAKS[4] * that->nbOfCell ,
+                                    LIFE_VOLTAGE_BREAKS[5] * that->nbOfCell ,
+                                    LIFE_VOLTAGE_BREAKS[6] * that->nbOfCell );
+          }
+          that->profileOn = -1; 
+          LOG("POWER: Switched to default profile") ;
+
+        }
+      }
+
+
 
 
         that->SOC = that->_stm32->battery();
