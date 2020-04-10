@@ -108,22 +108,27 @@ class K32_anim {
     }
 
     // register new modulator
-    K32_modulator* mod( String modName, K32_modulator* mod, bool playNow = true) 
+    K32_modulator* mod(K32_modulator* modulator, bool playNow = true) 
     {
       if (this->_modcounter >= ANIM_MOD_SLOTS) {
         LOG("ERROR: no more slot available to register new modulator");
-        return mod;
+        return modulator;
       }
       
-      mod->name(modName);
-
-      this->_modulators[ this->_modcounter ] = mod;
+      this->_modulators[ this->_modcounter ] = modulator;
       this->_modcounter++;
-      // LOGINL("ANIM: register "); LOG(mod->name());
+      // LOGINL("ANIM: register "); LOG(modulator->name());
       
-      if (playNow) mod->play();
+      if (playNow) modulator->play();
 
-      return mod;
+      return modulator;
+    }
+
+    // register new modulator (named)
+    K32_modulator* mod( String modName, K32_modulator* modulator, bool playNow = false) 
+    {
+      modulator->name(modName);
+      return this->mod( modulator, playNow );
     }
 
     // get registered modulator
@@ -136,6 +141,17 @@ class K32_anim {
         }
       LOGINL("MOD: not found "); LOG(modName);
       return new K32_modulator();
+    }
+
+    // remove all modulators
+    K32_anim* unmod()
+    {
+      for (int k=0; k<this->_modcounter; k++){
+        this->_modulators[k]->stop();
+        this->_modulators[k] = NULL;
+      }
+      this->_modcounter = 0;
+      return this;
     }
 
 

@@ -79,61 +79,21 @@ void K32_remote::setMacroMax(int macroMax)
   this->_unlock();
 }
 
-void K32_remote::setAuto_Lock()
+void K32_remote::setState(remoteState state)
 {
   this->_lock();
-  this->_state = REMOTE_AUTO_LOCK;
+  this->_state = state;
   this->_unlock();
 }
 
-void K32_remote::setAuto()
+void K32_remote::nextActiveMacro()
 {
   this->_lock();
-  this->_state = REMOTE_AUTO;
+  this->_activeMacro = (this->_activeMacro+1) % this->_macroMax;
+  this->_previewMacro = this->_activeMacro;
   this->_unlock();
 }
 
-void K32_remote::setManu()
-{
-  this->_lock();
-  this->_state = REMOTE_MANU;
-  this->_unlock();
-}
-
-void K32_remote::setManu_Stm()
-{
-  this->_lock();
-  this->_state = REMOTE_MANU_STM;
-  this->_unlock();
-}
-
-void K32_remote::setManu_Stm_lock()
-{
-  this->_lock();
-  this->_state = REMOTE_MANU_STM_LOCK;
-  this->_unlock();
-}
-
-void K32_remote::setManu_Lock()
-{
-  this->_lock();
-  this->_state = REMOTE_MANU_LOCK;
-  this->_unlock();
-}
-
-void K32_remote::setManu_Lamp()
-{
-  this->_lock();
-  this->_state = REMOTE_MANU_LAMP;
-  this->_unlock();
-}
-
-void K32_remote::setSendMacro()
-{
-  this->_lock();
-  this->_send_active_macro = false;
-  this->_unlock();
-}
 ////////////////////////////////////////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////////////////////////////////////////
@@ -186,6 +146,7 @@ int K32_remote::getSendMacro()
 {
   this->_lock();
   int data = this->_send_active_macro;
+  this->_send_active_macro = false;
   this->_unlock();
   return data;
 }
@@ -310,9 +271,11 @@ void K32_remote::task(void *parameter)
               break;
             case 1: // Button 2 : Previous
               that->_lamp_grad = max(0, that->_lamp_grad - 1);
+              that->_lamp = that->_lamp_grad;
               break;
             case 2: // Button 3 : Forward
               that->_lamp_grad = min(255, that->_lamp_grad + 1);
+              that->_lamp = that->_lamp_grad;
               break;
             case 3: // Button 4 : Go
               that->system->preferences.putUInt("lamp_grad", that->_lamp_grad);
@@ -390,6 +353,7 @@ void K32_remote::task(void *parameter)
             if (that->_state == that->_old_state)
             {
               that->_state = REMOTE_MANU_LAMP;
+              that->_lamp = that->_lamp_grad;
             }
             else if (that->_state == REMOTE_MANU_LAMP)
             {
@@ -524,6 +488,7 @@ void K32_remote::task(void *parameter)
             else if (that->_state == REMOTE_MANU_LAMP)
             {
               that->_lamp_grad = max(0, that->_lamp_grad - 1);
+              that->_lamp = that->_lamp_grad;
 #ifdef DEBUG_lib_btn
               LOGF("LAMP -- STATE =  %d\n", that->_state);
 #endif
@@ -548,6 +513,7 @@ void K32_remote::task(void *parameter)
             else if (that->_state == REMOTE_MANU_LAMP)
             {
               that->_lamp_grad = min(255, that->_lamp_grad + 1);
+              that->_lamp = that->_lamp_grad;
 #ifdef DEBUG_lib_btn
               LOGF("LAMP ++ that->_lamp_grad =  %d\n", that->_lamp_grad);
               LOGF("LAMP ++ STATE =  %d\n", that->_state);

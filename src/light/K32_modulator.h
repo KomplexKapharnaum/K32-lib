@@ -47,11 +47,10 @@ public:
     if (!this->isRunning) {
       this->trigger();
       if (this->dataslot >= 0) LOGF2("ANIM: %s modulate param %i \n", this->name().c_str(), this->dataslot);
+
+      this->freezeTime = 0;
+      this->isRunning = true;
     }
-      
-    this->isRunning = true;
-    this->freezeTime = 0;
-    
     return this;
   }
 
@@ -77,16 +76,29 @@ public:
   // Execute modulation function
   bool run(int *animData)
   {
-    if (this->isRunning && this->dataslot >= 0)
+    if (this->isRunning)
     {
-      this->anim_data = animData;
+      int before = _lastProducedData;
 
-      int &mData = animData[this->dataslot];
-      int before = mData;
-      xSemaphoreTake(this->paramInUse, portMAX_DELAY);
-      this->modulate(mData);
-      xSemaphoreGive(this->paramInUse);
-      return before != mData;
+      if (this->dataslot >= 0 && animData != NULL)
+      {
+        this->anim_data = animData;
+        before = animData[this->dataslot];
+
+        xSemaphoreTake(this->paramInUse, portMAX_DELAY);
+        this->modulate(animData[this->dataslot]);
+        xSemaphoreGive(this->paramInUse);
+        
+        _lastProducedData = animData[this->dataslot];
+      }
+      else
+      {
+        xSemaphoreTake(this->paramInUse, portMAX_DELAY);
+        this->modulate(_lastProducedData);
+        xSemaphoreGive(this->paramInUse);
+      }
+
+      return before != _lastProducedData;
     }
     return false;
   }
@@ -178,7 +190,7 @@ private:
   bool isRunning = false;
 
   int dataslot = -1;
-
+  int _lastProducedData = 0;
 };
 
 

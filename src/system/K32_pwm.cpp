@@ -34,10 +34,12 @@ K32_pwm *K32_pwm::setAll(int value)
 
 K32_pwm *K32_pwm::set(int channel, int value)
 { 
-  if (channel < this->chanNumber) {
-    this->chanState[channel] = value;
-    ledcWrite(channel, value);
-  }
+  if (channel < this->chanNumber) 
+    if (this->chanState[channel] != value)
+    {
+      this->chanState[channel] = value*value/255;
+      ledcWrite(channel, this->chanState[channel]);
+    }
   return this;
 }
 
