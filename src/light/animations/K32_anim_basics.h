@@ -18,15 +18,11 @@
 
 class K32_anim_test : public K32_anim {
   public:
-
-    // Constructor
-    K32_anim_test() : K32_anim()  
-    {
-      this->loop(false);  // disable loop: it's a one time generator !
-    }
     
     // Setup
-    void init() {}
+    void init() {
+      this->loop(false);
+    }
 
     // Image generator
     void draw ()
