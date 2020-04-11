@@ -46,9 +46,9 @@ Modulator can also access / modify those attributes:
 class K32_mod_sinus : public K32_modulator_periodic {
   public:  
     
-    void modulate( int& data )
+    uint8_t value()
     {
-      data = (0.5f + 0.5f * sin(2 * PI * progress())) * amplitude() + mini();
+      return (0.5f + 0.5f * sin(2 * PI * progress())) * amplitude() + mini();
     };
   
 };
@@ -59,12 +59,12 @@ class K32_mod_sinus : public K32_modulator_periodic {
 class K32_mod_triangle : public K32_modulator_periodic {
   public:  
 
-    void modulate ( int& data )
+    uint8_t value()
     { 
       float percent = progress();
       if (percent > 0.5) percent = 1 - percent;
 
-      data = 2*percent * amplitude() + mini();
+      return 2*percent * amplitude() + mini();
     };
   
 };
@@ -75,9 +75,9 @@ class K32_mod_triangle : public K32_modulator_periodic {
 class K32_mod_sawtooth : public K32_modulator_periodic {
   public:  
 
-    void modulate ( int& data )
+    uint8_t value()
     {
-      data = progress() * amplitude() + mini();
+      return progress() * amplitude() + mini();
     };
   
 };
@@ -88,9 +88,9 @@ class K32_mod_sawtooth : public K32_modulator_periodic {
 class K32_mod_isawtooth : public K32_modulator_periodic {
   public:  
 
-    void modulate ( int& data )
+    uint8_t value()
     {
-      data = maxi() - progress() * amplitude();
+      return maxi() - progress() * amplitude();
     };
 
 };
@@ -105,13 +105,13 @@ class K32_mod_pulse : public K32_modulator_periodic {
     int& widthMS  = params[0];  // pulse ON width in milliseconds
     int& widthPCT = params[1];  // pulse ON width in percentage (activated if widthMS = 0)
 
-    void modulate ( int& data )
+    uint8_t value()
     {  
       int width = widthMS;
       if (widthMS == 0) width = period()*widthPCT/100;
 
-      if ( time() % period() < width) data = maxi();
-      else data = mini();
+      if ( time() % period() < width) return maxi();
+      else return mini();
     };
 
 };
@@ -124,15 +124,17 @@ class K32_mod_random : public K32_modulator_periodic {
   public:  
 
     // internal attribute
-    int lastPeriod;
+    int lastPeriod = -1;
+    uint8_t lastValue = 255;
 
-    void modulate( int& data )
+    uint8_t value()
     {
       int newPeriod = periodCount();
       if (newPeriod != lastPeriod) {
         lastPeriod = newPeriod;
-        data = random(mini(), maxi());
+        lastValue = random(mini(), maxi());
       }
+      return lastValue;
     };
   
 };

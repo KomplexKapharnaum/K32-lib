@@ -47,23 +47,19 @@ Modulator can also access / modify those attributes:
 class K32_mod_fadein : public K32_modulator_trigger {
   public:  
     
-    void modulate( int& data )
+    uint8_t value()
     {   
       // not yet ready
-      if (time() < 0) return; 
+      if (time() < 0) return 255; 
 
       // end of modulation
       if (time() >= period()) 
       {
-        data = maxi();
         stop();
-        return;
+        return maxi();
       }
       
-      // first run (since trigger): set current data value as fadein start
-      if ( fresh() ) mini(data); 
-      
-      data = time() * amplitude() / period() + mini();
+      return progress() * amplitude() + mini();
 
     };
 };
@@ -74,23 +70,19 @@ class K32_mod_fadein : public K32_modulator_trigger {
 class K32_mod_fadeout : public K32_modulator_trigger {
   public:  
     
-    void modulate( int& data )
+    uint8_t value()
     { 
       // not yet ready
-      if (time() < 0) return; 
+      if (time() < 0) return 255; 
 
       // end of modulation
       if (time() >= period()) 
       {
-        data = mini();
         stop();
-        return;
+        return mini();
       }
       
-      // first run (since trigger): set current data value as fadeout start
-      if ( fresh() ) maxi(data); 
-      
-      data = maxi() - time() * amplitude() / period();
+      return maxi() - progress() * amplitude();
       
     };
 };

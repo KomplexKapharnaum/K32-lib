@@ -17,17 +17,15 @@
 class K32_anim_discharge : public K32_anim {
   public:
 
-    int& master      = data[0];   // Master Brightness
-    int& stateCharge = data[1];   // State of charge
-    int& powerValue  = data[2];   // Power value (0 - 300)
-
-    void draw ()
+    void draw (int data[ANIM_DATA_SLOTS])
     {
+      int& stateCharge = data[0];   // State of charge
+      int& powerValue  = data[1];   // Power value (0 - 300)
 
       int length = this->size();
 
-      CRGBW color1 = CRGBW{0, 100, 0} % (uint8_t) master;
-      CRGBW color2 = CRGBW{100, 75, 0} % (uint8_t) master;
+      CRGBW color1 = CRGBW{0, 100, 0};
+      CRGBW color2 = CRGBW{100, 75, 0};
       
       for (int i=0; i<length; i ++)
       {
@@ -86,18 +84,16 @@ class K32_anim_discharge : public K32_anim {
 //
 class K32_anim_charge : public K32_anim {
   public:
-  
-    int& master      = data[0];   // Master Brightness
-    int& stateCharge = data[1];   // State of charge
-    int& powerValue  = data[2];   // Power value (0 - 300)
 
-    void draw ()
+    void draw (int data[ANIM_DATA_SLOTS])
     {
+      int& stateCharge = data[0];   // State of charge
+      int& powerValue  = data[1];   // Power value (0 - 300)
 
       int length = this->size();
 
-      CRGBW color1 = CRGBW(0, 100, 0) % (uint8_t)master;
-      CRGBW color2 = CRGBW(165, 110, 0) % (uint8_t)master;
+      CRGBW color1 = CRGBW(0, 100, 0);
+      CRGBW color2 = CRGBW(165, 110, 0);
 
       for (int i=0; i<length; i ++)
       {

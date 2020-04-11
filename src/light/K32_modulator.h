@@ -38,7 +38,7 @@ public:
 
   K32_modulator* at(int slot)
   {
-    if (slot < ANIM_DATA_SLOTS) this->dataslot = slot;
+    if (slot < ANIM_DATA_SLOTS) this->dataslot[slot] = true;
     return this;
   }
 
@@ -75,40 +75,32 @@ public:
 
   // Execute modulation function
   bool run(int *animData)
-  {
+  { 
+    bool didChange = false;
+
     if (this->isRunning)
     {
-      int before = _lastProducedData;
+      // Get Modulator value
+      xSemaphoreTake(this->paramInUse, portMAX_DELAY);
+      uint8_t val = this->value();
+      xSemaphoreGive(this->paramInUse);
 
-      if (this->dataslot >= 0 && animData != NULL)
-      {
-        this->anim_data = animData;
-        before = animData[this->dataslot];
-
-        xSemaphoreTake(this->paramInUse, portMAX_DELAY);
-        this->modulate(animData[this->dataslot]);
-        xSemaphoreGive(this->paramInUse);
-        
-        _lastProducedData = animData[this->dataslot];
-      }
-      else
-      {
-        xSemaphoreTake(this->paramInUse, portMAX_DELAY);
-        this->modulate(_lastProducedData);
-        xSemaphoreGive(this->paramInUse);
+      // Apply modulation to dataslots, value of 255 will not do anything
+      if (val < 255) {
+        for (int s=0; s<ANIM_DATA_SLOTS; s++)
+          if (this->dataslot[s]) animData[s] = scale16by8(animData[s], val);
       }
 
-      return before != _lastProducedData;
+      // Did animator produced a different result than last call ?
+      didChange = (this->_lastProducedData != val);
+      this->_lastProducedData = val;
+
     }
-    return false;
+    return didChange;
   }
 
-  // Direct value
-  int value(int sourceData = 0) 
-  {
-    this->modulate(sourceData);
-    return sourceData;
-  }
+  // 8Bit Direct value : Defined in SubClass ! 
+  virtual uint8_t value()    { return 255; }
 
   // change one Params
   K32_modulator *param(int k, int value)
@@ -162,11 +154,6 @@ public:
   
 
 protected:
-  virtual void modulate(int &data)
-  {
-    LOG("MOD: doing nothing !");
-  };
-
 
   int *anim_data;
   int params[MOD_PARAMS_SLOTS];
@@ -189,7 +176,7 @@ private:
   String _name = "?";
   bool isRunning = false;
 
-  int dataslot = -1;
+  bool dataslot[ANIM_DATA_SLOTS];
   int _lastProducedData = 0;
 };
 

@@ -24,22 +24,21 @@ class K32_anim_test : public K32_anim {
       this->loop(false);
     }
 
-    // Image generator
-    void draw ()
+    // Loop
+    void draw (int data[ANIM_DATA_SLOTS])
     {
-      uint8_t master = data[0];
-      int stepMS = data[1];
+      int stepMS = data[0];
 
-      this->all( ( CRGBW(CRGBW::Red) % master) );
+      this->all( CRGBW(CRGBW::Red) );
       delay(stepMS);
 
-      this->all( ( CRGBW(CRGBW::Green) % master) );
+      this->all( CRGBW(CRGBW::Green) );
       delay(stepMS);
 
-      this->all( ( CRGBW(CRGBW::Blue) % master) );
+      this->all( CRGBW(CRGBW::Blue) );
       delay(stepMS);
 
-      this->all( ( CRGBW{0,0,0,255} % master) );
+      this->all( CRGBW{0,0,0,255} );
       delay(stepMS);
 
       this->clear();
@@ -52,22 +51,14 @@ class K32_anim_test : public K32_anim {
 //
 class K32_anim_color : public K32_anim {
   public:
-    
-    int& master = data[0];
-    int& red    = data[1];
-    int& green  = data[2];
-    int& blue   = data[3];
-    int& white  = data[4];
 
     // Setup
     void init() {}
 
     // Loop
-    void draw()
+    void draw(int data[ANIM_DATA_SLOTS])
     {
-      CRGBW color {data[1], data[2], data[3], data[4]};
-      color %= data[0];      
-
+      CRGBW color {data[0], data[1], data[2], data[3]};
       this->all( color );
     };
 };

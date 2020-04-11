@@ -12,6 +12,7 @@
 #include "K32_ledstrip.h"
 #include "K32_modulator.h"
 
+
 //
 // BASE ANIM
 //
@@ -20,7 +21,7 @@ class K32_anim {
     K32_anim()
     {
       this->_strip = NULL;
-      memset(this->_dataBuffer, 0, sizeof this->_dataBuffer);
+      memset(this->_data, 0, sizeof this->_data);
 
       this->newData = xSemaphoreCreateBinary();
       this->bufferInUse = xSemaphoreCreateBinary();
@@ -109,14 +110,20 @@ class K32_anim {
 
     // register new modulator
     K32_modulator* mod(K32_modulator* modulator, bool playNow = true) 
-    {
-      if (this->_modcounter >= ANIM_MOD_SLOTS) {
+    { 
+      int i = -1;
+      for (int k=0; k<ANIM_MOD_SLOTS; k++)
+        if(this->_modulators[k] == NULL) {
+          i = k;
+          break;
+        }
+
+      if (i < 0) {
         LOG("ERROR: no more slot available to register new modulator");
         return modulator;
       }
       
-      this->_modulators[ this->_modcounter ] = modulator;
-      this->_modcounter++;
+      this->_modulators[i] = modulator;
       // LOGINL("ANIM: register "); LOG(modulator->name());
       
       if (playNow) modulator->play();
@@ -134,23 +141,34 @@ class K32_anim {
     // get registered modulator
     K32_modulator* mod( String modName) 
     {
-      for (int k=0; k<this->_modcounter; k++)
-        if (this->_modulators[k]->name() == modName) {
-          // LOGINL("LIGHT: "); LOG(name);
-          return this->_modulators[k];
-        }
+      for (int k=0; k<ANIM_MOD_SLOTS; k++)
+        if(this->_modulators[k] != NULL)
+          if (this->_modulators[k]->name() == modName) {
+            // LOGINL("LIGHT: "); LOG(name);
+            return this->_modulators[k];
+          }
       LOGINL("MOD: not found "); LOG(modName);
       return new K32_modulator();
+    }
+
+    // search registered modulator
+    bool hasmod( String modName) 
+    {
+      for (int k=0; k<ANIM_MOD_SLOTS; k++)
+        if(this->_modulators[k] != NULL)
+          if (this->_modulators[k]->name() == modName)
+            return true;
+      return false;
     }
 
     // remove all modulators
     K32_anim* unmod()
     {
-      for (int k=0; k<this->_modcounter; k++){
-        this->_modulators[k]->stop();
-        this->_modulators[k] = NULL;
-      }
-      this->_modcounter = 0;
+      for (int k=0; k<ANIM_MOD_SLOTS; k++)
+        if(this->_modulators[k] != NULL) {
+          this->_modulators[k]->stop();
+          this->_modulators[k] = NULL;
+        }
       return this;
     }
 
@@ -166,7 +184,7 @@ class K32_anim {
     // change one element in data
     K32_anim* set(int k, int value) { 
       xSemaphoreTake(this->bufferInUse, portMAX_DELAY);     // data can be modified only during anim waitData
-      if (k < ANIM_DATA_SLOTS) this->_dataBuffer[k] = value; 
+      if (k < ANIM_DATA_SLOTS) this->_data[k] = value; 
       xSemaphoreGive(this->bufferInUse);
       return this;
     }
@@ -177,8 +195,8 @@ class K32_anim {
       size = min(size, ANIM_DATA_SLOTS);
       xSemaphoreTake(this->bufferInUse, portMAX_DELAY);     // data can be modified only during anim waitData
       for(int k=0; k<size; k++) 
-        if (this->_dataBuffer[k] != frame[k]) {
-          this->_dataBuffer[k] = frame[k]; 
+        if (this->_data[k] != frame[k]) {
+          this->_data[k] = frame[k]; 
           didChange = true;
         }
       xSemaphoreGive(this->bufferInUse);
@@ -224,10 +242,7 @@ class K32_anim {
 
     // generate frame from data, called by update
     // this is a prototype, must be defined in specific anim class
-    virtual void draw () { LOG("ANIM: nothing to do.."); };
-
-    // frozen data: can be accessed in draw, do net set anything in it !
-    int data[ANIM_DATA_SLOTS];
+    virtual void draw (int data[ANIM_DATA_SLOTS]) { LOG("ANIM: nothing to do.."); };
 
     // DRAW ON STRIP
     //
@@ -261,46 +276,45 @@ class K32_anim {
   private:
 
     // input data
-    int _dataBuffer[ANIM_DATA_SLOTS];
+    int _data[ANIM_DATA_SLOTS];
 
     // THREAD: draw frame on new data
     static void animate( void * parameter ) 
     {
       K32_anim* that = (K32_anim*) parameter;
       TickType_t timeout;
-      
+
+      bool triggerDraw;
+      int dataCopy[ANIM_DATA_SLOTS];
+
       that->startTime = millis();
 
       that->init();                                                                 // Subclass init hook
 
       do 
       {
+        triggerDraw = false;
+
         xSemaphoreGive(that->bufferInUse);                                          // allow push & pushdata to modify data
         yield();                                                                          
         timeout = pdMS_TO_TICKS( 1000/LEDS_ANIMATE_FPS );                             // push timeout according to FPS
-        
-        if (xSemaphoreTake(that->newData, timeout) == pdTRUE) {                     // Wait external DATA refresh or FPS timeout
-          xSemaphoreGive(that->newData);
-          that->_firstDataReceived = true;
-        }
-
-        if (!that->_firstDataReceived) continue;                                    // check if data has been set at least one time 
-        if (that->_stopAt && millis() >= that->_stopAt) break;                      // check if we should stop now
+        triggerDraw = (xSemaphoreTake(that->newData, timeout) == pdTRUE);
 
         xSemaphoreTake(that->bufferInUse, portMAX_DELAY);                           // lock buffer to prevent external change
+
+        if (triggerDraw) that->_firstDataReceived = true;                           // Data has been set at least one time since anim creation
+        else if (!that->_firstDataReceived) continue;                               // Data has never been set -> we can't draw ! 
+        if (that->_stopAt && millis() >= that->_stopAt) break;                      // check if we should stop now
+
+        memcpy(dataCopy, that->_data, ANIM_DATA_SLOTS*sizeof(int));                 // copy buffer
+
+        xSemaphoreGive(that->bufferInUse);                                          // let data be push by others
         
-        for (int k=0; k<that->_modcounter; k++)       
-          if (that->_modulators[k]->run(that->_dataBuffer))                               // run modulators on data buffer
-            xSemaphoreGive(that->newData);;                                         // trigger new data if data has been changed 
+        for (int k=0; k<ANIM_MOD_SLOTS; k++)
+          if (that->_modulators[k])       
+            triggerDraw = that->_modulators[k]->run(dataCopy) || triggerDraw;       // run modulators on data
 
-        if (xSemaphoreTake(that->newData, 0) == pdTRUE)                             // new data available in buffer
-        {
-          memcpy(that->data, that->_dataBuffer, ANIM_DATA_SLOTS*sizeof(int));       // copy buffer into data
-          xSemaphoreTake(that->newData, 1);                                         // consume newdata
-          xSemaphoreGive(that->bufferInUse);                                        // let data be push by others
-
-          that->draw();                                                             // Subclass draw hook
-        }
+        if (triggerDraw) that->draw(dataCopy);                                      // Subclass draw hook
 
       } 
       while(that->loop());
@@ -341,7 +355,6 @@ class K32_anim {
 
     // Modulator
     K32_modulator* _modulators[ANIM_MOD_SLOTS];
-    int _modcounter = 0;
 };
 
 
