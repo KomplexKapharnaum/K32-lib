@@ -23,6 +23,9 @@ class K32_anim {
       this->_strip = NULL;
       memset(this->_data, 0, sizeof this->_data);
 
+      for (int k=0; k<ANIM_MOD_SLOTS; k++)
+        this->_modulators[k] = NULL;
+
       this->newData = xSemaphoreCreateBinary();
       this->bufferInUse = xSemaphoreCreateBinary();
       xSemaphoreTake(this->newData, 1);
@@ -124,7 +127,7 @@ class K32_anim {
       }
       
       this->_modulators[i] = modulator;
-      // LOGINL("ANIM: register "); LOG(modulator->name());
+      LOGINL("ANIM: register "); LOG(modulator->name());
       
       if (playNow) modulator->play();
 
@@ -200,7 +203,7 @@ class K32_anim {
           didChange = true;
         }
       xSemaphoreGive(this->bufferInUse);
-      if (didChange) xSemaphoreGive(this->newData);
+      if (didChange || !this->_firstDataReceived) xSemaphoreGive(this->newData);
       return this;
     }
     
@@ -269,6 +272,7 @@ class K32_anim {
     }
     
     unsigned long startTime = 0;
+    uint32_t frameCount = 0;
 
 
   // PRIVATE
@@ -288,17 +292,20 @@ class K32_anim {
       int dataCopy[ANIM_DATA_SLOTS];
 
       that->startTime = millis();
+      that->frameCount = 0;
 
       that->init();                                                                 // Subclass init hook
 
       do 
       {
         triggerDraw = false;
+        that->frameCount++;
 
         xSemaphoreGive(that->bufferInUse);                                          // allow push & pushdata to modify data
         yield();                                                                          
         timeout = pdMS_TO_TICKS( 1000/LEDS_ANIMATE_FPS );                             // push timeout according to FPS
         triggerDraw = (xSemaphoreTake(that->newData, timeout) == pdTRUE);
+
 
         xSemaphoreTake(that->bufferInUse, portMAX_DELAY);                           // lock buffer to prevent external change
 

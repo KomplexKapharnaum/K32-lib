@@ -164,8 +164,8 @@ static void handleInterrupt(void *arg);
 
 uint8_t gamma8(uint8_t value)
 {
-  // return (int)value*(int)value/255;
-  return gamma8_table[value];
+  return (int)value*(int)value/255;
+  //return gamma8_table[value];
 }
 
 int digitalLeds_init() 

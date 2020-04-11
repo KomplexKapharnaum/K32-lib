@@ -67,6 +67,7 @@ class K32_mod_triangle : public K32_modulator_periodic {
       float percent = progress();
       if (percent > 0.5) percent = 1 - percent;
 
+      // LOGF5("tri %d %d %d %d %d\n", mini(), maxi(), percent, time(), period());
       return 2*percent * amplitude() + mini();
     };
   
@@ -112,7 +113,6 @@ class K32_mod_pulse : public K32_modulator_periodic {
     {  
       int width = widthMS;
       if (widthMS == 0) width = period()*widthPCT/100;
-
       if ( time() % period() < width) return maxi();
       else return mini();
     };

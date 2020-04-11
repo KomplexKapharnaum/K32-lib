@@ -25,18 +25,12 @@ public:
   K32_modulator() {
     this->paramInUse = xSemaphoreCreateBinary();
     xSemaphoreGive(this->paramInUse);
+
+    memset(this->params, 0, sizeof this->params);
+
+    for (int s=0; s<ANIM_DATA_SLOTS; s++) 
+      this->dataslot[s] = false;
   }
-
-  K32_modulator(int *p, int size) {
-    this->paramInUse = xSemaphoreCreateBinary();
-    xSemaphoreGive(this->paramInUse);
-
-    xSemaphoreTake(this->paramInUse, portMAX_DELAY);
-    size = min(size, MOD_PARAMS_SLOTS);
-    for (int k = 0; k < size; k++) this->params[k] = p[k];
-    xSemaphoreGive(this->paramInUse);
-  }
-
 
   // get/set name
   String name() { return this->_name; }
@@ -52,8 +46,7 @@ public:
   {
     if (!this->isRunning) {
       this->trigger();
-      if (this->dataslot >= 0) LOGF2("ANIM: %s modulate param %i \n", this->name().c_str(), this->dataslot);
-
+      if (this->dataslot >= 0) LOGF("ANIM: %s modulate\n", this->name().c_str());
       this->freezeTime = 0;
       this->isRunning = true;
     }
@@ -122,11 +115,11 @@ public:
 
   // set special params
   K32_modulator *mini(int m) {
-    this->_mini = m;
+    this->_mini = min(m, 255);
     return this;
   }
   K32_modulator *maxi(int m) {
-    this->_maxi = m;
+    this->_maxi = max(0, m);
     return this;
   }
   K32_modulator *period(int p) {
