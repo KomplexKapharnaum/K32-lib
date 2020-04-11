@@ -10,6 +10,12 @@
 
 #include "K32_anim.h"
 
+/*
+  NOTE: This is the modulator BASE class,
+  for usable modulator, look into K32_mods.h
+*/
+
+
 //
 // BASE MODULATOR
 //
@@ -92,8 +98,8 @@ public:
       }
 
       // Did animator produced a different result than last call ?
-      didChange = (this->_lastProducedData != val);
-      this->_lastProducedData = val;
+      didChange = (this->_lastProducedValue != val);
+      this->_lastProducedValue = val;
 
     }
     return didChange;
@@ -155,7 +161,6 @@ public:
 
 protected:
 
-  int *anim_data;
   int params[MOD_PARAMS_SLOTS];
 
   // common params
@@ -177,7 +182,7 @@ private:
   bool isRunning = false;
 
   bool dataslot[ANIM_DATA_SLOTS];
-  int _lastProducedData = 0;
+  int _lastProducedValue = 0;
 };
 
 

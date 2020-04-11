@@ -19,8 +19,7 @@
 // NOTE: to be able to use a modulator, it must be included here
 //
 
-#include "modulators/K32_mod_lfo.h"
-#include "modulators/K32_mod_fades.h"
+#include "K32_mods.h"
 
 //
 // NOTE: to be able to use an animation, it must be included here
