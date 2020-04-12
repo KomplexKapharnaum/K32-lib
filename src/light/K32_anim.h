@@ -35,6 +35,12 @@ class K32_anim {
       xSemaphoreGive(this->wait_lock);
     }
 
+    ~K32_anim() {
+      vQueueDelete(this->newData);
+      vQueueDelete(this->bufferInUse);
+      vQueueDelete(this->wait_lock);
+    }
+
     K32_anim* setup(K32_ledstrip* strip, int size = 0, int offset = 0) {
       this->_strip = strip;
       this->_size = (size) ? size : strip->size();
@@ -138,6 +144,18 @@ class K32_anim {
     K32_modulator* mod( String modName, K32_modulator* modulator, bool playNow = false) 
     {
       modulator->name(modName);
+
+      // delete already existing mod with this name (replace)
+      for (int k=0; k<ANIM_MOD_SLOTS; k++)
+        if(this->_modulators[k] != NULL) 
+          if (this->_modulators[k]->name() == modName)
+          {
+            LOGF("ANIM: %s replaced !\n", this->_modulators[k]->name());
+            this->_modulators[k]->stop();
+            delete this->_modulators[k];
+            this->_modulators[k] = NULL;
+          }
+
       return this->mod( modulator, playNow );
     }
 
@@ -172,7 +190,9 @@ class K32_anim {
         if(this->_modulators[k] != NULL) 
           if (all || this->_modulators[k]->name() == "?")
           {
+            // LOGF("ANIM: %s unmoded !\n", this->_modulators[k]->name());
             this->_modulators[k]->stop();
+            delete this->_modulators[k];
             this->_modulators[k] = NULL;
           }
       // LOGF("ANIM: %s unmoded !\n", this->name());
@@ -225,14 +245,14 @@ class K32_anim {
     }
 
     // data push simplified
-    K32_anim* push(int d0) { return this->push(new int[1]{d0}, 1); }
-    K32_anim* push(int d0, int d1) { return this->push(new int[2]{d0, d1}, 2); }
-    K32_anim* push(int d0, int d1, int d2) { return this->push(new int[3]{d0, d1, d2}, 3); }
-    K32_anim* push(int d0, int d1, int d2, int d3) { return this->push(new int[4]{d0, d1, d2, d3}, 4); }
-    K32_anim* push(int d0, int d1, int d2, int d3, int d4) { return this->push(new int[5]{d0, d1, d2, d3, d4}, 5); }
-    K32_anim* push(int d0, int d1, int d2, int d3, int d4, int d5) { return this->push(new int[6]{d0, d1, d2, d3, d4, d5}, 6); }
-    K32_anim* push(int d0, int d1, int d2, int d3, int d4, int d5, int d6) { return this->push(new int[7]{d0, d1, d2, d3, d4, d5, d6}, 7); }
-    K32_anim* push(int d0, int d1, int d2, int d3, int d4, int d5, int d6, int d7) { return this->push(new int[8]{d0, d1, d2, d3, d4, d5, d6, d7}, 8); }
+    K32_anim* push(int d0) { int frame[1] = {d0}; return this->push(frame, 1); }
+    K32_anim* push(int d0, int d1) { int frame[2] = {d0, d1}; return this->push(frame, 2); }
+    K32_anim* push(int d0, int d1, int d2) { int frame[3] = {d0, d1, d2}; return this->push(frame, 3); }
+    K32_anim* push(int d0, int d1, int d2, int d3) { int frame[4] = {d0, d1, d2, d3}; return this->push(frame, 4); }
+    K32_anim* push(int d0, int d1, int d2, int d3, int d4) { int frame[5] = {d0, d1, d2, d3, d4}; return this->push(frame, 5); }
+    K32_anim* push(int d0, int d1, int d2, int d3, int d4, int d5) { int frame[6] = {d0, d1, d2, d3, d4, d5}; return this->push(frame, 6); }
+    K32_anim* push(int d0, int d1, int d2, int d3, int d4, int d5, int d6) { int frame[7] = {d0, d1, d2, d3, d4, d5, d6}; return this->push(frame, 7); }
+    K32_anim* push(int d0, int d1, int d2, int d3, int d4, int d5, int d6, int d7) { int frame[8] = {d0, d1, d2, d3, d4, d5, d6, d7}; return this->push(frame, 8); }
 
 
 

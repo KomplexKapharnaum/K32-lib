@@ -32,6 +32,10 @@ public:
       this->dataslot[s] = false;
   }
 
+  ~K32_modulator() {
+    vQueueDelete(this->paramInUse);
+  }
+
   // get/set name
   String name() { return this->_name; }
   void name(String n) { this->_name = n; }
@@ -46,7 +50,7 @@ public:
   {
     if (!this->isRunning) {
       this->trigger();
-      if (this->dataslot >= 0) LOGF("ANIM: %s modulate\n", this->name().c_str());
+      // if (this->dataslot >= 0) LOGF("ANIM: %s modulate\n", this->name().c_str());
       this->freezeTime = 0;
       this->isRunning = true;
     }
