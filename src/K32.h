@@ -20,6 +20,7 @@
 #include "system/K32_pwm.h"
 #include "audio/K32_audio.h"
 #include "light/K32_light.h"
+#include "light/K32_samplerjpeg.h"
 #include "remote/K32_remote.h"
 #include "network/K32_wifi.h"
 #include "network/K32_osc.h"
@@ -40,26 +41,25 @@ public:
         system = new K32_system();
         timer = new K32_timer();
 
-    // Save NODE_ID in flash
-    #ifdef K32_SET_NODEID
+// Save NODE_ID in flash
+#ifdef K32_SET_NODEID
         system->id(K32_SET_NODEID);
         system->channel(15);
-    #endif
-        LOGINL("HW id:  ");
+#endif
+        LOGINL("Node id: ");
         LOG(system->id());
 
-    // Save HW_REVISION in flash
-    #ifdef K32_SET_HWREVISION
+// Save HW_REVISION in flash
+#ifdef K32_SET_HWREVISION
         system->hw(K32_SET_HWREVISION);
-    #elif HW_REVISION
+#elif HW_REVISION
         system->hw(HW_REVISION);
-    #endif
+#endif
         LOGINL("HW rev: ");
         LOG(system->hw());
 
         LOG("");
         delay(100);
-
     }
 
 
@@ -77,9 +77,11 @@ public:
     K32_artnet *artnet = NULL;
 
 
+    K32_samplerjpeg *samplerjpeg = NULL;
+
     void init_stm32()
     {
-        system->stm32 = new K32_stm32( (system->hw() <= 2) );
+        system->stm32 = new K32_stm32((system->hw() <= 2));
     }
 
     void init_sd()
@@ -120,8 +122,8 @@ public:
         if (system->hw() >= 0 && system->hw() <= MAX_HW)
         {
             pwm = new K32_pwm();
-            for(int k=0; k<PWM_N_CHAN; k++)
-                if(PWM_PIN[system->hw()][k] > 0)
+            for (int k = 0; k < PWM_N_CHAN; k++)
+                if (PWM_PIN[system->hw()][k] > 0)
                     pwm->attach(PWM_PIN[system->hw()][k]);
         }
         else
@@ -130,46 +132,53 @@ public:
 
     void init_remote(int nbOfMacro)
     {
-      if (system->hw() >= 0 && system->hw() <= MAX_HW)
-      {
-        remote = new K32_remote(system, BTN_PIN[system->hw()]);
-        if(nbOfMacro > 0)
+        if (system->hw() >= 0 && system->hw() <= MAX_HW)
         {
-          remote->setMacroMax(nbOfMacro);
-        } else
-        {
-          LOG("REMOTE: Error Number of Macro must be positive");
+            remote = new K32_remote(system, BTN_PIN[system->hw()]);
+            if (nbOfMacro > 0)
+            {
+                remote->setMacroMax(nbOfMacro);
+            }
+            else
+            {
+                LOG("REMOTE: Error Number of Macro must be positive");
+            }
         }
-      } else
-      {
-        LOG("REMOTE: Error HWREVISION not valid please define K32_SET_HWREVISION or HW_REVISION");
-      }
+        else
+        {
+            LOG("REMOTE: Error HWREVISION not valid please define K32_SET_HWREVISION or HW_REVISION");
+        }
     }
 
     void init_power()
     {
-      if (system->hw() >= 0 && system->hw() <= MAX_HW)
-      {
-        if(system->stm32 != NULL)
+        if (system->hw() >= 0 && system->hw() <= MAX_HW)
         {
-          power = new K32_power(system->stm32, CURRENT_PIN[system->hw()]);
-        } else
-        {
-          LOG("POWER: Error Missing STM32 Init. Power module can not be used without STM32");
+            if (system->stm32 != NULL)
+            {
+                power = new K32_power(system->stm32, CURRENT_PIN[system->hw()]);
+            }
+            else
+            {
+                LOG("POWER: Error Missing STM32 Init. Power module can not be used without STM32");
+            }
         }
-      } else
-      {
-        LOG("POWER: Error HWREVISION not valid please define K32_SET_HWREVISION or HW_REVISION");
-      }
+        else
+        {
+            LOG("POWER: Error HWREVISION not valid please define K32_SET_HWREVISION or HW_REVISION");
+        }
     }
 
-    void init_wifi(String nameAlias = "") {
+    void init_wifi(String nameAlias = "")
+    {
         btStop();
-        if (nameAlias != "") nameAlias = "-"+nameAlias;
-        wifi = new K32_wifi(system->name()+nameAlias);
+        if (nameAlias != "")
+            nameAlias = "-" + nameAlias;
+        wifi = new K32_wifi(system->name() + nameAlias);
     }
 
-    void init_osc(oscconf conf) {
+    void init_osc(oscconf conf)
+    {
         osc = new K32_osc(system, wifi, audio, light);
         osc->start(conf);
 
@@ -177,7 +186,8 @@ public:
             LOG("OSC: Warning WIFI should be initialized BEFORE osc");
     }
 
-    void init_mqtt(mqttconf conf) {
+    void init_mqtt(mqttconf conf)
+    {
         mqtt = new K32_mqtt(system, wifi, audio, light);
         mqtt->start(conf);
 
@@ -191,6 +201,11 @@ public:
 
         if (!wifi)
             LOG("MQTT: Warning WIFI should be initialized BEFORE artnet");
+    }
+
+    void init_samplerjpeg()
+    {
+        samplerjpeg = new K32_samplerjpeg(SD_PIN[system->hw()]);
     }
 
 };

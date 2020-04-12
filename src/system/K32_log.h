@@ -25,6 +25,7 @@
  #define LOGSETUP()
  #define LOGINL(x)
  #define LOGDEC(x)
+ #define LOGHEX(x)
  #define LOGF(x, y)
  #define LOGF2(x, y1, y2)
  #define LOGF3(x, y1, y2, y3)
