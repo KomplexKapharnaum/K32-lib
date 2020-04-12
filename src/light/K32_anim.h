@@ -35,7 +35,7 @@ class K32_anim {
       xSemaphoreGive(this->wait_lock);
     }
 
-    ~K32_anim() {
+    virtual ~K32_anim() {
       vQueueDelete(this->newData);
       vQueueDelete(this->bufferInUse);
       vQueueDelete(this->wait_lock);

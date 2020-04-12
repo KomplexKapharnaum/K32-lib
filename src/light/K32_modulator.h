@@ -32,7 +32,7 @@ public:
       this->dataslot[s] = false;
   }
 
-  ~K32_modulator() {
+  virtual ~K32_modulator() {
     vQueueDelete(this->paramInUse);
   }
 
