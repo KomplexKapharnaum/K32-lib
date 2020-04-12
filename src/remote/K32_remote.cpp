@@ -91,6 +91,8 @@ void K32_remote::nextActiveMacro()
   this->_lock();
   this->_activeMacro = (this->_activeMacro+1) % this->_macroMax;
   this->_previewMacro = this->_activeMacro;
+  this->_state = REMOTE_MANU_STM;
+  this->_send_active_macro = true;
   this->_unlock();
 }
 

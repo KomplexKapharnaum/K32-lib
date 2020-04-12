@@ -127,7 +127,7 @@ class K32_anim {
       }
       
       this->_modulators[i] = modulator;
-      LOGINL("ANIM: register "); LOG(modulator->name());
+      // LOGF2("ANIM: %s register mod %s \n", this->name(), modulator->name()); 
       
       if (playNow) modulator->play();
 
@@ -150,7 +150,8 @@ class K32_anim {
             // LOGINL("LIGHT: "); LOG(name);
             return this->_modulators[k];
           }
-      LOGINL("MOD: not found "); LOG(modName);
+
+      LOGF2("ANIM: %s mod not found: %s \n", this->name(), modName);
       return new K32_modulator();
     }
 
@@ -164,14 +165,17 @@ class K32_anim {
       return false;
     }
 
-    // remove all modulators
-    K32_anim* unmod()
+    // remove Anonym only / All modulators
+    K32_anim* unmod(bool all=false)
     {
       for (int k=0; k<ANIM_MOD_SLOTS; k++)
-        if(this->_modulators[k] != NULL) {
-          this->_modulators[k]->stop();
-          this->_modulators[k] = NULL;
-        }
+        if(this->_modulators[k] != NULL) 
+          if (all || this->_modulators[k]->name() == "?")
+          {
+            this->_modulators[k]->stop();
+            this->_modulators[k] = NULL;
+          }
+      // LOGF("ANIM: %s unmoded !\n", this->name());
       return this;
     }
 
