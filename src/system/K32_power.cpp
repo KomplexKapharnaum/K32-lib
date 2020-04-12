@@ -210,6 +210,7 @@ uint8_t K32_power::findCellCount(unsigned int voltage, unsigned int cellMin, uns
       return i;
     }
   }
+  return 0;
 }
 
 void K32_power::task(void *parameter)
