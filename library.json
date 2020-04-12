@@ -83,7 +83,11 @@
             "platforms": "espressif32",
             "name": "Timer",
             "version": "https://github.com/JChristensen/Timer"
+        },
+        {
+            "platforms": "espressif32",
+            "name": "JPEGDecoder",
+            "version": "https://github.com/Bodmer/JPEGDecoder"
         }
-
     ]
 }
