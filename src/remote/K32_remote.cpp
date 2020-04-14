@@ -76,8 +76,8 @@ void K32_remote::setMacroMax(int macroMax)
 {
   this->_lock();
   this->_macroMax = macroMax;
-  this->_activeMacro = this->_macroMax-1;
-  this->_previewMacro = this->_macroMax-1;
+  // this->_activeMacro = this->_macroMax-1;
+  // this->_previewMacro = this->_macroMax-1;
   this->_unlock();
 }
 
