@@ -318,6 +318,8 @@ class K32_anim {
       that->startTime = millis();
       that->frameCount = 0;
 
+      if (that->_firstDataReceived) xSemaphoreGive(that->newData);                  // Not first play -> data can be drawn now !
+      
       that->init();                                                                 // Subclass init hook
 
       do 
