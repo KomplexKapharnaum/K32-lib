@@ -42,7 +42,7 @@ public:
 
   void setMacroMax(int macroMax);
   void setState(remoteState state);
-  void nextActiveMacro();
+  void stmNext();
 
   remoteState getState();
   int getActiveMacro();

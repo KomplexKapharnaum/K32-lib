@@ -76,6 +76,8 @@ void K32_remote::setMacroMax(int macroMax)
 {
   this->_lock();
   this->_macroMax = macroMax;
+  this->_activeMacro = this->_macroMax-1;
+  this->_previewMacro = this->_macroMax-1;
   this->_unlock();
 }
 
@@ -86,12 +88,16 @@ void K32_remote::setState(remoteState state)
   this->_unlock();
 }
 
-void K32_remote::nextActiveMacro()
+void K32_remote::stmNext()
 {
   this->_lock();
   this->_activeMacro = (this->_activeMacro+1) % this->_macroMax;
   this->_previewMacro = this->_activeMacro;
-  this->_state = REMOTE_MANU_STM;
+
+  // Last macro -> back to AUTO
+  if (this->_activeMacro == this->_macroMax-1) this->_state = REMOTE_AUTO;
+  else this->_state = REMOTE_MANU_STM;
+  
   this->_send_active_macro = true;
   this->_unlock();
 }

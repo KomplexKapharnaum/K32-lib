@@ -119,6 +119,26 @@ class K32_mod_pulse : public K32_modulator_periodic {
 
 };
 
+//
+// MULTI PULSE
+//
+class K32_mod_multipulse : public K32_modulator_periodic {
+  public:  
+
+    // named link to params 
+    int& widthMS  = params[0];  // pulse ON width in milliseconds
+    int& widthPCT = params[1];  // pulse ON width in percentage (activated if widthMS = 0)
+
+    uint8_t value()
+    {  
+      int width = widthMS;
+      if (widthMS == 0) width = period()*widthPCT/100;
+      if ( time() % period() < width) return maxi();
+      else return mini();
+    };
+
+};
+
 
 //
 // RANDOM
