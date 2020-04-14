@@ -54,7 +54,7 @@ public:
 private:
   SemaphoreHandle_t lock;
   digitalbtn buttons[NB_BTN];
-  remoteState _state = REMOTE_AUTO;
+  remoteState _state = REMOTE_AUTO_LOCK;
   remoteState _old_state = REMOTE_MANU_LAMP;
   int _macroMax = 0;
   int _activeMacro = 0;

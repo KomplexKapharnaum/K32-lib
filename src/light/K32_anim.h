@@ -102,6 +102,7 @@ class K32_anim {
     // stop animation
     void stop() { 
       this->_stopAt = 1; 
+      this->wait(); // !!! stop might hang an entire frame (but it safer to prevent clear conflict)
     }
 
     // wait until anim end (or timeout)
@@ -347,7 +348,10 @@ class K32_anim {
           if (that->_modulators[k])       
             triggerDraw = that->_modulators[k]->run(dataCopy) || triggerDraw;       // run modulators on data
 
-        if (triggerDraw) that->draw(dataCopy);                                      // Subclass draw hook
+        
+        if (triggerDraw) {
+          that->draw(dataCopy);                                      // Subclass draw hook
+        }
 
       } 
       while(that->loop());
