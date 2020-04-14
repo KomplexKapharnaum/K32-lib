@@ -94,7 +94,7 @@ void K32_remote::stmNext()
   this->_activeMacro = (this->_activeMacro+1) % this->_macroMax;
   this->_previewMacro = this->_activeMacro;
 
-  // Last macro -> back to AUTO
+  // Last macro -> back to AUTO_LOCK
   if (this->_activeMacro == this->_macroMax-1) this->_state = REMOTE_AUTO_LOCK;
   else this->_state = REMOTE_MANU_STM;
   
