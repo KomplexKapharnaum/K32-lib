@@ -205,7 +205,6 @@ class K32_anim {
     //
     K32_anim* master(uint8_t m) {
       this->_master = m;
-      xSemaphoreGive(this->newData);
       return this;
     }
 
