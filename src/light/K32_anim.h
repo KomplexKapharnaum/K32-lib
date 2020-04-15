@@ -313,7 +313,7 @@ class K32_anim {
       K32_anim* that = (K32_anim*) parameter;
       TickType_t timeout;
 
-      bool triggerDraw;
+      bool triggerDraw = false;
       int dataCopy[ANIM_DATA_SLOTS];
 
       that->startTime = millis();
@@ -325,12 +325,14 @@ class K32_anim {
 
       do 
       {
-        triggerDraw = false;
         that->frameCount++;
 
         xSemaphoreGive(that->bufferInUse);                                          // allow push & pushdata to modify data
-        yield();                                                                          
-        timeout = pdMS_TO_TICKS( 1000/LEDS_ANIMATE_FPS );                             // push timeout according to FPS
+        yield();      
+
+        if (triggerDraw) timeout = pdMS_TO_TICKS( 1000/LEDS_ANIMATE_FPS );          // adapt FPS if an image has been drawn (optimized strobe)
+        else timeout = pdMS_TO_TICKS( 500/LEDS_ANIMATE_FPS );
+
         triggerDraw = (xSemaphoreTake(that->newData, timeout) == pdTRUE);
 
 
@@ -350,7 +352,9 @@ class K32_anim {
 
         
         if (triggerDraw) {
+          that->_strip->lock();
           that->draw(dataCopy);                                      // Subclass draw hook
+          that->_strip->unlock();
         }
 
       } 
