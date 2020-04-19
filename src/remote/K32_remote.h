@@ -58,7 +58,7 @@ private:
   remoteState _old_state = REMOTE_MANU_LAMP;
   int _macroMax = 0;
   int _activeMacro = 0;
-  int _previewMacro = _macroMax - 1;
+  int _previewMacro = 0;
   int _lamp = -1;
   int _lamp_grad;
   bool _key_lock = true;
