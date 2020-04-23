@@ -272,6 +272,13 @@ class K32_anim {
     // this is a prototype, must be defined in specific anim class
     virtual void draw (int data[ANIM_DATA_SLOTS]) { LOG("ANIM: nothing to do.."); };
 
+    // pause is like delay, but allow strip refresh
+    void pause(int ms) {
+      this->_strip->unlock();
+      delay(ms);
+      this->_strip->lock();
+    }
+
     // DRAW ON STRIP
     //
 

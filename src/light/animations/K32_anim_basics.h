@@ -30,16 +30,16 @@ class K32_anim_test : public K32_anim {
       int stepMS = data[0];
 
       this->all( CRGBW{255,0,0} );
-      delay(stepMS);
+      this->pause(stepMS);
 
       this->all( CRGBW{0,255,0} );
-      delay(stepMS);
+      this->pause(stepMS);
 
       this->all( CRGBW{0,0,255} );
-      delay(stepMS);
+      this->pause(stepMS);
 
       this->all( CRGBW{0,0,0,255} );
-      delay(stepMS);
+      this->pause(stepMS);
 
       this->clear();
     };
