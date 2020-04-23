@@ -5,6 +5,7 @@
 */
 
 #include "K32_artnet.h"
+#include "system/K32_log.h"
 
 /*
  *   PUBLIC
