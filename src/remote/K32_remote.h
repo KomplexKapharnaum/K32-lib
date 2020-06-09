@@ -10,7 +10,8 @@ Released under GPL v3.0
 #define BTN_CHECK 10     // btn reading task loop in ms
 #define NB_BTN 4         // Number of push buttons
 
-// #define DEBUG_lib_btn 1
+#define DEBUG_lib_btn 1
+#define CALIB_BUTTON 7
 
 #include "system/K32_log.h"
 #include "Adafruit_MCP23017.h"
@@ -53,7 +54,11 @@ public:
 
 private:
   SemaphoreHandle_t lock;
+  #ifdef CALIB_BUTTON
+  digitalbtn buttons[NB_BTN + 1];
+  #else
   digitalbtn buttons[NB_BTN];
+  #endif
   remoteState _state = REMOTE_AUTO_LOCK;
   remoteState _old_state = REMOTE_MANU_LAMP;
   int _macroMax = 0;

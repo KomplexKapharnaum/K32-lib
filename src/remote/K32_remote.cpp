@@ -16,7 +16,7 @@
 
 ////////////////////////////////////////////////////////////////////////////////////////
 
-K32_remote::K32_remote(K32_system *system, const int BTN_PIN[NB_BTN]) : system(system)
+K32_remote::K32_remote(K32_system *system, const int BTN_PIN[2]) : system(system)
 {
   LOG("REMOTE: init");
 
@@ -34,6 +34,14 @@ K32_remote::K32_remote(K32_system *system, const int BTN_PIN[NB_BTN]) : system(s
     this->mcp.pinMode(i, INPUT);
     this->mcp.pullUp(i, HIGH);
   }
+
+  #ifdef CALIB_BUTTON
+    this->buttons[NB_BTN].pin = CALIB_BUTTON ; 
+    this->buttons[NB_BTN].state = LOW ; 
+
+    this->mcp.pinMode(CALIB_BUTTON, INPUT); 
+    this->mcp.pullUp(CALIB_BUTTON, HIGH);
+  #endif
 
   // load LampGrad
   this->_lamp_grad = system->preferences.getUInt("lamp_grad", 30);
@@ -249,6 +257,19 @@ void K32_remote::task(void *parameter)
     }
 
     //////////////////////////////////////////////////////////////////////////////
+    ////////////////////* Check flags for calibration button *////////////////////
+    //////////////////////////////////////////////////////////////////////////////
+#ifdef CALIB_BUTTON
+      that->_lock();
+      if (that->buttons[NB_BTN].flag == 1) // Short Push
+      {
+        that->system->power->calibrate(); 
+      }
+      that->buttons[NB_BTN].flag = 0;
+      that->_unlock();
+#endif
+
+    //////////////////////////////////////////////////////////////////////////////
     ////////////////////* Check flags for each button *///////////////////////////
     //////////////////////////////////////////////////////////////////////////////
     for (int i = 0; i < NB_BTN; i++)
@@ -453,7 +474,6 @@ void K32_remote::task(void *parameter)
           LOGF("UNLOCK REMOTE: Short push on button %d\n", i);
           LOGF("UNLOCK REMOTE: that->_state %d\n", that->_state);
 #endif
-
           /* Instructions for the different buttons */
           switch (i)
           {
@@ -725,7 +745,11 @@ void K32_remote::read_btn_state(void *parameter)
 
   while (true)
   {
-    for (int i = 0; i < NB_BTN; i++)
+#ifdef CALIB_BUTTON
+    for (int i = 0; i < NB_BTN + 1; i++)
+#else
+    for (int i=0; i<NB_BTN; i++)
+#endif
     {
 
       that->_lock();

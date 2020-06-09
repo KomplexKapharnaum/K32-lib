@@ -10,14 +10,16 @@ Released under GPL v3.0
 #include "system/K32_stm32.h"
 #include "system/K32_stm32_api.h"
 #include "Arduino.h"
+
 //#define SET_CURRENT_OFFSET 2890        // Set Current calibration offset ((necessary one time only))
 
-#define MAX_VOLTAGE_PROFILES 10
 #define POWER_CHECK 100        // task loop in ms
 #define CURRENT_SENSOR_TYPE 10 // Current sensor type : 0 = no sensor (info given by OSC) ; 
                                // 10 = HO10-P/SP33                                          
                                // 11 = H010                                                 
                                // 25 = HO25-P/SP33
+
+#define BATTERY_RINT 0.14 // Internal resistance of battery
 
 enum batteryType
 {
@@ -25,11 +27,6 @@ enum batteryType
   LIFE,
 };
 
-struct voltageProfile
-{
-  unsigned int profile[7];
-  unsigned int outputCurrent[2]; // min and max value of outpur current
-};
 
 /* All voltages are given in mV */
 const unsigned int LIPO_VOLTAGE_BREAKS[] = {3500, 3650, 3700, 3750, 3825, 3950, 4200}; //For one cell
@@ -39,7 +36,7 @@ const unsigned int INITIAL_CELL_VOLTAGE_TOLERANCE = 50;                         
 class K32_power
 {
 public:
-  K32_power(K32_stm32 *stm32, const int CURRENT_SENSOR_PIN);
+  K32_power(K32_stm32 *stm32, bool autoGauge, const int CURRENT_SENSOR_PIN);
 
   void start();
   void stop();
@@ -53,7 +50,6 @@ public:
                                                                           // Set adaptiveOn to true to set adaptive gauge algo
                                                                           // type between LIPO and LIFE
                                                                           // Set nbOfCell according to number of Cell ; 0 means auto determining number of Cells
-  void addVoltageProfile(unsigned int profile[7], unsigned int minOutputCurrent, unsigned int maxOutputCurrent);
 
   bool charge;
   int SOC;
@@ -65,19 +61,26 @@ private:
   int _energy = 0;
   int _current = 0;
   TaskHandle_t t_handle = NULL;
+
+  bool _error = false ; 
+
   /* Current Sensor specs */
   int currentPin;
   int currentOffset = 1800; // Offset of current measurement
   int currentFactor;        // Factor of current measurement
   /* Adaptive Gauge variables */
+  bool autoGauge = false; // Enable programm to restart adaptive gauge if the sensor is replugged
   bool adaptiveGaugeOn = false;
   batteryType battType = LIPO;
   uint8_t nbOfCell = 0;
-  voltageProfile profiles[MAX_VOLTAGE_PROFILES];
-  int profileIdx = 0; // Number of profile Idx available
-  int profileOn = -1; // Index of operating profile (-1 stands for default mode)
+  int currentRecord = 0 ; // Save value of current corresponding to actual gauge value
+  unsigned int profile[7]; // Operating voltage profile for SOC calculation
+  // voltageProfile profiles[MAX_VOLTAGE_PROFILES];
+  // int profileIdx = 0; // Number of profile Idx available
+  // int profileOn = -1; // Index of operating profile (-1 stands for default mode)
 
   uint8_t findCellCount(unsigned int voltage, unsigned int cellMin, unsigned int cellMax);
+  void updateCustom(void *parameter); 
   void _lock();
   void _unlock();
 

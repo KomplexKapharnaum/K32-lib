@@ -10,6 +10,7 @@
 
 #include "K32_version.h"
 #include "K32_stm32.h"
+#include "K32_power.h"
 
 class K32_system {
   public:
@@ -101,6 +102,7 @@ class K32_system {
     }
 
     K32_stm32 *stm32 = NULL;
+    K32_power *power = NULL; 
   
     Preferences preferences;
     

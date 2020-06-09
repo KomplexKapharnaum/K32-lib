@@ -13,12 +13,13 @@ Preferences power_prefs;
  *   PUBLIC
  */
 
-K32_power::K32_power(K32_stm32 *stm32, const int CURRENT_SENSOR_PIN)
+K32_power::K32_power(K32_stm32 *stm32, bool autoGauge ,const int CURRENT_SENSOR_PIN)
 {
   LOG("POWER : init");
 
   this->lock = xSemaphoreCreateMutex();
   this->_stm32 = stm32;
+  this->autoGauge = autoGauge ; 
   this->charge = false;
   this->currentPin = CURRENT_SENSOR_PIN;
 
@@ -49,6 +50,7 @@ K32_power::K32_power(K32_stm32 *stm32, const int CURRENT_SENSOR_PIN)
 #else
   this->_lock();
   this->currentOffset = power_prefs.getUInt("offset", 0);
+  power_prefs.end(); 
   this->_unlock();
 #endif
 
@@ -58,8 +60,9 @@ K32_power::K32_power(K32_stm32 *stm32, const int CURRENT_SENSOR_PIN)
               5000,
               (void *)this,
               0, // priority
-              &t_handle);
+              &t_handle); 
 };
+
 
 int K32_power::power()
 {
@@ -129,6 +132,37 @@ void K32_power::setAdaptiveGauge(bool adaptiveOn, batteryType type, int nbOfCell
 
     LOGF("POWER : Auto nb of cell : %d", nbOfCell);
   }
+  
+
+  if(!adaptiveOn) // Set to default before switch off adaptive gauge
+  {
+    if (type == LIPO)
+      {
+        this->_lock();
+        this->_stm32->custom(LIPO_VOLTAGE_BREAKS[0] * nbOfCell,
+                            LIPO_VOLTAGE_BREAKS[1] * nbOfCell,
+                            LIPO_VOLTAGE_BREAKS[2] * nbOfCell,
+                            LIPO_VOLTAGE_BREAKS[3] * nbOfCell,
+                            LIPO_VOLTAGE_BREAKS[4] * nbOfCell,
+                            LIPO_VOLTAGE_BREAKS[5] * nbOfCell,
+                            LIPO_VOLTAGE_BREAKS[6] * nbOfCell);
+        this->_unlock();
+      }
+      else if (type == LIFE)
+      {
+        this->_lock(); 
+        this->_stm32->custom(LIFE_VOLTAGE_BREAKS[0] * nbOfCell,
+                            LIFE_VOLTAGE_BREAKS[1] * nbOfCell,
+                            LIFE_VOLTAGE_BREAKS[2] * nbOfCell,
+                            LIFE_VOLTAGE_BREAKS[3] * nbOfCell,
+                            LIFE_VOLTAGE_BREAKS[4] * nbOfCell,
+                            LIFE_VOLTAGE_BREAKS[5] * nbOfCell,
+                            LIFE_VOLTAGE_BREAKS[6] * nbOfCell);
+        this->_unlock(); 
+      }
+  }
+
+           
   this->_lock();
   this->adaptiveGaugeOn = adaptiveOn;
   this->nbOfCell = nbOfCell;
@@ -136,46 +170,6 @@ void K32_power::setAdaptiveGauge(bool adaptiveOn, batteryType type, int nbOfCell
   this->_unlock();
 }
 
-void K32_power::addVoltageProfile(unsigned int profile[7], unsigned int minOutputCurrent, unsigned int maxOutputCurrent)
-{
-  bool currentCheck = true;
-  /* Check consistency of output current values */
-  for (int i = 0; i < this->profileIdx; i++)
-  {
-    if ((minOutputCurrent <= this->profiles[i].outputCurrent[1]) && (minOutputCurrent >= this->profiles[i].outputCurrent[0])) // min current is inside interval of another profile
-    {
-      LOG("POWER: Error min current value for new profile not consistent");
-      currentCheck = false;
-    }
-    else if ((maxOutputCurrent <= this->profiles[i].outputCurrent[1]) && (maxOutputCurrent >= this->profiles[i].outputCurrent[0])) // min current is inside interval of another profile
-    {
-      LOG("POWER: Error max current value for new profile not consistent");
-      currentCheck = false;
-    }
-    else if ((minOutputCurrent <= this->profiles[i].outputCurrent[0]) && (maxOutputCurrent >= this->profiles[i].outputCurrent[1])) // current values are inside interval of another profile
-    {
-      LOG("POWER: Error current values for new profile not consistent");
-      currentCheck = false;
-    }
-    else if ((minOutputCurrent >= this->profiles[i].outputCurrent[0]) && (maxOutputCurrent <= this->profiles[i].outputCurrent[1])) // current interval surronds interval of another profile
-    {
-      LOG("POWER: Error current values for new profile not consistent");
-      currentCheck = false;
-    }
-  }
-  /* End of check */
-  if (currentCheck)
-  {
-    for (int i = 0; i < 7; i++)
-    {
-      this->profiles[this->profileIdx].profile[i] = profile[i];
-    }
-    this->profiles[this->profileIdx].outputCurrent[0] = minOutputCurrent;
-    this->profiles[this->profileIdx].outputCurrent[1] = maxOutputCurrent;
-    this->profileIdx++;
-    LOGF("POWER: New profile added, now %d profiles available \n", this->profileIdx);
-  }
-}
 
 /*
   *   PRIVATE
@@ -213,20 +207,138 @@ uint8_t K32_power::findCellCount(unsigned int voltage, unsigned int cellMin, uns
   return 0;
 }
 
+void K32_power::updateCustom(void *parameter)
+{
+    K32_power *that = (K32_power *)parameter;
+
+    if(abs(that->_current)>20000) 
+    {
+      LOGF("POWER ERROR : problem with current sensor value %d mA", that->_current); 
+      that->_lock(); 
+      that->_error = true;
+      that->_unlock(); 
+      that->setAdaptiveGauge(false, that->battType, that->nbOfCell);
+      return; 
+    }
+
+    if (that->_current > 300) // Discharging batteries
+    {
+      if (abs(that->_current - that->currentRecord) > 500) // If current changed significantly
+      {
+        /* Update profile according to current value */
+        for (int i = 0; i<7; i++)
+        {
+          if (that->battType == LIPO)
+          {
+            that->profile[i] = LIPO_VOLTAGE_BREAKS[i]*that->nbOfCell - BATTERY_RINT * that->_current ; 
+          }
+          else if (that->battType == LIFE)
+          {
+            that->profile[i] = LIFE_VOLTAGE_BREAKS[i]*that->nbOfCell - BATTERY_RINT * that->_current  ; 
+          }
+        }
+        /* Update custom profile */ 
+        that->_stm32->custom(that->profile[0],
+                            that->profile[1],
+                            that->profile[2],
+                            that->profile[3],
+                            that->profile[4],
+                            that->profile[5], 
+                            that->profile[6]);
+        /* Update value of operating profile */
+        that->currentRecord = that->_current ;
+        LOGF("POWER : new profile with current : %d mA \n", that->currentRecord ); 
+ 
+
+      }
+    } else if (that->_current < -300) // Charging batteries
+    {
+      if(that->currentRecord>0)
+      {
+          /* Switch profile to default */ 
+        if (that->battType == LIPO)
+        {
+          that->_stm32->custom(LIPO_VOLTAGE_BREAKS[0] * that->nbOfCell,
+                              LIPO_VOLTAGE_BREAKS[1] * that->nbOfCell,
+                              LIPO_VOLTAGE_BREAKS[2] * that->nbOfCell,
+                              LIPO_VOLTAGE_BREAKS[3] * that->nbOfCell,
+                              LIPO_VOLTAGE_BREAKS[4] * that->nbOfCell,
+                              LIPO_VOLTAGE_BREAKS[5] * that->nbOfCell,
+                              LIPO_VOLTAGE_BREAKS[6] * that->nbOfCell);
+        }
+        else if (that->battType == LIFE)
+        {
+          that->_stm32->custom(LIFE_VOLTAGE_BREAKS[0] * that->nbOfCell,
+                              LIFE_VOLTAGE_BREAKS[1] * that->nbOfCell,
+                              LIFE_VOLTAGE_BREAKS[2] * that->nbOfCell,
+                              LIFE_VOLTAGE_BREAKS[3] * that->nbOfCell,
+                              LIFE_VOLTAGE_BREAKS[4] * that->nbOfCell,
+                              LIFE_VOLTAGE_BREAKS[5] * that->nbOfCell,
+                              LIFE_VOLTAGE_BREAKS[6] * that->nbOfCell);
+        }
+
+        LOG("POWER: Battery charging, Switched to default profile");
+
+
+      }
+      that->currentRecord = -1 ; // Negative value of current
+
+    } else // Current near to zero
+    {
+      if(that->currentRecord > 0) 
+      {
+        /* Switch profile to default */ 
+        if (that->battType == LIPO)
+        {
+          that->_stm32->custom(LIPO_VOLTAGE_BREAKS[0] * that->nbOfCell,
+                              LIPO_VOLTAGE_BREAKS[1] * that->nbOfCell,
+                              LIPO_VOLTAGE_BREAKS[2] * that->nbOfCell,
+                              LIPO_VOLTAGE_BREAKS[3] * that->nbOfCell,
+                              LIPO_VOLTAGE_BREAKS[4] * that->nbOfCell,
+                              LIPO_VOLTAGE_BREAKS[5] * that->nbOfCell,
+                              LIPO_VOLTAGE_BREAKS[6] * that->nbOfCell);
+        }
+        else if (that->battType == LIFE)
+        {
+          that->_stm32->custom(LIFE_VOLTAGE_BREAKS[0] * that->nbOfCell,
+                              LIFE_VOLTAGE_BREAKS[1] * that->nbOfCell,
+                              LIFE_VOLTAGE_BREAKS[2] * that->nbOfCell,
+                              LIFE_VOLTAGE_BREAKS[3] * that->nbOfCell,
+                              LIFE_VOLTAGE_BREAKS[4] * that->nbOfCell,
+                              LIFE_VOLTAGE_BREAKS[5] * that->nbOfCell,
+                              LIFE_VOLTAGE_BREAKS[6] * that->nbOfCell);
+        }
+
+        LOG("POWER: current = 0 ; Switched to default profile");
+
+      }
+
+      that->currentRecord = 0; 
+
+
+    }
+
+    
+    
+}
+
 void K32_power::task(void *parameter)
 {
 
   K32_power *that = (K32_power *)parameter;
   TickType_t xFrequency = pdMS_TO_TICKS(POWER_CHECK);
-  int counter = 0;
   int currentMeas = 0;
 
   while (true)
   {
 
+    /* Update State of Charge */ 
+    that->_lock(); 
+    that->SOC = that->_stm32->battery();
+    that->_unlock();
+
     /* Check Current Value */
-    that->_lock();
-    if (CURRENT_SENSOR_TYPE != 0)
+    if ((CURRENT_SENSOR_TYPE != 0) && (!that->_error))
     {
 
       /* Averaging*/
@@ -240,79 +352,82 @@ void K32_power::task(void *parameter)
       // currentMeas = currentMeas + analogRead(that->currentPin) ;
       // counter ++;
 
+      that->_lock();
       currentMeas = analogRead(that->currentPin);
+      that->_unlock(); 
+
+      //LOG(currentMeas); 
+
+      /* Check for problem with current sensor */ 
+      if ((currentMeas == 0))
+      {
+        LOG("POWER ERROR: Current sensor not plugged in. Entering error mode ");
+        that->_lock(); 
+        that->_error = true ; 
+        that->_unlock(); 
+        /* Remove adaptive gauge and set to default */ 
+        if(that->adaptiveGaugeOn)
+        {
+          that->setAdaptiveGauge(false, that->battType, that->nbOfCell); 
+        }
+        /* stop power task*/ 
+        continue; 
+      }
+      that->_lock(); 
+      /* Update Current value */ 
       that->_current = (currentMeas - that->currentOffset) * 1000 / that->currentFactor; // Curent in mA
+
+      /* Update charge state */ 
+      if (that->_current > 0)
+      {
+        that->charge = true;
+      }
+      else if (that->_current < -100)
+      {
+        that->charge = false;
+      }
+      that->_unlock(); 
+
+      /* Update values of gauge */ 
+      if(that->adaptiveGaugeOn)  that->updateCustom((void *)that); 
+  
+      /* Delay */ 
+      vTaskDelay(xFrequency);      
     }
-    else
+    else if (that->_error) // Problem with current sensor
+    {
+      that->_lock(); 
+      currentMeas = analogRead(that->currentPin);
+      that->_unlock(); 
+      /* Check if current sensor has been replugged */ 
+      if (currentMeas != 0)
+      {
+        /* Double check */ 
+        vTaskDelay(pdMS_TO_TICKS(500));  
+        that->_lock(); 
+        currentMeas = analogRead(that->currentPin);
+        that->_unlock(); 
+        if (currentMeas != 0)
+        {
+          LOG("POWER ERROR: Exitting error mode");
+          that->_lock(); 
+          that->_error = false ; 
+          that->_unlock(); 
+          if (that->autoGauge)
+          {
+            that->setAdaptiveGauge(true, that->battType, that->nbOfCell);
+          }
+        }
+     }
+      /* Delay */ 
+      vTaskDelay(pdMS_TO_TICKS(2000));  
+    } 
+    else if (CURRENT_SENSOR_TYPE == 0) // No current sensor 
     {
       /* Do nothing... */
+      vTaskDelay(pdMS_TO_TICKS(2000));  
     }
+    
 
-    if (that->_current > 0)
-    {
-      that->charge = true;
-    }
-    else if (that->_current < -100)
-    {
-      that->charge = false;
-    }
-
-    /* Adaptive profile */
-    if (that->adaptiveGaugeOn)
-    {
-      bool defaultMode = true; // Will be set to file if a profile corresponds to actual current value
-      for (int i = 0; i < that->profileIdx; i++)
-      {
-        if ((that->_current >= that->profiles[i].outputCurrent[0]) && (that->_current <= that->profiles[i].outputCurrent[1])) // Current in the interval of a profile
-        {
-          if (i != that->profileOn)
-          {
-            /* Set new profile according to current value */
-            that->_stm32->custom(that->profiles[i].profile[0] * that->nbOfCell,
-                                 that->profiles[i].profile[1] * that->nbOfCell,
-                                 that->profiles[i].profile[2] * that->nbOfCell,
-                                 that->profiles[i].profile[3] * that->nbOfCell,
-                                 that->profiles[i].profile[4] * that->nbOfCell,
-                                 that->profiles[i].profile[5] * that->nbOfCell,
-                                 that->profiles[i].profile[6] * that->nbOfCell);
-            /* Update value of operating profile */
-            that->profileOn = i;
-            i = that->profileIdx; // no need to check other profiles
-            LOGF("POWER: Switched to another profile : %d \n", that->profileOn);
-          }
-          defaultMode = false;
-        }
-      }
-      if ((defaultMode) && (that->profileOn != -1))
-      {
-        if (that->battType == LIPO)
-        {
-          that->_stm32->custom(LIPO_VOLTAGE_BREAKS[0] * that->nbOfCell,
-                               LIPO_VOLTAGE_BREAKS[1] * that->nbOfCell,
-                               LIPO_VOLTAGE_BREAKS[2] * that->nbOfCell,
-                               LIPO_VOLTAGE_BREAKS[3] * that->nbOfCell,
-                               LIPO_VOLTAGE_BREAKS[4] * that->nbOfCell,
-                               LIPO_VOLTAGE_BREAKS[5] * that->nbOfCell,
-                               LIPO_VOLTAGE_BREAKS[6] * that->nbOfCell);
-        }
-        else if (that->battType == LIFE)
-        {
-          that->_stm32->custom(LIFE_VOLTAGE_BREAKS[0] * that->nbOfCell,
-                               LIFE_VOLTAGE_BREAKS[1] * that->nbOfCell,
-                               LIFE_VOLTAGE_BREAKS[2] * that->nbOfCell,
-                               LIFE_VOLTAGE_BREAKS[3] * that->nbOfCell,
-                               LIFE_VOLTAGE_BREAKS[4] * that->nbOfCell,
-                               LIFE_VOLTAGE_BREAKS[5] * that->nbOfCell,
-                               LIFE_VOLTAGE_BREAKS[6] * that->nbOfCell);
-        }
-        that->profileOn = -1;
-        LOG("POWER: Switched to default profile");
-      }
-    }
-
-    that->SOC = that->_stm32->battery();
-    that->_unlock();
-
-    vTaskDelay(xFrequency);
   }
 }

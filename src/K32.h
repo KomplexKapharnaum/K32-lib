@@ -71,7 +71,6 @@ public:
     K32_light *light = NULL;
     K32_pwm *pwm = NULL;
     K32_remote *remote = NULL;
-    K32_power *power = NULL;
     K32_osc *osc = NULL;
     K32_mqtt *mqtt = NULL;
     K32_artnet *artnet = NULL;
@@ -156,7 +155,7 @@ public:
         {
             if (system->stm32 != NULL)
             {
-                power = new K32_power(system->stm32, CURRENT_PIN[system->hw()]);
+                system->power = new K32_power(system->stm32, true, CURRENT_PIN[system->hw()]);
             }
             else
             {
