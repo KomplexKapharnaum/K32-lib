@@ -100,6 +100,21 @@ K32_ledstrip* K32_ledstrip::pix(int pixel, int red, int green, int blue, int whi
   return this->pix( pixel, pixelFromRGBW(red, green, blue, white) );
 }
 
+void K32_ledstrip::getBuffer(pixelColor_t* buffer, int _size) {
+  xSemaphoreTake(this->buffer_lock, portMAX_DELAY);
+  for(int k= 0; (k<this->size() && k<_size); k++) 
+    buffer[k] = this->_buffer[k];
+  xSemaphoreGive(this->buffer_lock);
+}
+
+void K32_ledstrip::setBuffer(pixelColor_t* buffer, int _size) {
+  xSemaphoreTake(this->buffer_lock, portMAX_DELAY);
+  for(int k= 0; (k<this->size() && k<_size); k++) 
+    this->_buffer[k] = buffer[k];
+  this->dirty = true;
+  xSemaphoreGive(this->buffer_lock);
+}
+
 void K32_ledstrip::show() {
   // LOG("LIGHT: show in");
   
