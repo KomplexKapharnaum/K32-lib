@@ -39,6 +39,7 @@ class K32_light {
     // STRIPS
     //
     void addStrip(const int pin, led_types type, int size = 0);
+    void cloneStrips(int masterStrip=0);
 
     K32_ledstrip* strip(int s);
     K32_light* strips();
@@ -48,6 +49,8 @@ class K32_light {
     K32_light* all(int red, int green, int blue, int white = 0);
     K32_light* pix(int pixel, pixelColor_t color);
     K32_light* pix(int pixel, int red, int green, int blue, int white = 0);
+
+
     void show();
     void blackout();
 
@@ -63,7 +66,7 @@ class K32_light {
     
 
   private:
-
+    
     static int _nstrips;
     K32_ledstrip* _strips[LEDS_MAXSTRIPS];
 
@@ -73,6 +76,7 @@ class K32_light {
     static void refresh( void * parameter ) ;
     int _fps = LEDS_SHOW_FPS;
 
+    int _masterClone = -1;
 };
 
 

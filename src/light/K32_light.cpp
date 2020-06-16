@@ -38,6 +38,11 @@ void K32_light::addStrip(const int pin, led_types type, int size)
   this->_strips[s] = new K32_ledstrip(s, pin, type, size);
 }
 
+// link every strip to masterStrip
+void K32_light::cloneStrips(int masterStrip) {
+  if (masterStrip < this->_nstrips) this->_masterClone = masterStrip;
+}
+
 K32_ledstrip* K32_light::strip(int s) {
   return this->_strips[s];
 }
@@ -73,13 +78,31 @@ K32_light* K32_light::pix(int pixel, int red, int green, int blue, int white) {
 }
 
 void K32_light::show() {
-  for (int s=0; s<this->_nstrips; s++) this->_strips[s]->show();
+
+  // Clone from master strip (if _masterClone exist)
+  pixelColor_t* cloneBuffer = NULL;
+  int cloneSize = 0;
+  if (this->_masterClone >= 0) {
+    cloneSize = this->_strips[this->_masterClone]->size();
+    cloneBuffer = static_cast<pixelColor_t*>(malloc(cloneSize * sizeof(pixelColor_t)));
+    this->_strips[this->_masterClone]->getBuffer(cloneBuffer, cloneSize);
+  }
+
+  for (int s=0; s<this->_nstrips; s++)  
+  {
+    // Clone from master strip
+    if (cloneSize > 0) this->_strips[s]->setBuffer(cloneBuffer, cloneSize);   
+
+    this->_strips[s]->show();
+  }
+
+  if (cloneBuffer) free(cloneBuffer);
 }
 
 
 void K32_light::blackout() {
   this->stop();
-  this->strips()->black();
+  this->black();
 }
 
 
