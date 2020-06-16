@@ -44,7 +44,7 @@ K32_power::K32_power(K32_stm32 *stm32, bool autoGauge ,const int CURRENT_SENSOR_
 
   this->_lock();
   this->currentOffset = power_prefs.getUInt("offset", CURRENT_OFFSET);
-  this->batteryRint = power_prefs.getUInt("rint", BATTERY_RINT);
+  //this->batteryRint = power_prefs.getUInt("rint", BATTERY_RINT);
   power_prefs.end(); 
   this->_unlock();
 
@@ -96,7 +96,7 @@ void K32_power::calibrate(calibType type)
 {
   int currentMeas = 0 ; 
   int voltageMeas = 0; 
-  int rintMeas = 0.14 ; 
+  //int rintMeas = 0.14 ; 
   if( this->_error)
   {
     LOG("POWER : Error with current sensor, calibration is impossible"); 
@@ -111,40 +111,53 @@ void K32_power::calibrate(calibType type)
       this->_current = (currentMeas - this->currentOffset) * 1000 / this->currentFactor; // Curent in mA
 
       this->currentOffset = this->currentOffset + this->_current * this->currentFactor / 1000;
-      this->calibVoltage = this->_stm32->voltage(); 
+      voltageMeas = this->_stm32->voltage(); 
+      this->calibVoltage = voltageMeas; 
+      this->_unlock(); 
+
+      this->_lock(); 
+      power_prefs.begin("k32-power", false);
       power_prefs.putUInt("offset", this->currentOffset);
-      LOG(this->currentOffset); 
+      power_prefs.end() ; 
       this->_unlock();
     } else if (type == InternalRes) 
     {
-      if (this->calibVoltage == 0)
-      {
-        LOG("POWER : Error with calibration voltage value, calibration is impossible"); 
-      } else
-      {
-        LOG("POWER : Calibration of battery internal resistance");
-        this->_lock() ; 
-        // Reading Current Value
-        currentMeas = analogRead(this->currentPin);
-        this->_current = (currentMeas - this->currentOffset) * 1000 / this->currentFactor; // Curent in mA
-        voltageMeas = this->_stm32->voltage();
-        if (abs(voltageMeas - this->calibVoltage) < 300) // Check if voltage value is significantly different
-        {
-          LOG("POWER : Error current is too low, calibration is impossible"); 
-          return; 
-        }
-        rintMeas = (this->calibVoltage - voltageMeas) / this->_current; 
-        LOG(rintMeas); 
-        if ((rintMeas<0)||(rintMeas > 1)) 
-        {
-          LOG("POWER : Error with rint value, calibration is impossible"); 
-          return;  
-        }
-        this->batteryRint = rintMeas ; 
-        power_prefs.putUInt("rint", this->batteryRint);
-        this->calibVoltage = 0 ; // Set back calibration voltage
-        this->_unlock() ; 
-      }
+      /* INTERNAL RES FUNCTION TO REWORK */ 
+      // if (this->calibVoltage == 0)
+      // {
+      //   LOG("POWER : Error with calibration voltage value, calibration is impossible");
+      //   this->batteryRint = BATTERY_RINT ; 
+      //   power_prefs.putUInt("rint", this->batteryRint); 
+      // } else
+      // {
+      //   LOG("POWER : Calibration of battery internal resistance");
+      //   this->_lock() ; 
+      //   // Reading Current Value
+      //   currentMeas = analogRead(this->currentPin);
+      //   this->_current = (currentMeas - this->currentOffset) * 1000 / this->currentFactor; // Curent in mA
+      //   voltageMeas = this->_stm32->voltage();
+      //   if (abs(voltageMeas - this->calibVoltage) < 300) // Check if voltage value is significantly different
+      //   {
+      //     this->batteryRint = BATTERY_RINT ; 
+      //     power_prefs.putUInt("rint", this->batteryRint);
+      //     LOG("POWER : Error current is too low, calibration is impossible"); 
+      //     return; 
+      //   }
+      //   rintMeas = (this->calibVoltage - voltageMeas) / this->_current; 
+      //   LOG(rintMeas); 
+      //   if ((rintMeas<0)||(rintMeas > 1)) 
+      //   {
+      //     this->batteryRint = BATTERY_RINT ; 
+      //     power_prefs.putUInt("rint", this->batteryRint);
+      //     LOG("POWER : Error with rint value, calibration is impossible"); 
+      //     return;  
+      //   }
+      //   this->batteryRint = rintMeas ; 
+      //   power_prefs.putUInt("rint", this->batteryRint);
+      //   LOGF("Rint: %d\n", this->batteryRint); 
+      //   this->calibVoltage = 0 ; // Set back calibration voltage
+      //   this->_unlock() ; 
+      //}
     }
   }
 }
@@ -178,30 +191,42 @@ void K32_power::setAdaptiveGauge(bool adaptiveOn, batteryType type, int nbOfCell
 
   if(!adaptiveOn) // Set to default before switch off adaptive gauge
   {
-    if (type == LIPO)
-      {
-        this->_lock();
-        this->_stm32->custom(LIPO_VOLTAGE_BREAKS[0] * nbOfCell,
-                            LIPO_VOLTAGE_BREAKS[1] * nbOfCell,
-                            LIPO_VOLTAGE_BREAKS[2] * nbOfCell,
-                            LIPO_VOLTAGE_BREAKS[3] * nbOfCell,
-                            LIPO_VOLTAGE_BREAKS[4] * nbOfCell,
-                            LIPO_VOLTAGE_BREAKS[5] * nbOfCell,
-                            LIPO_VOLTAGE_BREAKS[6] * nbOfCell);
-        this->_unlock();
-      }
-      else if (type == LIFE)
-      {
-        this->_lock(); 
-        this->_stm32->custom(LIFE_VOLTAGE_BREAKS[0] * nbOfCell,
-                            LIFE_VOLTAGE_BREAKS[1] * nbOfCell,
-                            LIFE_VOLTAGE_BREAKS[2] * nbOfCell,
-                            LIFE_VOLTAGE_BREAKS[3] * nbOfCell,
-                            LIFE_VOLTAGE_BREAKS[4] * nbOfCell,
-                            LIFE_VOLTAGE_BREAKS[5] * nbOfCell,
-                            LIFE_VOLTAGE_BREAKS[6] * nbOfCell);
-        this->_unlock(); 
-      }
+    if (this->_error)
+    {
+      this->_lock();
+      this->_stm32->custom(LIPO_ERROR_BREAKS[0] * nbOfCell,
+                          LIPO_ERROR_BREAKS[1] * nbOfCell,
+                          LIPO_ERROR_BREAKS[2] * nbOfCell,
+                          LIPO_ERROR_BREAKS[3] * nbOfCell,
+                          LIPO_ERROR_BREAKS[4] * nbOfCell,
+                          LIPO_ERROR_BREAKS[5] * nbOfCell,
+                          LIPO_ERROR_BREAKS[6] * nbOfCell);
+      this->_unlock();
+    }
+    else if (type == LIPO)
+    {
+      this->_lock();
+      this->_stm32->custom(LIPO_VOLTAGE_BREAKS[0] * nbOfCell,
+                          LIPO_VOLTAGE_BREAKS[1] * nbOfCell,
+                          LIPO_VOLTAGE_BREAKS[2] * nbOfCell,
+                          LIPO_VOLTAGE_BREAKS[3] * nbOfCell,
+                          LIPO_VOLTAGE_BREAKS[4] * nbOfCell,
+                          LIPO_VOLTAGE_BREAKS[5] * nbOfCell,
+                          LIPO_VOLTAGE_BREAKS[6] * nbOfCell);
+      this->_unlock();
+    }
+    else if (type == LIFE)
+    {
+      this->_lock(); 
+      this->_stm32->custom(LIFE_VOLTAGE_BREAKS[0] * nbOfCell,
+                          LIFE_VOLTAGE_BREAKS[1] * nbOfCell,
+                          LIFE_VOLTAGE_BREAKS[2] * nbOfCell,
+                          LIFE_VOLTAGE_BREAKS[3] * nbOfCell,
+                          LIFE_VOLTAGE_BREAKS[4] * nbOfCell,
+                          LIFE_VOLTAGE_BREAKS[5] * nbOfCell,
+                          LIFE_VOLTAGE_BREAKS[6] * nbOfCell);
+      this->_unlock(); 
+    }
   }
 
            
@@ -265,18 +290,18 @@ void K32_power::updateCustom(void *parameter)
 
     if (that->_current > 300) // Discharging batteries
     {
-      if (abs(that->_current - that->currentRecord) > 500) // If current changed significantly
+      if (abs(that->_current - that->currentRecord) > 2500 ) // If current changed significantly
       {
         /* Update profile according to current value */
         for (int i = 0; i<7; i++)
         {
           if (that->battType == LIPO)
           {
-            that->profile[i] = LIPO_VOLTAGE_BREAKS[i]*that->nbOfCell - that->batteryRint * that->_current ; 
+            that->profile[i] = LIPO_VOLTAGE_BREAKS[i]*that->nbOfCell - BATTERY_RINT * that->_current ; 
           }
           else if (that->battType == LIFE)
           {
-            that->profile[i] = LIFE_VOLTAGE_BREAKS[i]*that->nbOfCell - that->batteryRint * that->_current  ; 
+            that->profile[i] = LIFE_VOLTAGE_BREAKS[i]*that->nbOfCell - BATTERY_RINT * that->_current  ; 
           }
         }
         /* Update custom profile */ 
@@ -448,7 +473,6 @@ void K32_power::task(void *parameter)
         vTaskDelay(pdMS_TO_TICKS(1000));  
         that->_lock(); 
         currentMeas = analogRead(that->currentPin);
-        LOGF("Error check : %d\n", currentMeas);   
         that->_unlock(); 
         if (currentMeas > 400)
         {

@@ -263,23 +263,17 @@ void K32_remote::task(void *parameter)
       that->_lock();
       if (that->buttons[NB_BTN].flag == 1) // Short Push
       {
-        that->_unlock() ; 
         #ifdef DEBUG_lib_btn
           LOG("REMOTE: Short push on calibration button \n");
         #endif
         that->system->power->calibrate(Offset); 
       } else if (that->buttons[NB_BTN].flag == 2) // Long Push
       {
-        that->_unlock() ;
         #ifdef DEBUG_lib_btn
           LOG("REMOTE: Long push on calibration button \n");
         #endif
-        that->system->power->calibrate(InternalRes); 
-      } else 
-      {
-        that->_unlock() ; 
+        // that->system->power->calibrate(InternalRes); TO REWORK
       }
-      that->_lock(); 
       that->buttons[NB_BTN].flag = 0;
       that->_unlock();
 #endif

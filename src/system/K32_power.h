@@ -37,6 +37,7 @@ enum calibType
 /* All voltages are given in mV */
 const unsigned int LIPO_VOLTAGE_BREAKS[] = {3500, 3650, 3700, 3750, 3825, 3950, 4200}; //For one cell
 const unsigned int LIFE_VOLTAGE_BREAKS[] = {2920, 3140, 3200, 3220, 3240, 3260, 3600}; //For one cell
+const unsigned int LIPO_ERROR_BREAKS[] = {3100, 3300, 3357, 3500, 37857, 4000, 4200}; //For one cell
 const unsigned int INITIAL_CELL_VOLTAGE_TOLERANCE = 50;                                // Tolerance added to the cell charged voltage
 
 class K32_power
@@ -75,7 +76,7 @@ private:
   int currentOffset = 1800; // Offset of current measurement
   int currentFactor;        // Factor of current measurement
   int calibVoltage = 0; // Voltage of the battery during calibration of the offset
-  float batteryRint;                 // Value of internal resistance of the battery
+  //int batteryRint;                 // Value of internal resistance of the battery
   /* Adaptive Gauge variables */
   bool autoGauge = false; // Enable programm to restart adaptive gauge if the sensor is replugged
   bool adaptiveGaugeOn = false;
