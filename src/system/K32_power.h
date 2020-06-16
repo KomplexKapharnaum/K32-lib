@@ -11,7 +11,6 @@ Released under GPL v3.0
 #include "system/K32_stm32_api.h"
 #include "Arduino.h"
 
-//#define SET_CURRENT_OFFSET 2890        // Set Current calibration offset ((necessary one time only))
 
 #define POWER_CHECK 100        // task loop in ms
 #define CURRENT_SENSOR_TYPE 10 // Current sensor type : 0 = no sensor (info given by OSC) ; 
@@ -19,13 +18,20 @@ Released under GPL v3.0
                                // 11 = H010                                                 
                                // 25 = HO25-P/SP33
 
-#define BATTERY_RINT 0.14 // Internal resistance of battery
+#define BATTERY_RINT 0.14 // Default internal resistance of battery
+#define CURRENT_OFFSET 2890 // Default current calibration offset
 
 enum batteryType
 {
   LIPO,
   LIFE,
 };
+
+enum calibType
+{
+  Offset, 
+  InternalRes,
+}; 
 
 
 /* All voltages are given in mV */
@@ -45,7 +51,7 @@ public:
   int energy();                                                           // Get Energy consummed since last reset (Wh)
   int current();                                                          // Get current from current sensor / STM32 if Current type = 0
   void reset();                                                           // Reset energy time counter
-  void calibrate();                                                       // Calibrate current sensor. Call this function when Current flowing through sensor is 0.
+  void calibrate(calibType type);                                                       // Calibrate current sensor. Call this function when Current flowing through sensor is 0.
   void setAdaptiveGauge(bool adaptiveOn, batteryType type, int nbOfCell); // Function to activate adaptive gauge visualisation depending on current.
                                                                           // Set adaptiveOn to true to set adaptive gauge algo
                                                                           // type between LIPO and LIFE
@@ -68,6 +74,8 @@ private:
   int currentPin;
   int currentOffset = 1800; // Offset of current measurement
   int currentFactor;        // Factor of current measurement
+  int calibVoltage = 0; // Voltage of the battery during calibration of the offset
+  float batteryRint;                 // Value of internal resistance of the battery
   /* Adaptive Gauge variables */
   bool autoGauge = false; // Enable programm to restart adaptive gauge if the sensor is replugged
   bool adaptiveGaugeOn = false;

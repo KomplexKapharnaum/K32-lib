@@ -41,18 +41,12 @@ K32_power::K32_power(K32_stm32 *stm32, bool autoGauge ,const int CURRENT_SENSOR_
   this->_lock();
   power_prefs.begin("k32-power", false);
   this->_unlock();
-#ifdef SET_CURRENT_OFFSET
+
   this->_lock();
-  int old = power_prefs.getUInt("offset", 0);
-  if (this->currentOffset != old)
-    power_prefs.putUInt("offset", SET_CURRENT_OFFSET);
-  this->_unlock();
-#else
-  this->_lock();
-  this->currentOffset = power_prefs.getUInt("offset", 0);
+  this->currentOffset = power_prefs.getUInt("offset", CURRENT_OFFSET);
+  this->batteryRint = power_prefs.getUInt("rint", BATTERY_RINT);
   power_prefs.end(); 
   this->_unlock();
-#endif
 
   // Start main task
   xTaskCreate(this->task,
@@ -98,13 +92,61 @@ int K32_power::current()
   }
 }
 
-void K32_power::calibrate()
+void K32_power::calibrate(calibType type)
 {
-  LOG("POWER : Calibration of current sensor");
-  this->_lock();
-  this->currentOffset = this->currentOffset + this->_current * this->currentFactor / 1000;
-  power_prefs.putUInt("offset", this->currentOffset);
-  this->_unlock();
+  int currentMeas = 0 ; 
+  int voltageMeas = 0; 
+  int rintMeas = 0.14 ; 
+  if( this->_error)
+  {
+    LOG("POWER : Error with current sensor, calibration is impossible"); 
+  } else 
+  {
+    if (type == Offset ) 
+    {
+      LOG("POWER : Calibration of current sensor offset");
+      this->_lock();
+      // Reading current value
+      currentMeas = analogRead(this->currentPin);
+      this->_current = (currentMeas - this->currentOffset) * 1000 / this->currentFactor; // Curent in mA
+
+      this->currentOffset = this->currentOffset + this->_current * this->currentFactor / 1000;
+      this->calibVoltage = this->_stm32->voltage(); 
+      power_prefs.putUInt("offset", this->currentOffset);
+      LOG(this->currentOffset); 
+      this->_unlock();
+    } else if (type == InternalRes) 
+    {
+      if (this->calibVoltage == 0)
+      {
+        LOG("POWER : Error with calibration voltage value, calibration is impossible"); 
+      } else
+      {
+        LOG("POWER : Calibration of battery internal resistance");
+        this->_lock() ; 
+        // Reading Current Value
+        currentMeas = analogRead(this->currentPin);
+        this->_current = (currentMeas - this->currentOffset) * 1000 / this->currentFactor; // Curent in mA
+        voltageMeas = this->_stm32->voltage();
+        if (abs(voltageMeas - this->calibVoltage) < 300) // Check if voltage value is significantly different
+        {
+          LOG("POWER : Error current is too low, calibration is impossible"); 
+          return; 
+        }
+        rintMeas = (this->calibVoltage - voltageMeas) / this->_current; 
+        LOG(rintMeas); 
+        if ((rintMeas<0)||(rintMeas > 1)) 
+        {
+          LOG("POWER : Error with rint value, calibration is impossible"); 
+          return;  
+        }
+        this->batteryRint = rintMeas ; 
+        power_prefs.putUInt("rint", this->batteryRint);
+        this->calibVoltage = 0 ; // Set back calibration voltage
+        this->_unlock() ; 
+      }
+    }
+  }
 }
 
 void K32_power::setAdaptiveGauge(bool adaptiveOn, batteryType type, int nbOfCell)
@@ -230,11 +272,11 @@ void K32_power::updateCustom(void *parameter)
         {
           if (that->battType == LIPO)
           {
-            that->profile[i] = LIPO_VOLTAGE_BREAKS[i]*that->nbOfCell - BATTERY_RINT * that->_current ; 
+            that->profile[i] = LIPO_VOLTAGE_BREAKS[i]*that->nbOfCell - that->batteryRint * that->_current ; 
           }
           else if (that->battType == LIFE)
           {
-            that->profile[i] = LIFE_VOLTAGE_BREAKS[i]*that->nbOfCell - BATTERY_RINT * that->_current  ; 
+            that->profile[i] = LIFE_VOLTAGE_BREAKS[i]*that->nbOfCell - that->batteryRint * that->_current  ; 
           }
         }
         /* Update custom profile */ 
@@ -400,14 +442,15 @@ void K32_power::task(void *parameter)
       currentMeas = analogRead(that->currentPin);
       that->_unlock(); 
       /* Check if current sensor has been replugged */ 
-      if (currentMeas != 0)
+      if (currentMeas > 400)
       {
         /* Double check */ 
-        vTaskDelay(pdMS_TO_TICKS(500));  
+        vTaskDelay(pdMS_TO_TICKS(1000));  
         that->_lock(); 
         currentMeas = analogRead(that->currentPin);
+        LOGF("Error check : %d\n", currentMeas);   
         that->_unlock(); 
-        if (currentMeas != 0)
+        if (currentMeas > 400)
         {
           LOG("POWER ERROR: Exitting error mode");
           that->_lock(); 
