@@ -189,44 +189,42 @@ void K32_power::setAdaptiveGauge(bool adaptiveOn, batteryType type, int nbOfCell
   }
   
 
-  if(!adaptiveOn) // Set to default before switch off adaptive gauge
+ // Set to default before switch off adaptive gauge
+  if (this->_error)
   {
-    if (this->_error)
-    {
-      this->_lock();
-      this->_stm32->custom(LIPO_ERROR_BREAKS[0] * nbOfCell,
-                          LIPO_ERROR_BREAKS[1] * nbOfCell,
-                          LIPO_ERROR_BREAKS[2] * nbOfCell,
-                          LIPO_ERROR_BREAKS[3] * nbOfCell,
-                          LIPO_ERROR_BREAKS[4] * nbOfCell,
-                          LIPO_ERROR_BREAKS[5] * nbOfCell,
-                          LIPO_ERROR_BREAKS[6] * nbOfCell);
-      this->_unlock();
-    }
-    else if (type == LIPO)
-    {
-      this->_lock();
-      this->_stm32->custom(LIPO_VOLTAGE_BREAKS[0] * nbOfCell,
-                          LIPO_VOLTAGE_BREAKS[1] * nbOfCell,
-                          LIPO_VOLTAGE_BREAKS[2] * nbOfCell,
-                          LIPO_VOLTAGE_BREAKS[3] * nbOfCell,
-                          LIPO_VOLTAGE_BREAKS[4] * nbOfCell,
-                          LIPO_VOLTAGE_BREAKS[5] * nbOfCell,
-                          LIPO_VOLTAGE_BREAKS[6] * nbOfCell);
-      this->_unlock();
-    }
-    else if (type == LIFE)
-    {
-      this->_lock(); 
-      this->_stm32->custom(LIFE_VOLTAGE_BREAKS[0] * nbOfCell,
-                          LIFE_VOLTAGE_BREAKS[1] * nbOfCell,
-                          LIFE_VOLTAGE_BREAKS[2] * nbOfCell,
-                          LIFE_VOLTAGE_BREAKS[3] * nbOfCell,
-                          LIFE_VOLTAGE_BREAKS[4] * nbOfCell,
-                          LIFE_VOLTAGE_BREAKS[5] * nbOfCell,
-                          LIFE_VOLTAGE_BREAKS[6] * nbOfCell);
-      this->_unlock(); 
-    }
+    this->_lock();
+    this->_stm32->custom(LIPO_ERROR_BREAKS[0] * nbOfCell,
+                        LIPO_ERROR_BREAKS[1] * nbOfCell,
+                        LIPO_ERROR_BREAKS[2] * nbOfCell,
+                        LIPO_ERROR_BREAKS[3] * nbOfCell,
+                        LIPO_ERROR_BREAKS[4] * nbOfCell,
+                        LIPO_ERROR_BREAKS[5] * nbOfCell,
+                        LIPO_ERROR_BREAKS[6] * nbOfCell);
+    this->_unlock();
+  }
+  else if (type == LIPO)
+  {
+    this->_lock();
+    this->_stm32->custom(LIPO_ERROR_BREAKS[0] * nbOfCell,
+                        LIPO_VOLTAGE_BREAKS[1] * nbOfCell,
+                        LIPO_VOLTAGE_BREAKS[2] * nbOfCell,
+                        LIPO_VOLTAGE_BREAKS[3] * nbOfCell,
+                        LIPO_VOLTAGE_BREAKS[4] * nbOfCell,
+                        LIPO_VOLTAGE_BREAKS[5] * nbOfCell,
+                        LIPO_VOLTAGE_BREAKS[6] * nbOfCell);
+    this->_unlock();
+  }
+  else if (type == LIFE)
+  {
+    this->_lock(); 
+    this->_stm32->custom(LIFE_VOLTAGE_BREAKS[0] * nbOfCell,
+                        LIFE_VOLTAGE_BREAKS[1] * nbOfCell,
+                        LIFE_VOLTAGE_BREAKS[2] * nbOfCell,
+                        LIFE_VOLTAGE_BREAKS[3] * nbOfCell,
+                        LIFE_VOLTAGE_BREAKS[4] * nbOfCell,
+                        LIFE_VOLTAGE_BREAKS[5] * nbOfCell,
+                        LIFE_VOLTAGE_BREAKS[6] * nbOfCell);
+    this->_unlock(); 
   }
 
            
@@ -277,6 +275,7 @@ uint8_t K32_power::findCellCount(unsigned int voltage, unsigned int cellMin, uns
 void K32_power::updateCustom(void *parameter)
 {
     K32_power *that = (K32_power *)parameter;
+    // LOGF("POWER update : Current %d mA", that->_current); 
 
     if(abs(that->_current)>20000) 
     {
@@ -292,6 +291,16 @@ void K32_power::updateCustom(void *parameter)
     {
       if (abs(that->_current - that->currentRecord) > 2500 ) // If current changed significantly
       {
+        /* Set constant cut off value */ 
+        // if (that->battType == LIPO)
+        //   {
+        //     that->profile[0] = LIPO_VOLTAGE_BREAKS[0]*that->nbOfCell; 
+        //   }
+        // else if (that->battType == LIFE)
+        //   {
+        //     that->profile[0] = LIFE_VOLTAGE_BREAKS[0]*that->nbOfCell; 
+        //   }
+
         /* Update profile according to current value */
         for (int i = 0; i<7; i++)
         {
@@ -325,7 +334,7 @@ void K32_power::updateCustom(void *parameter)
           /* Switch profile to default */ 
         if (that->battType == LIPO)
         {
-          that->_stm32->custom(LIPO_VOLTAGE_BREAKS[0] * that->nbOfCell,
+          that->_stm32->custom(LIPO_ERROR_BREAKS[0] * that->nbOfCell,
                               LIPO_VOLTAGE_BREAKS[1] * that->nbOfCell,
                               LIPO_VOLTAGE_BREAKS[2] * that->nbOfCell,
                               LIPO_VOLTAGE_BREAKS[3] * that->nbOfCell,
@@ -357,7 +366,7 @@ void K32_power::updateCustom(void *parameter)
         /* Switch profile to default */ 
         if (that->battType == LIPO)
         {
-          that->_stm32->custom(LIPO_VOLTAGE_BREAKS[0] * that->nbOfCell,
+          that->_stm32->custom(LIPO_ERROR_BREAKS[0] * that->nbOfCell,
                               LIPO_VOLTAGE_BREAKS[1] * that->nbOfCell,
                               LIPO_VOLTAGE_BREAKS[2] * that->nbOfCell,
                               LIPO_VOLTAGE_BREAKS[3] * that->nbOfCell,
@@ -419,9 +428,21 @@ void K32_power::task(void *parameter)
       // currentMeas = currentMeas + analogRead(that->currentPin) ;
       // counter ++;
 
+
+      /* Simple check measurement*/ 
+      // that->_lock();
+      // currentMeas = analogRead(that->currentPin);
+      // that->_unlock(); 
+
+      /* Averaging*/
       that->_lock();
-      currentMeas = analogRead(that->currentPin);
+      currentMeas = 0; 
+      for (int i =0; i<50; i++)
+      {
+        currentMeas += analogRead(that->currentPin);
+      }
       that->_unlock(); 
+      currentMeas = currentMeas / 50 ; 
 
       //LOG(currentMeas); 
 
