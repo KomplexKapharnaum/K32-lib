@@ -292,17 +292,17 @@ void K32_power::updateCustom(void *parameter)
       if (abs(that->_current - that->currentRecord) > 2500 ) // If current changed significantly
       {
         /* Set constant cut off value */ 
-        // if (that->battType == LIPO)
-        //   {
-        //     that->profile[0] = LIPO_VOLTAGE_BREAKS[0]*that->nbOfCell; 
-        //   }
-        // else if (that->battType == LIFE)
-        //   {
-        //     that->profile[0] = LIFE_VOLTAGE_BREAKS[0]*that->nbOfCell; 
-        //   }
+        if (that->battType == LIPO)
+          {
+            that->profile[0] = LIPO_ERROR_BREAKS[0]*that->nbOfCell; 
+          }
+        else if (that->battType == LIFE)
+          {
+            that->profile[0] = LIFE_VOLTAGE_BREAKS[0]*that->nbOfCell; 
+          }
 
         /* Update profile according to current value */
-        for (int i = 0; i<7; i++)
+        for (int i = 1; i<7; i++)
         {
           if (that->battType == LIPO)
           {
