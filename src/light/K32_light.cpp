@@ -43,6 +43,15 @@ void K32_light::cloneStrips(int masterStrip) {
   if (masterStrip < this->_nstrips) this->_masterClone = masterStrip;
 }
 
+// link every strip to masterStrip
+void K32_light::copyStrip(stripcopy copy) {
+  if (_copyMax<LEDS_MAX_COPY) 
+  {
+    _copylist[_copyMax] = copy;
+    _copyMax += 1;
+  }
+}
+
 K32_ledstrip* K32_light::strip(int s) {
   return this->_strips[s];
 }
@@ -91,7 +100,20 @@ void K32_light::show() {
   for (int s=0; s<this->_nstrips; s++)  
   {
     // Clone from master strip
-    if (cloneSize > 0) this->_strips[s]->setBuffer(cloneBuffer, cloneSize);   
+    if (cloneSize > 0) this->_strips[s]->setBuffer(cloneBuffer, cloneSize); 
+
+    // Copy pixels
+    for (int c=0; c<_copyMax; c++) {
+      if (_copylist[c].destStrip == s) {
+        pixelColor_t* copyBuffer = NULL;
+        int copySize = 0;
+        copySize = _copylist[c].srcStop-_copylist[c].srcStart+1;
+        copyBuffer = static_cast<pixelColor_t*>(malloc(copySize * sizeof(pixelColor_t)));
+        this->_strips[_copylist[c].srcStrip]->getBuffer(copyBuffer, copySize, _copylist[c].srcStart);
+        this->_strips[s]->setBuffer(copyBuffer, copySize, _copylist[c].destPos); 
+        free(copyBuffer);
+      }
+    }  
 
     this->_strips[s]->show();
   }
