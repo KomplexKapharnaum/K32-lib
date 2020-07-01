@@ -10,6 +10,7 @@
 #define LEDS_ANIMATE_FPS  100   // Anims modulation FPS
 #define LEDS_SHOW_FPS     100   // Show RMT push FPS
 #define LEDS_ANIMS_SLOTS  16
+#define LEDS_MAX_COPY     16
 
 
 #include "K32_ledstrip.h"
@@ -28,6 +29,15 @@
 #include "animations/K32_anim_basics.h"
 #include "animations/K32_anim_charge.h"
 
+struct stripcopy
+{
+  int srcStrip;
+  int srcStart;
+  int srcStop;
+  int destStrip;
+  int destPos;
+};
+
 
 
 class K32_light {
@@ -40,6 +50,7 @@ class K32_light {
     //
     void addStrip(const int pin, led_types type, int size = 0);
     void cloneStrips(int masterStrip=0);
+    void copyStrip(stripcopy copy);
 
     K32_ledstrip* strip(int s);
     K32_light* strips();
@@ -77,6 +88,9 @@ class K32_light {
     int _fps = LEDS_SHOW_FPS;
 
     int _masterClone = -1;
+
+    int _copyMax = 0;
+    stripcopy _copylist[LEDS_MAX_COPY];
 };
 
 
