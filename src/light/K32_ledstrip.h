@@ -32,8 +32,8 @@ class K32_ledstrip {
     K32_ledstrip* pix(int pixelStart, int count, pixelColor_t color);
     K32_ledstrip* pix(int pixel, int red, int green, int blue, int white = 0);
 
-    void getBuffer(pixelColor_t* buffer, int size);
-    void setBuffer(pixelColor_t* buffer, int size);
+    void getBuffer(pixelColor_t* buffer, int size, int offset=0);
+    void setBuffer(pixelColor_t* buffer, int size, int offset=0);
 
     void show();
 
