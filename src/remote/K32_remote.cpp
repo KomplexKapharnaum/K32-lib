@@ -44,7 +44,7 @@ K32_remote::K32_remote(K32_system *system, const int BTN_PIN[2]) : system(system
   #endif
 
   // load LampGrad
-  this->_lamp_grad = system->preferences.getUInt("lamp_grad", 30);
+  this->_lamp_grad = system->preferences.getUInt("lamp_grad", 127);
 
   // Start main task
   xTaskCreate(this->task,    // function
