@@ -35,13 +35,13 @@ K32_remote::K32_remote(K32_system *system, const int BTN_PIN[2]) : system(system
     this->mcp.pullUp(i, HIGH);
   }
 
-  #ifdef CALIB_BUTTON
-    this->buttons[NB_BTN].pin = CALIB_BUTTON ; 
-    this->buttons[NB_BTN].state = LOW ; 
+#ifdef CALIB_BUTTON
+  this->buttons[NB_BTN].pin = CALIB_BUTTON;
+  this->buttons[NB_BTN].state = LOW;
 
-    this->mcp.pinMode(CALIB_BUTTON, INPUT); 
-    this->mcp.pullUp(CALIB_BUTTON, HIGH);
-  #endif
+  this->mcp.pinMode(CALIB_BUTTON, INPUT);
+  this->mcp.pullUp(CALIB_BUTTON, HIGH);
+#endif
 
   // load LampGrad
   this->_lamp_grad = system->preferences.getUInt("lamp_grad", 127);
@@ -99,13 +99,15 @@ void K32_remote::setState(remoteState state)
 void K32_remote::stmNext()
 {
   this->_lock();
-  this->_activeMacro = (this->_activeMacro+1) % this->_macroMax;
+  this->_activeMacro = (this->_activeMacro + 1) % this->_macroMax;
   this->_previewMacro = this->_activeMacro;
 
   // Last macro -> back to AUTO_LOCK
-  if (this->_activeMacro == this->_macroMax-1) this->_state = REMOTE_AUTO_LOCK;
-  else this->_state = REMOTE_MANU_STM;
-  
+  if (this->_activeMacro == this->_macroMax - 1)
+    this->_state = REMOTE_AUTO_LOCK;
+  else
+    this->_state = REMOTE_MANU_STM;
+
   this->_send_active_macro = true;
   this->_unlock();
 }
@@ -205,7 +207,7 @@ void K32_remote::task(void *parameter)
       LOGF("that->_state %d\n", that->_state);
       LOGF("that->_old_state %d\n", that->_old_state);
 #endif
-      if (that->_old_state < 3)
+      if (that->_old_state < 5)
       {
         that->_state = REMOTE_MANU;
       }
@@ -230,25 +232,25 @@ void K32_remote::task(void *parameter)
       {
         that->_old_state = that->_state;
       }
-      if (that->_old_state == REMOTE_MANU)
+      if (that->_old_state == REMOTE_MANU) // 4
       {
-        that->_state = REMOTE_MANU_LOCK;
+        that->_state = REMOTE_MANU_LOCK; // 2
       }
-      else if (that->_old_state == REMOTE_MANU_LOCK)
+      else if (that->_old_state == REMOTE_MANU_LOCK) // 2
       {
-        that->_state = REMOTE_MANU_LOCK;
+        that->_state = REMOTE_MANU; //4
       }
-      else if (that->_old_state == REMOTE_MANU_STM)
+      else if (that->_old_state == REMOTE_MANU_STM) // 5
       {
-        that->_state = REMOTE_MANU_STM_LOCK;
+        that->_state = REMOTE_MANU_STM_LOCK; // 3
       }
-      else if (that->_old_state == REMOTE_AUTO)
+      else if (that->_old_state == REMOTE_AUTO) // 1
       {
-        that->_state = REMOTE_AUTO_LOCK;
+        that->_state = REMOTE_AUTO_LOCK; // 0
       }
       else
       {
-        that->_state = REMOTE_AUTO_LOCK;
+        that->_state = REMOTE_AUTO_LOCK; // 0
       }
 #ifdef DEBUG_lib_btn
       LOGF("NEW that->_old_state %d\n", that->_old_state);
@@ -260,22 +262,23 @@ void K32_remote::task(void *parameter)
     ////////////////////* Check flags for calibration button *////////////////////
     //////////////////////////////////////////////////////////////////////////////
 #ifdef CALIB_BUTTON
-      that->_lock();
-      if (that->buttons[NB_BTN].flag == 1) // Short Push
-      {
-        #ifdef DEBUG_lib_btn
-          LOG("REMOTE: Short push on calibration button \n");
-        #endif
-        that->system->power->calibrate(Offset); 
-      } else if (that->buttons[NB_BTN].flag == 2) // Long Push
-      {
-        #ifdef DEBUG_lib_btn
-          LOG("REMOTE: Long push on calibration button \n");
-        #endif
-        // that->system->power->calibrate(InternalRes); TO REWORK
-      }
-      that->buttons[NB_BTN].flag = 0;
-      that->_unlock();
+    that->_lock();
+    if (that->buttons[NB_BTN].flag == 1) // Short Push
+    {
+#ifdef DEBUG_lib_btn
+      LOG("REMOTE: Short push on calibration button \n");
+#endif
+      that->system->power->calibrate(Offset);
+    }
+    else if (that->buttons[NB_BTN].flag == 2) // Long Push
+    {
+#ifdef DEBUG_lib_btn
+      LOG("REMOTE: Long push on calibration button \n");
+#endif
+      // that->system->power->calibrate(InternalRes); TO REWORK
+    }
+    that->buttons[NB_BTN].flag = 0;
+    that->_unlock();
 #endif
 
     //////////////////////////////////////////////////////////////////////////////
@@ -380,8 +383,19 @@ void K32_remote::task(void *parameter)
             that->buttons[2].flag = 0; // reset flags after action
             break;
           case 30: // Button 1 and 4                                // LOCK & UNLOCK
-            /* */
-            that->_key_lock = false;
+                   /* */
+            if (that->_key_lock == true)
+            {
+              that->_key_lock = false;
+            }
+            else
+            {
+              that->_key_lock = true;
+            }
+#ifdef DEBUG_lib_btn
+            LOGF("that->_key_lock %d\n", that->_key_lock);
+            LOGF("_check_key %d\n", that->_check_key);
+#endif
             /* */
             that->buttons[0].flag = 0;
             that->buttons[3].flag = 0; // reset flags after action
@@ -646,7 +660,14 @@ void K32_remote::task(void *parameter)
             break;
           case 30: // Button 1 and 4                                // LOCK & UNLOCK
             /* */
-            that->_key_lock = true;
+            if (that->_key_lock == true)
+            {
+              that->_key_lock = false;
+            }
+            else
+            {
+              that->_key_lock = true;
+            }
             /* */
             that->buttons[0].flag = 0;
             that->buttons[3].flag = 0; // reset flags after action
@@ -757,7 +778,7 @@ void K32_remote::read_btn_state(void *parameter)
 #ifdef CALIB_BUTTON
     for (int i = 0; i < NB_BTN + 1; i++)
 #else
-    for (int i=0; i<NB_BTN; i++)
+    for (int i = 0; i < NB_BTN; i++)
 #endif
     {
 
