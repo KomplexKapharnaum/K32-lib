@@ -41,8 +41,9 @@ class K32_remote
 public:
   K32_remote(K32_system *system, const int BTN_PIN[2]);
 
-  void setMacroMax(int macroMax);
   void setState(remoteState state);
+  void setMacroMax(uint8_t macroMax);
+  void stmSetMacro(uint8_t macro);
   void stmNext();
 
   remoteState getState();

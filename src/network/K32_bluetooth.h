@@ -11,13 +11,14 @@
 #include "system/K32_system.h"
 #include "audio/K32_audio.h"
 #include "light/K32_light.h"
+#include "remote/K32_remote.h"
 
 #include <BluetoothSerial.h>
 
 
 class K32_bluetooth {
   public:
-    K32_bluetooth(String nameDevice, K32_system *system, K32_audio *audio, K32_light *light);
+    K32_bluetooth(String nameDevice, K32_system *system, K32_audio *audio, K32_light *light, K32_remote *remote);
 
     BluetoothSerial* serial;
 
@@ -25,12 +26,20 @@ class K32_bluetooth {
     void onConnect( void (*callback)(void) );
     void onDisconnect( void (*callback)(void) );
 
+    // custom callback
+    typedef void (*cbPtr)(uint8_t *data, int length);
+    static cbPtr cmdCallback;
+    void onCmd( cbPtr callback );
+
+
     String nameDevice;
 
   private:
     SemaphoreHandle_t lock;
     static void state( void * parameter );
     static void server( void * parameter );
+
+    void dispatch(char* data, size_t length);
 
     static bool ok;
     static bool didConnect;
@@ -43,6 +52,7 @@ class K32_bluetooth {
     K32_system *system;
     K32_audio *audio;
     K32_light *light;
+    K32_remote *remote;
 
 };
 

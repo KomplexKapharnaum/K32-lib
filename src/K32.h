@@ -181,7 +181,7 @@ public:
 
     void init_bt(String name = "")
     {
-        bt = new K32_bluetooth(name, system, audio, light);
+        bt = new K32_bluetooth(name, system, audio, light, remote);
     }
 
     void init_osc(oscconf conf)

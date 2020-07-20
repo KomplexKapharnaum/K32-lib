@@ -6,13 +6,16 @@
 
 #include "network/K32_bluetooth.h"
 
+#define min(m, n) ((m) < (n) ? (m) : (n))
+#define max(m, n) ((m) > (n) ? (m) : (n))
+
 
 /*
  *   PUBLIC
  */
 
-K32_bluetooth::K32_bluetooth(String nameDevice, K32_system *system, K32_audio *audio, K32_light *light) 
-                                                      : nameDevice(nameDevice), system(system), audio(audio), light(light)
+K32_bluetooth::K32_bluetooth(String nameDevice, K32_system *system, K32_audio *audio, K32_light *light, K32_remote *remote) 
+                                                      : nameDevice(nameDevice), system(system), audio(audio), light(light), remote(remote)
 {
   this->lock = xSemaphoreCreateMutex();
 
@@ -55,6 +58,13 @@ void K32_bluetooth::onConnect( void (*callback)(void) ) {
 void K32_bluetooth::onDisconnect( void (*callback)(void) ) {
   this->disconCallback = callback;
 }
+
+void K32_bluetooth::onCmd( cbPtr callback ) 
+{
+  this->cmdCallback = callback;
+}
+
+K32_bluetooth::cbPtr K32_bluetooth::cmdCallback = nullptr;
 
 
 /*
@@ -122,18 +132,96 @@ void K32_bluetooth::state(void *parameter)
 void K32_bluetooth::server(void *parameter)
 {
   K32_bluetooth *that = (K32_bluetooth *)parameter;
+  const int bufferSize = 256;
+  char buffer[bufferSize];
+  int size = 0;
 
   while (true)
     if (that->isConnected()) {
       
-      while(that->serial->available()) 
-      {
-        LOGINL("BT received:");
-        LOG(that->serial->read());
-      }
+      while(that->serial->available()) {
+        buffer[size] = that->serial->read();
+        size += 1;
+
+        // buffer is full
+        if (size == bufferSize-1) {
+          buffer[size] = '\n';
+          size += 1;
+        }
+
+        // process
+        if (buffer[size-1] == '\n') {
+          buffer[size-1] = '\0';
+          that->dispatch(buffer, size-1);
+          size=0;
+        }
+      }        
       delay(20);
     }
     else delay(300);
 
   vTaskDelete(NULL);
+}
+
+void splitString(char *data, const char *separator, int index, char *result)
+{
+  char input[strlen(data)];
+  strcpy(input, data);
+
+  char *command = strtok(input, separator);
+  for (int k = 0; k < index; k++)
+    if (command != NULL)
+      command = strtok(NULL, separator);
+
+  if (command == NULL)
+    strcpy(result, "");
+  else
+    strcpy(result, command);
+}
+
+void K32_bluetooth::dispatch(char* data, size_t length)
+{
+  LOGINL("BT received: ");
+  LOG(data);
+
+  // TOPIC
+  char topic[length];
+  splitString(data, " ", 0, topic);
+
+  // PAYLOAD
+  int paySize = max(1, length-strlen(topic));
+  char payload[paySize];
+  memcpy( payload, &data[strlen(topic)+1], paySize );
+  payload[paySize-1] = '\0';
+
+  // LOGINL("BT topic: ");
+  // LOG(topic);
+  // LOGINL("BT payload: ");
+  // LOG(payload);
+
+  // ENGINE
+  char motor[16];
+  splitString(topic, "/", 0, motor);
+
+  if (strcmp(motor, "leds") == 0 && this->light)
+  {
+
+    char action[16];
+    splitString(topic, "/", 1, action);
+
+    if (strcmp(action, "mem") == 0)
+    {
+      char mem[4];
+      splitString(payload, "§", 0, mem);
+      
+      this->remote->stmSetMacro( atoi(mem) );
+    }
+
+  }
+
+  // if (K32_bluetooth::cmdCallback)
+  //   K32_bluetooth::cmdCallback( 
+  //     &data[ K32_artnet::conf.address-1 ], 
+  //     min(K32_artnet::conf.framesize, length-(K32_artnet::conf.address-1)) 
+  //   );
 }
