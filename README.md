@@ -1,9 +1,7 @@
 # ESP32 framework for KXKM board
 
 ## TODO
-- strobe on anim_dmx
-- modulator calling modulator (tri-sinus) ?
-- stop modulator when not in use (dmx)
+- Use centrale queue (RTOS) with system dispatcher to stack and forward network commands
 
 ## INSTALL
 

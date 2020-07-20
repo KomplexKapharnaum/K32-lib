@@ -7,6 +7,8 @@
 #define K32_h
 
 #include <Arduino.h>
+#include <BluetoothSerial.h>
+
 
 #define min(m, n) ((m) < (n) ? (m) : (n))
 #define max(m, n) ((m) > (n) ? (m) : (n))
@@ -23,6 +25,7 @@
 #include "light/K32_samplerjpeg.h"
 #include "remote/K32_remote.h"
 #include "network/K32_wifi.h"
+#include "network/K32_bluetooth.h"
 #include "network/K32_osc.h"
 #include "network/K32_mqtt.h"
 #include "network/K32_artnet.h"
@@ -66,6 +69,7 @@ public:
     K32_timer* timer;
     K32_system *system = NULL;
     K32_wifi *wifi = NULL;
+    K32_bluetooth *bt = NULL;
     K32_sd *sd = NULL;
     K32_audio *audio = NULL;
     K32_light *light = NULL;
@@ -170,10 +174,14 @@ public:
 
     void init_wifi(String nameAlias = "")
     {
-        btStop();
         if (nameAlias != "")
             nameAlias = "-" + nameAlias;
         wifi = new K32_wifi(system->name() + nameAlias);
+    }
+
+    void init_bt(String name = "")
+    {
+        bt = new K32_bluetooth(name, system, audio, light);
     }
 
     void init_osc(oscconf conf)

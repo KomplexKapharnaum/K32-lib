@@ -17,8 +17,6 @@
 
 K32_wifi::K32_wifi(String nameDevice) : nameDevice(nameDevice)
 {
-  btStop();
-
   this->lock = xSemaphoreCreateMutex();
 
   ArduinoOTA.setHostname(this->nameDevice.c_str());
