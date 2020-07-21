@@ -11,7 +11,7 @@
 #include "system/K32_system.h"
 #include "audio/K32_audio.h"
 #include "light/K32_light.h"
-#include "remote/K32_remote.h"
+#include "xtension/K32_remote.h"
 
 #include <BluetoothSerial.h>
 

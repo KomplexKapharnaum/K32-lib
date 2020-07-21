@@ -56,10 +56,10 @@ const int SD_PIN[MAX_HW+1][4] = {
   {22, 19, 23, 33}        // HW_REVISION 3 : ATOM
 };
 
-// Buttons PINS
+// MCP PINS
 // {I2C_SDA_PIN, I2C_SCL_PIN}
 //
-const int BTN_PIN[MAX_HW+1][2] = {
+const int MCP_PIN[MAX_HW+1][2] = {
   {2, 4},          // HW_REVISION 0
   {2, 4},          // HW_REVISION 1
   {32, 33},        // HW_REVISION 2

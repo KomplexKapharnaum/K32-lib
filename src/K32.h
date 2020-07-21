@@ -15,7 +15,7 @@
 
 #include "K32_version.h"
 #include "system/K32_timer.h"
-#include "system/K32_power.h"
+#include "xtension/K32_power.h"
 #include "system/K32_log.h"
 #include "system/K32_system.h"
 #include "system/K32_sd.h"
@@ -23,7 +23,8 @@
 #include "audio/K32_audio.h"
 #include "light/K32_light.h"
 #include "light/K32_samplerjpeg.h"
-#include "remote/K32_remote.h"
+#include "xtension/K32_mcp.h"
+#include "xtension/K32_remote.h"
 #include "network/K32_wifi.h"
 #include "network/K32_bluetooth.h"
 #include "network/K32_osc.h"
@@ -74,6 +75,7 @@ public:
     K32_audio *audio = NULL;
     K32_light *light = NULL;
     K32_pwm *pwm = NULL;
+    K32_mcp *mcp = NULL;
     K32_remote *remote = NULL;
     K32_osc *osc = NULL;
     K32_mqtt *mqtt = NULL;
@@ -133,24 +135,27 @@ public:
             LOG("LIGHT: Error HWREVISION not valid please define K32_SET_HWREVISION or HW_REVISION");
     }
 
+    void init_mcp()
+    {
+        if (system->hw() >= 0 && system->hw() <= MAX_HW)
+        {
+            mcp = new K32_mcp(MCP_PIN[system->hw()]);
+        }
+        else LOG("REMOTE: Error HWREVISION not valid please define K32_SET_HWREVISION or HW_REVISION");
+    }
+
     void init_remote(int nbOfMacro)
     {
         if (system->hw() >= 0 && system->hw() <= MAX_HW)
         {
-            remote = new K32_remote(system, BTN_PIN[system->hw()]);
+            remote = new K32_remote(system, mcp);
             if (nbOfMacro > 0)
             {
                 remote->setMacroMax(nbOfMacro);
             }
-            else
-            {
-                LOG("REMOTE: Error Number of Macro must be positive");
-            }
+            else LOG("REMOTE: Error Number of Macro must be positive");
         }
-        else
-        {
-            LOG("REMOTE: Error HWREVISION not valid please define K32_SET_HWREVISION or HW_REVISION");
-        }
+        else LOG("REMOTE: Error HWREVISION not valid please define K32_SET_HWREVISION or HW_REVISION");
     }
 
     void init_power()

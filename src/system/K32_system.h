@@ -10,7 +10,7 @@
 
 #include "K32_version.h"
 #include "K32_stm32.h"
-#include "K32_power.h"
+#include "xtension/K32_power.h"
 
 class K32_system {
   public:
