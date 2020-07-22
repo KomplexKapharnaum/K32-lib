@@ -45,6 +45,8 @@ class K32_bluetooth {
     static bool didConnect;
     static bool didDisconnect;
     static void event(esp_spp_cb_event_t ev, esp_spp_cb_param_t *param);
+
+    void splitString(char *data, const char *separator, int index, char *result);
     
     void (*conCallback)(void);
     void (*disconCallback)(void);

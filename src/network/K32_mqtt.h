@@ -10,6 +10,7 @@
 #include "network/K32_wifi.h"
 #include "audio/K32_audio.h"
 #include "light/K32_light.h"
+#include "xtension/K32_remote.h"
 
 #define CONFIG_ASYNC_TCP_RUNNING_CORE 0
 #include <AsyncMqttClient.h>
@@ -23,7 +24,7 @@ struct mqttconf
 
 class K32_mqtt {
   public:
-    K32_mqtt(K32_system *system, K32_wifi *wifi, K32_audio *audio, K32_light *light);
+    K32_mqtt(K32_system *system, K32_wifi *wifi, K32_audio *audio, K32_light *light, K32_remote *remote);
     void start(mqttconf conf);
 
   private:
@@ -48,6 +49,7 @@ class K32_mqtt {
     K32_wifi *wifi;
     K32_audio *audio;
     K32_light *light;
+    K32_remote *remote;
 };
 
 #endif

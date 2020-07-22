@@ -200,7 +200,7 @@ public:
 
     void init_mqtt(mqttconf conf)
     {
-        mqtt = new K32_mqtt(system, wifi, audio, light);
+        mqtt = new K32_mqtt(system, wifi, audio, light, remote);
         mqtt->start(conf);
 
         if (!wifi)

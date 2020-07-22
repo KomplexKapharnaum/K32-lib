@@ -163,7 +163,7 @@ void K32_bluetooth::server(void *parameter)
   vTaskDelete(NULL);
 }
 
-void splitString(char *data, const char *separator, int index, char *result)
+void K32_bluetooth::splitString(char *data, const char *separator, int index, char *result)
 {
   char input[strlen(data)];
   strcpy(input, data);
@@ -186,7 +186,7 @@ void K32_bluetooth::dispatch(char* data, size_t length)
 
   // TOPIC
   char topic[length];
-  splitString(data, " ", 0, topic);
+  this->splitString(data, " ", 0, topic);
 
   // PAYLOAD
   int paySize = max(1, length-strlen(topic));
@@ -201,20 +201,37 @@ void K32_bluetooth::dispatch(char* data, size_t length)
 
   // ENGINE
   char motor[16];
-  splitString(topic, "/", 0, motor);
+  this->splitString(topic, "/", 0, motor);
 
   if (strcmp(motor, "leds") == 0 && this->light)
   {
 
     char action[16];
-    splitString(topic, "/", 1, action);
+    this->splitString(topic, "/", 1, action);
 
-    if (strcmp(action, "mem") == 0)
+    // ALL
+    if (strcmp(action, "all") == 0)
+    {
+      char color[8];
+      this->splitString(payload, "§", 0, color);
+      // TODO SET COLOR ALL !
+
+    }
+
+    // MEM
+    else if (strcmp(action, "mem") == 0)
     {
       char mem[4];
-      splitString(payload, "§", 0, mem);
+      this->splitString(payload, "§", 0, mem);
       
-      this->remote->stmSetMacro( atoi(mem) );
+      if (this->remote)
+        this->remote->stmSetMacro( atoi(mem) );
+    }
+
+    // STOP
+    else if (strcmp(action, "stop") == 0 || strcmp(action, "off") == 0 || strcmp(action, "blackout") == 0)
+    {
+      // TODO
     }
 
   }

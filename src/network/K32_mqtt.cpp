@@ -12,8 +12,8 @@
  *   PUBLIC
  */
 
-K32_mqtt::K32_mqtt(K32_system *system, K32_wifi *wifi, K32_audio *audio, K32_light *light) 
-                                : system(system), wifi(wifi), audio(audio), light(light) {}
+K32_mqtt::K32_mqtt(K32_system *system, K32_wifi *wifi, K32_audio *audio, K32_light *light, K32_remote *remote) 
+                                : system(system), wifi(wifi), audio(audio), light(light), remote(remote) {}
 
 
 void K32_mqtt::start(mqttconf conf)
@@ -27,6 +27,7 @@ void K32_mqtt::start(mqttconf conf)
 
   mqttClient->onConnect([this](bool sessionPresent){
     this->connected = true;
+    LOG("MQTT: connected");
 
     String myChan = String(this->system->channel()); 
     String myID =String(this->system->id());
@@ -47,6 +48,7 @@ void K32_mqtt::start(mqttconf conf)
 
   mqttClient->onDisconnect([this](AsyncMqttClientDisconnectReason reason){
     this->connected = false;
+    LOG("MQTT: disconnected");
   });
 
   mqttClient->onMessage([this](char *topic, char *payload, AsyncMqttClientMessageProperties properties, size_t len, size_t index, size_t total){
@@ -220,6 +222,7 @@ void K32_mqtt::dispatch(char *topic, char *payload, size_t length)
 
   LOGINL("MQTT: recv ");
   LOGINL(topic);
+  LOGINL(" ");
   LOG(payload);
 
   // ENGINE
@@ -383,64 +386,37 @@ void K32_mqtt::dispatch(char *topic, char *payload, size_t length)
     }
   }
 
-  // OSC LEDS
+  // OSC LIGHT
   else if (strcmp(motor, "leds") == 0 && this->light)
   {
 
     char action[16];
     splitString(topic, "/", 3, action);
 
-    // PYRAMID
-    if (strcmp(action, "pyramid") == 0)
-    {
-    }
-
     // ALL
-    else if (strcmp(action, "all") == 0)
+    if (strcmp(action, "all") == 0)
     {
+      char color[8];
+      splitString(payload, "§", 0, color);
+      // TODO SET COLOR ALL !
+
     }
 
-    // STRIP
-    else if (strcmp(action, "strip") == 0)
+    // MEM
+    else if (strcmp(action, "mem") == 0)
     {
-    }
-
-    // PIXEL
-    else if (strcmp(action, "pixel") == 0)
-    {
-    }
-
-    // PLAY ANIM
-    else if (strcmp(action, "play") == 0)
-    {
-
-      char anim_name[16];
-      splitString(payload, "§", 0, anim_name);
+      char mem[4];
+      splitString(payload, "§", 0, mem);
       
-      K32_anim *anim = this->light->anim(anim_name);
-      LOGINL("MQTT: leds play ");
-      LOGINL(anim_name);
-
-      char val[128];
-      byte inc = 1;
-      splitString(payload, "§", inc, val);
-      while (strcmp(val, "") != 0 && (inc - 1) < ANIM_DATA_SLOTS)
-      {
-        LOGINL(" ");
-        LOGINL(atoi(val));
-        anim->set(inc - 1, atoi(val));
-        ++inc;
-        splitString(payload, "§", inc, val);
-      }
-      LOG("");
-
-      anim->play();
+      if (this->remote)
+        this->remote->stmSetMacro( atoi(mem) );
     }
 
     // STOP
-    else if (strcmp(action, "stop") == 0 || strcmp(action, "blackout") == 0)
+    else if (strcmp(action, "stop") == 0 || strcmp(action, "off") == 0 || strcmp(action, "blackout") == 0)
     {
-      this->light->stop();
+      // TODO
     }
+
   }
 }
