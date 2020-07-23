@@ -415,7 +415,7 @@ void K32_mqtt::dispatch(char *topic, char *payload, size_t length)
     // STOP
     else if (strcmp(action, "stop") == 0 || strcmp(action, "off") == 0 || strcmp(action, "blackout") == 0)
     {
-      // TODO
+      this->remote->stmBlackout();
     }
 
   }

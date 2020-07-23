@@ -119,6 +119,12 @@ void K32_mcp::read_btn_state(void *parameter)
 
   while (true)
   {
+    // for (int i = 0; i < 16; i++) {
+    //   LOGINL(that->mcp.digitalRead(i));
+    //   LOGINL(" ");
+    // }
+    // LOG("");
+
     for (int i = 0; i < 16; i++)
       if (that->io[i].mode == MCPIO_INPUT)
       {

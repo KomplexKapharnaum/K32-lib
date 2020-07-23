@@ -26,11 +26,15 @@ class K32_bluetooth {
     void onConnect( void (*callback)(void) );
     void onDisconnect( void (*callback)(void) );
 
+    long getRSSI();
+
     // custom callback
     typedef void (*cbPtr)(uint8_t *data, int length);
     static cbPtr cmdCallback;
     void onCmd( cbPtr callback );
 
+    // Send
+    void send(String str);
 
     String nameDevice;
 

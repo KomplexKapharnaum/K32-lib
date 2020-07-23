@@ -34,6 +34,8 @@ public:
 
   void setState(remoteState state);
   void setMacroMax(uint8_t macroMax);
+
+  void stmBlackout();
   void stmSetMacro(uint8_t macro);
   void stmNext();
 

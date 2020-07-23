@@ -85,6 +85,11 @@ void K32_remote::setState(remoteState state)
   this->_semaunlock();
 }
 
+void K32_remote::stmBlackout() 
+{
+  this->stmSetMacro(this->_macroMax - 1);
+}
+
 void K32_remote::stmSetMacro(uint8_t macro)
 {
   this->_semalock();
@@ -286,8 +291,10 @@ void K32_remote::task(void *parameter)
 
               case 1:
               case 4: 
-                // Button 1 SHORT : Save + Escape
-                if (actionFlag == MCPIO_RELEASE_SHORT)
+                // Button 1 SHORT
+                if (actionFlag == MCPIO_RELEASE_SHORT) 
+                {
+                  // Lamp: Save + Escape
                   if (that->_state == REMOTE_MANU_LAMP) 
                   {
                     that->system->preferences.putUInt("lamp_grad", that->_lamp_grad);
@@ -296,6 +303,12 @@ void K32_remote::task(void *parameter)
                     LOGF("4BTNS: 1/4 Escape STATE =  %d\n", that->_state);
                     #endif
                   }
+                  // STM: Stop
+                  else if (that->_state == REMOTE_MANU_STM) 
+                  {
+                    that->stmBlackout();
+                  }
+                }
                 break;
               
               case 2: 
@@ -380,7 +393,10 @@ void K32_remote::task(void *parameter)
                 {
                   if (that->_state == REMOTE_AUTO)            that->lock();
                   else if (that->_state == REMOTE_MANU)       that->setState(REMOTE_AUTO);
-                  else if (that->_state == REMOTE_MANU_STM)   that->setState(REMOTE_MANU);
+                  else if (that->_state == REMOTE_MANU_STM)   {
+                    that->stmBlackout();
+                    that->setState(REMOTE_MANU);
+                  }
                   else if (that->_state == REMOTE_MANU_LAMP)  that->setState(REMOTE_MANU);
 
                   #ifdef DEBUG_lib_btn

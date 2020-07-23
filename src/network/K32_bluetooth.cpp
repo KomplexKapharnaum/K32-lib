@@ -67,6 +67,16 @@ void K32_bluetooth::onCmd( cbPtr callback )
 K32_bluetooth::cbPtr K32_bluetooth::cmdCallback = nullptr;
 
 
+void K32_bluetooth::send(String str) {
+  this->serial->print(str);
+}
+
+long K32_bluetooth::getRSSI()
+{ 
+  if (!this->isConnected()) return 0;
+  return 60;  // TODO: BT Rssi ?
+}
+
 /*
  *   PRIVATE
  */
@@ -231,7 +241,7 @@ void K32_bluetooth::dispatch(char* data, size_t length)
     // STOP
     else if (strcmp(action, "stop") == 0 || strcmp(action, "off") == 0 || strcmp(action, "blackout") == 0)
     {
-      // TODO
+      this->remote->stmBlackout();
     }
 
   }

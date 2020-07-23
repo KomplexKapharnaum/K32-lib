@@ -152,7 +152,7 @@ bool K32_wifi::isConnected()
 
 long K32_wifi::getRSSI()
 { 
-  // if (!this->isConnected()) return 0;
+  if (!this->isConnected()) return 0;
   return WiFi.RSSI();
 }
 
