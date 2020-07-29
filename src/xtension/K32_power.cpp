@@ -13,226 +13,164 @@ Preferences power_prefs;
  *   PUBLIC
  */
 
-K32_power::K32_power(K32_stm32 *stm32, bool autoGauge ,const int CURRENT_SENSOR_PIN)
+K32_power::K32_power(K32_stm32 *stm32, K32_mcp *mcp, batteryType type, bool autoGauge, const int CURRENT_SENSOR_PIN)
 {
   LOG("POWER : init");
 
   this->lock = xSemaphoreCreateMutex();
-  this->_stm32 = stm32;
-  this->autoGauge = autoGauge ; 
-  this->charge = false;
+  this->battType = type;
   this->currentPin = CURRENT_SENSOR_PIN;
+  
+  this->_stm32 = stm32;
+  this->_mcp = mcp;
+
+  this->autoGauge = autoGauge;
+  this->adaptiveGaugeOn = autoGauge;
+
+  // Calib button
+  if (this->_mcp)
+    this->_mcp->input(CALIB_BUTTON);
 
   // Set Current factor depending on HW specifications
-  if (CURRENT_SENSOR_TYPE == 10)
-  {
-    this->currentFactor = 60;
-  }
-  else if (CURRENT_SENSOR_TYPE == 25)
-  {
-    this->currentFactor = 24;
-  }
-  else if (CURRENT_SENSOR_TYPE == 11)
-  {
-    this->currentFactor = 110;
-  }
+  if (CURRENT_SENSOR_TYPE == 10) this->currentFactor = 57;        // original: 60
+  else if (CURRENT_SENSOR_TYPE == 25) this->currentFactor = 24;
+  else if (CURRENT_SENSOR_TYPE == 11) this->currentFactor = 110;
 
   // Set Current offset
-  this->_lock();
   power_prefs.begin("k32-power", false);
-  this->_unlock();
-
-  this->_lock();
-  this->currentOffset = power_prefs.getUInt("offset", CURRENT_OFFSET);
-  //this->batteryRint = power_prefs.getUInt("rint", BATTERY_RINT);
+  this->currentOffset = power_prefs.getUInt("offset", DEFAULT_MEASURE_OFFSET);
+  // this->batteryRint = power_prefs.getUInt("rint", DEFAULT_BATTERY_RINT);
+  this->batteryRint = DEFAULT_BATTERY_RINT;
   power_prefs.end(); 
-  this->_unlock();
 
   // Start main task
-  xTaskCreate(this->task,
-              "power_task",
-              5000,
-              (void *)this,
-              0, // priority
-              &t_handle); 
+  if (CURRENT_SENSOR_TYPE > 0)
+    xTaskCreate(this->task,
+                "power_task",
+                5000,
+                (void *)this,
+                0, // priority
+                &t_handle); 
 };
 
+int K32_power::current()
+{
+  int a = 0;
+  if (CURRENT_SENSOR_TYPE > 0 && !this->_error) {
+    this->_lock();
+    a = this->_current;
+    this->_unlock();
+  }
+  else a = this->_stm32->current();
+  return a;
+}
 
 int K32_power::power()
 {
-  if (CURRENT_SENSOR_TYPE != 0)
-  {
-    this->_lock();
-    this->_power = this->_current * this->_stm32->voltage() / 1000; // Power in mW
-    this->_unlock();
-  }
-  else
-  {
-    this->_lock();
-    this->_power = this->_stm32->current() * this->_stm32->voltage() / 1000; // Power in mW
-    this->_unlock();
-  }
-  return this->_power;
+  int v = this->_stm32->voltage();
+  if (v > 0) return this->current() * v / 1000; // Power in mW
+  else return 0;
 }
 
 int K32_power::energy()
 {
+  int e = 0;
+  this->_lock();
+  e = this->_energy;
+  this->_unlock();
   return this->_energy; // TODO !
 }
 
-int K32_power::current()
+void K32_power::reset()
 {
-  if (CURRENT_SENSOR_TYPE != 0)
-  {
-    return this->_current;
-  }
-  else
-  {
-    return this->_stm32->current();
-  }
+  this->_lock();
+  this->_energy = 0;
+  this->_unlock();
 }
 
-void K32_power::calibrate(calibType type)
+
+void K32_power::calibOffset(int offset)
+{
+  LOG("POWER : Calibration of current sensor offset");
+  LOG("POWER : Make sure current use is near 0 !!!");
+
+  this->_lock();
+  this->currentOffset = offset;
+  power_prefs.begin("k32-power", false);
+  power_prefs.putUInt("offset", this->currentOffset);
+  power_prefs.end() ; 
+  this->_unlock();
+
+  LOGF("POWER : Offset at %d\n", offset);
+}
+
+void K32_power::calibIres()
 {
   int currentMeas = 0 ; 
   int voltageMeas = 0; 
   //int rintMeas = 0.14 ; 
-  if( this->_error)
-  {
+
+  if( this->_error) 
     LOG("POWER : Error with current sensor, calibration is impossible"); 
-  } else 
+  else 
   {
-    if (type == Offset ) 
-    {
-      LOG("POWER : Calibration of current sensor offset");
-      this->_lock();
-      // Reading current value
-      currentMeas = analogRead(this->currentPin);
-      this->_current = (currentMeas - this->currentOffset) * 1000 / this->currentFactor; // Curent in mA
-
-      this->currentOffset = this->currentOffset + this->_current * this->currentFactor / 1000;
-      voltageMeas = this->_stm32->voltage(); 
-      this->calibVoltage = voltageMeas; 
-      this->_unlock(); 
-
-      this->_lock(); 
-      power_prefs.begin("k32-power", false);
-      power_prefs.putUInt("offset", this->currentOffset);
-      power_prefs.end() ; 
-      this->_unlock();
-    } else if (type == InternalRes) 
-    {
-      /* INTERNAL RES FUNCTION TO REWORK */ 
-      // if (this->calibVoltage == 0)
-      // {
-      //   LOG("POWER : Error with calibration voltage value, calibration is impossible");
-      //   this->batteryRint = BATTERY_RINT ; 
-      //   power_prefs.putUInt("rint", this->batteryRint); 
-      // } else
-      // {
-      //   LOG("POWER : Calibration of battery internal resistance");
-      //   this->_lock() ; 
-      //   // Reading Current Value
-      //   currentMeas = analogRead(this->currentPin);
-      //   this->_current = (currentMeas - this->currentOffset) * 1000 / this->currentFactor; // Curent in mA
-      //   voltageMeas = this->_stm32->voltage();
-      //   if (abs(voltageMeas - this->calibVoltage) < 300) // Check if voltage value is significantly different
-      //   {
-      //     this->batteryRint = BATTERY_RINT ; 
-      //     power_prefs.putUInt("rint", this->batteryRint);
-      //     LOG("POWER : Error current is too low, calibration is impossible"); 
-      //     return; 
-      //   }
-      //   rintMeas = (this->calibVoltage - voltageMeas) / this->_current; 
-      //   LOG(rintMeas); 
-      //   if ((rintMeas<0)||(rintMeas > 1)) 
-      //   {
-      //     this->batteryRint = BATTERY_RINT ; 
-      //     power_prefs.putUInt("rint", this->batteryRint);
-      //     LOG("POWER : Error with rint value, calibration is impossible"); 
-      //     return;  
-      //   }
-      //   this->batteryRint = rintMeas ; 
-      //   power_prefs.putUInt("rint", this->batteryRint);
-      //   LOGF("Rint: %d\n", this->batteryRint); 
-      //   this->calibVoltage = 0 ; // Set back calibration voltage
-      //   this->_unlock() ; 
-      //}
-    }
+    /* INTERNAL RES FUNCTION TO REWORK */ 
+    // if (this->calibVoltage == 0)
+    // {
+    //   LOG("POWER : Error with calibration voltage value, calibration is impossible");
+    //   this->batteryRint = BATTERY_RINT ; 
+    //   power_prefs.putUInt("rint", this->batteryRint); 
+    // } else
+    // {
+    //   LOG("POWER : Calibration of battery internal resistance");
+    //   this->_lock() ; 
+    //   // Reading Current Value
+    //   currentMeas = analogRead(this->currentPin);
+    //   this->_current = (currentMeas - this->currentOffset) * 1000 / this->currentFactor; // Curent in mA
+    //   voltageMeas = this->_stm32->voltage();
+    //   if (abs(voltageMeas - this->calibVoltage) < 300) // Check if voltage value is significantly different
+    //   {
+    //     this->batteryRint = BATTERY_RINT ; 
+    //     power_prefs.putUInt("rint", this->batteryRint);
+    //     LOG("POWER : Error current is too low, calibration is impossible"); 
+    //     return; 
+    //   }
+    //   rintMeas = (this->calibVoltage - voltageMeas) / this->_current; 
+    //   LOG(rintMeas); 
+    //   if ((rintMeas<0)||(rintMeas > 1)) 
+    //   {
+    //     this->batteryRint = BATTERY_RINT ; 
+    //     power_prefs.putUInt("rint", this->batteryRint);
+    //     LOG("POWER : Error with rint value, calibration is impossible"); 
+    //     return;  
+    //   }
+    //   this->batteryRint = rintMeas ; 
+    //   power_prefs.putUInt("rint", this->batteryRint);
+    //   LOGF("Rint: %d\n", this->batteryRint); 
+    //   this->calibVoltage = 0 ; // Set back calibration voltage
+    //   this->_unlock() ; 
+    //}
   }
 }
 
-void K32_power::setAdaptiveGauge(bool adaptiveOn, batteryType type, int nbOfCell)
+void K32_power::setAdaptiveGauge(bool adaptiveOn)
 {
-  if (adaptiveOn)
-    LOG("POWER : Switch on adaptive gauge");
-  else
-    LOG("POWER : Switch off adaptive gauge");
-
-  if (nbOfCell == 0)
-  {
-    /* Auto determination of number of Cell*/
-    int v = this->_stm32->voltage();
-    switch (type)
-    {
-    case LIPO: //LiPo
-      v = this->_stm32->voltage();
-      nbOfCell = findCellCount(v, LIPO_VOLTAGE_BREAKS[0], LIPO_VOLTAGE_BREAKS[6]);
-      break;
-    case LIFE: // Life
-      v = this->_stm32->voltage();
-      nbOfCell = findCellCount(v, LIFE_VOLTAGE_BREAKS[0], LIFE_VOLTAGE_BREAKS[6]);
-      break;
-    }
-
-    LOGF("POWER : Auto nb of cell : %d", nbOfCell);
-  }
-  
-
- // Set to default before switch off adaptive gauge
-  if (this->_error)
-  {
-    this->_lock();
-    this->_stm32->custom(LIPO_ERROR_BREAKS[0] * nbOfCell,
-                        LIPO_ERROR_BREAKS[1] * nbOfCell,
-                        LIPO_ERROR_BREAKS[2] * nbOfCell,
-                        LIPO_ERROR_BREAKS[3] * nbOfCell,
-                        LIPO_ERROR_BREAKS[4] * nbOfCell,
-                        LIPO_ERROR_BREAKS[5] * nbOfCell,
-                        LIPO_ERROR_BREAKS[6] * nbOfCell);
-    this->_unlock();
-  }
-  else if (type == LIPO)
-  {
-    this->_lock();
-    this->_stm32->custom(LIPO_ERROR_BREAKS[0] * nbOfCell,
-                        LIPO_VOLTAGE_BREAKS[1] * nbOfCell,
-                        LIPO_VOLTAGE_BREAKS[2] * nbOfCell,
-                        LIPO_VOLTAGE_BREAKS[3] * nbOfCell,
-                        LIPO_VOLTAGE_BREAKS[4] * nbOfCell,
-                        LIPO_VOLTAGE_BREAKS[5] * nbOfCell,
-                        LIPO_VOLTAGE_BREAKS[6] * nbOfCell);
-    this->_unlock();
-  }
-  else if (type == LIFE)
-  {
-    this->_lock(); 
-    this->_stm32->custom(LIFE_VOLTAGE_BREAKS[0] * nbOfCell,
-                        LIFE_VOLTAGE_BREAKS[1] * nbOfCell,
-                        LIFE_VOLTAGE_BREAKS[2] * nbOfCell,
-                        LIFE_VOLTAGE_BREAKS[3] * nbOfCell,
-                        LIFE_VOLTAGE_BREAKS[4] * nbOfCell,
-                        LIFE_VOLTAGE_BREAKS[5] * nbOfCell,
-                        LIFE_VOLTAGE_BREAKS[6] * nbOfCell);
-    this->_unlock(); 
-  }
-
-           
-  this->_lock();
   this->adaptiveGaugeOn = adaptiveOn;
-  this->nbOfCell = nbOfCell;
-  this->battType = type;
-  this->_unlock();
+
+  // Set ON
+  if (adaptiveOn) {
+    LOG("POWER : Switch on adaptive gauge");
+    this->firstKick = true;
+    return;
+  }
+
+  // Set OFF  
+  LOG("POWER : Switch off adaptive gauge");
+
+  // OFF -> set FAKE CURRENT
+  this->_current = CURRENT_FAKE;
+  this->firstKick = true;
+  this->updateCustom();
 }
 
 
@@ -252,270 +190,176 @@ void K32_power::_unlock()
   xSemaphoreGive(this->lock);
 }
 
-/* Determine the number of cells based on the battery voltage and the given min and max cell voltages.
- * Return 0 if the voltage doesn't match any number of cells.
- *
- * 2, 3, 4 and 7 cells are supported.
- */
-uint8_t K32_power::findCellCount(unsigned int voltage, unsigned int cellMin, unsigned int cellMax)
+
+// int K32_power::voltageBreak(uint8_t i) 
+// {
+//   int minVoltage;
+//   minVoltage = VOLTAGE[this->battType][i] * this->nbOfCell;
+//   if (i < 6) minVoltage = minVoltage *(100-VOLTAGE_DROP_PCT)/100;
+//   int v = VOLTAGE[this->battType][i] * this->nbOfCell - this->batteryRint * this->current();
+//   if (v < minVoltage) v = minVoltage;
+//   return v;
+// }
+
+
+void K32_power::updateCustom()
 {
-  for (int i = 2; i <= 7; i++)
+    if (this->_current < 0) return; // Weird value
+
+    if (this->firstKick || abs(this->_current - this->currentRecord) > 700 ) // If current changed significantly
+    {
+      this->_lock(); 
+
+      /* Update profile according to current value */
+      for (int i = 0; i<7; i++)
+          this->profile[i] = VOLTAGE[this->battType][i]*this->nbOfCell - this->batteryRint * this->_current ; 
+
+      /* Update custom profile */ 
+      this->_stm32->custom( this->profile[0],
+                            this->profile[1],
+                            this->profile[2],
+                            this->profile[3],
+                            this->profile[4],
+                            this->profile[5], 
+                            this->profile[6]);
+
+      vTaskDelay( pdMS_TO_TICKS(100) );
+
+      /* Update value of operating profile */
+      this->currentRecord = this->_current ;
+      LOGF("POWER : new profile with current : %d mA \n", this->currentRecord ); 
+      
+      this->firstKick = false;
+      this->_unlock(); 
+    }
+}
+
+
+int K32_power::measure(int samples)
+{
+  /* Warning this function is blocking for ~100ms ! */
+  long meas = 0; 
+  for (int i =0; i<samples; i++)
   {
-    if (i == 5 || i == 6)
-      continue;
-
-    if ((voltage > i * cellMin) && (voltage <= i * (cellMax + INITIAL_CELL_VOLTAGE_TOLERANCE)))
-    {
-      return i;
-    }
+    meas += analogRead(this->currentPin);
+    vTaskDelay( pdMS_TO_TICKS(2) );
   }
-  return 0;
+  meas = meas / samples ; 
+  return meas;
 }
 
-void K32_power::updateCustom(void *parameter)
-{
-    K32_power *that = (K32_power *)parameter;
-    // LOGF("POWER update : Current %d mA", that->_current); 
-
-    if(abs(that->_current)>20000) 
-    {
-      LOGF("POWER ERROR : problem with current sensor value %d mA", that->_current); 
-      that->_lock(); 
-      that->_error = true;
-      that->_unlock(); 
-      that->setAdaptiveGauge(false, that->battType, that->nbOfCell);
-      return; 
-    }
-
-    if (that->_current > 300) // Discharging batteries
-    {
-      if (abs(that->_current - that->currentRecord) > 2500 ) // If current changed significantly
-      {
-        /* Set constant cut off value */ 
-        if (that->battType == LIPO)
-          {
-            that->profile[0] = LIPO_ERROR_BREAKS[0]*that->nbOfCell; 
-          }
-        else if (that->battType == LIFE)
-          {
-            that->profile[0] = LIFE_VOLTAGE_BREAKS[0]*that->nbOfCell; 
-          }
-
-        /* Update profile according to current value */
-        for (int i = 1; i<7; i++)
-        {
-          if (that->battType == LIPO)
-          {
-            that->profile[i] = LIPO_VOLTAGE_BREAKS[i]*that->nbOfCell - BATTERY_RINT * that->_current ; 
-          }
-          else if (that->battType == LIFE)
-          {
-            that->profile[i] = LIFE_VOLTAGE_BREAKS[i]*that->nbOfCell - BATTERY_RINT * that->_current  ; 
-          }
-        }
-        /* Update custom profile */ 
-        that->_stm32->custom(that->profile[0],
-                            that->profile[1],
-                            that->profile[2],
-                            that->profile[3],
-                            that->profile[4],
-                            that->profile[5], 
-                            that->profile[6]);
-        /* Update value of operating profile */
-        that->currentRecord = that->_current ;
-        LOGF("POWER : new profile with current : %d mA \n", that->currentRecord ); 
- 
-
-      }
-    } else if (that->_current < -300) // Charging batteries
-    {
-      if(that->currentRecord>0)
-      {
-          /* Switch profile to default */ 
-        if (that->battType == LIPO)
-        {
-          that->_stm32->custom(LIPO_ERROR_BREAKS[0] * that->nbOfCell,
-                              LIPO_VOLTAGE_BREAKS[1] * that->nbOfCell,
-                              LIPO_VOLTAGE_BREAKS[2] * that->nbOfCell,
-                              LIPO_VOLTAGE_BREAKS[3] * that->nbOfCell,
-                              LIPO_VOLTAGE_BREAKS[4] * that->nbOfCell,
-                              LIPO_VOLTAGE_BREAKS[5] * that->nbOfCell,
-                              LIPO_VOLTAGE_BREAKS[6] * that->nbOfCell);
-        }
-        else if (that->battType == LIFE)
-        {
-          that->_stm32->custom(LIFE_VOLTAGE_BREAKS[0] * that->nbOfCell,
-                              LIFE_VOLTAGE_BREAKS[1] * that->nbOfCell,
-                              LIFE_VOLTAGE_BREAKS[2] * that->nbOfCell,
-                              LIFE_VOLTAGE_BREAKS[3] * that->nbOfCell,
-                              LIFE_VOLTAGE_BREAKS[4] * that->nbOfCell,
-                              LIFE_VOLTAGE_BREAKS[5] * that->nbOfCell,
-                              LIFE_VOLTAGE_BREAKS[6] * that->nbOfCell);
-        }
-
-        LOG("POWER: Battery charging, Switched to default profile");
-
-
-      }
-      that->currentRecord = -1 ; // Negative value of current
-
-    } else // Current near to zero
-    {
-      if(that->currentRecord > 0) 
-      {
-        /* Switch profile to default */ 
-        if (that->battType == LIPO)
-        {
-          that->_stm32->custom(LIPO_ERROR_BREAKS[0] * that->nbOfCell,
-                              LIPO_VOLTAGE_BREAKS[1] * that->nbOfCell,
-                              LIPO_VOLTAGE_BREAKS[2] * that->nbOfCell,
-                              LIPO_VOLTAGE_BREAKS[3] * that->nbOfCell,
-                              LIPO_VOLTAGE_BREAKS[4] * that->nbOfCell,
-                              LIPO_VOLTAGE_BREAKS[5] * that->nbOfCell,
-                              LIPO_VOLTAGE_BREAKS[6] * that->nbOfCell);
-        }
-        else if (that->battType == LIFE)
-        {
-          that->_stm32->custom(LIFE_VOLTAGE_BREAKS[0] * that->nbOfCell,
-                              LIFE_VOLTAGE_BREAKS[1] * that->nbOfCell,
-                              LIFE_VOLTAGE_BREAKS[2] * that->nbOfCell,
-                              LIFE_VOLTAGE_BREAKS[3] * that->nbOfCell,
-                              LIFE_VOLTAGE_BREAKS[4] * that->nbOfCell,
-                              LIFE_VOLTAGE_BREAKS[5] * that->nbOfCell,
-                              LIFE_VOLTAGE_BREAKS[6] * that->nbOfCell);
-        }
-
-        LOG("POWER: current = 0 ; Switched to default profile");
-
-      }
-
-      that->currentRecord = 0; 
-
-
-    }
-
-    
-    
-}
 
 void K32_power::task(void *parameter)
 {
-
   K32_power *that = (K32_power *)parameter;
+
+  // CELLS DETECT
+  //
+  int wait = 300;
+  int vCellMin = VOLTAGE[that->battType][0]-VOLTAGE_CELLS_TOLERANCE;
+  int v = 0;
+
+  while (that->nbOfCell == 0)
+  {
+    vTaskDelay( pdMS_TO_TICKS(wait) );
+    
+    /* Auto determination of number of Cell*/
+    v = that->_stm32->voltage();
+    for (int n = 9; n > 0; n--)
+      if (n == 6 || n == 8) continue;
+      else if (v > n * vCellMin) {
+        that->nbOfCell = n;
+        break;
+      }
+
+    /* Retry */
+    if (that->nbOfCell == 0) {
+      LOGF2("POWER: Can't detect number of cells. voltage=%d cells=%d\n", v, that->nbOfCell);
+      if (wait < 5000) wait *= 1.1;
+    }
+  }
+  LOGF2("POWER: Nb cells detected: voltage=%d cells=%d\n", v, that->nbOfCell);
+
+
+  // CURRENT MEASURE
+  //
   TickType_t xFrequency = pdMS_TO_TICKS(POWER_CHECK);
   int currentMeas = 0;
-
   while (true)
-  {
+  { 
+    // Read sensor
+    currentMeas = that->measure();
 
-    /* Update State of Charge */ 
-    that->_lock(); 
-    that->SOC = that->_stm32->battery();
-    that->_unlock();
-
-    /* Check Current Value */
-    if ((CURRENT_SENSOR_TYPE != 0) && (!that->_error))
+    /* Check sensor state */ 
+    if (currentMeas < 200)
     {
-
-      /* Averaging*/
-      // if (counter == 50)
-      // {
-      //   that-> _current = currentMeas / 50;
-      //   that-> _current = (that->_current - that->currentOffset ) *1000 / that->currentFactor ; // Curent in mA
-      //   counter = 0;
-      //   currentMeas = 0;
-      // }
-      // currentMeas = currentMeas + analogRead(that->currentPin) ;
-      // counter ++;
-
-
-      /* Simple check measurement*/ 
-      // that->_lock();
-      // currentMeas = analogRead(that->currentPin);
-      // that->_unlock(); 
-
-      /* Averaging*/
-      that->_lock();
-      currentMeas = 0; 
-      for (int i =0; i<50; i++)
-      {
-        currentMeas += analogRead(that->currentPin);
-      }
-      that->_unlock(); 
-      currentMeas = currentMeas / 50 ; 
-
-      //LOG(currentMeas); 
-
-      /* Check for problem with current sensor */ 
-      if ((currentMeas == 0))
-      {
-        LOG("POWER ERROR: Current sensor not plugged in. Entering error mode ");
-        that->_lock(); 
-        that->_error = true ; 
-        that->_unlock(); 
-        /* Remove adaptive gauge and set to default */ 
-        if(that->adaptiveGaugeOn)
-        {
-          that->setAdaptiveGauge(false, that->battType, that->nbOfCell); 
-        }
-        /* stop power task*/ 
-        continue; 
-      }
-      that->_lock(); 
-      /* Update Current value */ 
-      that->_current = (currentMeas - that->currentOffset) * 1000 / that->currentFactor; // Curent in mA
-
-      /* Update charge state */ 
-      if (that->_current > 0)
-      {
-        that->charge = true;
-      }
-      else if (that->_current < -100)
-      {
-        that->charge = false;
-      }
-      that->_unlock(); 
-
-      /* Update values of gauge */ 
-      if(that->adaptiveGaugeOn)  that->updateCustom((void *)that); 
-  
-      /* Delay */ 
-      vTaskDelay(xFrequency);      
-    }
-    else if (that->_error) // Problem with current sensor
-    {
-      that->_lock(); 
-      currentMeas = analogRead(that->currentPin);
-      that->_unlock(); 
-      /* Check if current sensor has been replugged */ 
-      if (currentMeas > 400)
-      {
-        /* Double check */ 
-        vTaskDelay(pdMS_TO_TICKS(1000));  
-        that->_lock(); 
-        currentMeas = analogRead(that->currentPin);
-        that->_unlock(); 
-        if (currentMeas > 400)
-        {
-          LOG("POWER ERROR: Exitting error mode");
-          that->_lock(); 
-          that->_error = false ; 
-          that->_unlock(); 
-          if (that->autoGauge)
-          {
-            that->setAdaptiveGauge(true, that->battType, that->nbOfCell);
-          }
-        }
-     }
-      /* Delay */ 
-      vTaskDelay(pdMS_TO_TICKS(2000));  
-    } 
-    else if (CURRENT_SENSOR_TYPE == 0) // No current sensor 
-    {
-      /* Do nothing... */
-      vTaskDelay(pdMS_TO_TICKS(2000));  
+      if (!that->_error) LOG("POWER: Current sensor not plugged. Entering error mode ");
+      that->_error = true ; 
+      if(that->adaptiveGaugeOn) that->setAdaptiveGauge(false); 
     }
     
+    /* Sensor in ERROR: check again */
+    if (that->_error) 
+    {
+      // Current is back
+      if (currentMeas > 400) {
+        vTaskDelay(pdMS_TO_TICKS(1000));  
+        currentMeas = that->measure(); /* Double check */ 
+        if (currentMeas > 400)
+        {
+          LOG("POWER: Sensor is back !");
+          that->_error = false ; 
+          if (that->autoGauge) that->setAdaptiveGauge(true);
+        }
+      }
+      if (that->_error) {
+        vTaskDelay(pdMS_TO_TICKS(2000));
+        continue;   /* Loop again */
+      }
+    }
+
+    /* Check CALIB button */
+    if (that->_mcp) 
+    {
+      ioflag calibBtn = that->_mcp->flag(CALIB_BUTTON);
+
+      // Long Push -> Offset
+      if (calibBtn == MCPIO_PRESS_LONG || calibBtn == MCPIO_RELEASE_LONG) 
+      {  
+        that->_stm32->switchLoad(false);
+        vTaskDelay(pdMS_TO_TICKS(1000));
+        currentMeas = that->measure(500);
+        LOGF2("POWER: Long push on calibration button %d %d \n", currentMeas, that->_stm32->current());
+        that->calibOffset(currentMeas);
+        that->_mcp->consume(CALIB_BUTTON);
+        that->_stm32->switchLoad(true);
+        vTaskDelay(pdMS_TO_TICKS(1000));
+        currentMeas = that->measure();
+      }
+    }
+
+    /* Calculate current */ 
+    int a = (currentMeas - that->currentOffset) * 1000 / that->currentFactor + CURRENT_ERROR_OFFSET; // Curent in mA
+
+    /* Check Current value */ 
+    if(abs(a)>20000) 
+    {
+      LOGF("POWER: Error with current sensor value %d mA", a); 
+      that->_error = true;
+      that->setAdaptiveGauge(false);
+      continue;   /* Loop again */
+    }
+
+    /* Set current */
+    that->_lock(); 
+    that->_current = a;
+    // LOGF3("POWER: Current calc=%d stm32=%d pct=%d \n", a, that->_stm32->current(), that->_stm32->battery());
+    that->_unlock();
+    
+    /* Update Adaptative profile */ 
+    if(that->adaptiveGaugeOn) that->updateCustom(); 
+    
+    vTaskDelay(xFrequency);  
 
   }
 }

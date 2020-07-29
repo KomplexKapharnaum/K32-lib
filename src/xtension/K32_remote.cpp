@@ -28,10 +28,6 @@ K32_remote::K32_remote(K32_system *system, K32_mcp *mcp) : system(system), mcp(m
   for (int i = 0; i < NB_BTN; i++)
     this->mcp->input(i);
 
-#ifdef CALIB_BUTTON
-  this->mcp->input(CALIB_BUTTON);
-#endif
-
   // load LampGrad
   this->_lamp_grad = this->system->preferences.getUInt("lamp_grad", 127);
 
@@ -217,30 +213,6 @@ void K32_remote::task(void *parameter)
 
   while (true)
   {
-
-    //////////////////////////////////////////////////////////////////////////////
-    ////////////////////* Check flags for calibration button *////////////////////
-    //////////////////////////////////////////////////////////////////////////////
-    #ifdef CALIB_BUTTON
-        ioflag calib = that->mcp->flag(CALIB_BUTTON);
-
-        if (calib == MCPIO_RELEASE_SHORT) // Short Push
-        {
-          #ifdef DEBUG_lib_btn
-            LOG("4BTNS: Short push on calibration button \n");
-          #endif
-          that->system->power->calibrate(Offset);
-          that->mcp->consume(CALIB_BUTTON);
-        }
-        else if (calib == MCPIO_PRESS_LONG) // Long Push
-        {
-          #ifdef DEBUG_lib_btn
-            LOG("4BTNS: Long push on calibration button \n");
-          #endif
-          // that->system->power->calibrate(InternalRes); TO REWORK
-          that->mcp->consume(CALIB_BUTTON);
-        }
-    #endif
 
     //////////////////////////////////////////////////////////////////////////////
     ////////////////////* Check flags for each button *///////////////////////////

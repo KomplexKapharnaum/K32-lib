@@ -114,6 +114,10 @@ void K32_stm32::wait() {
   xSemaphoreGive(this->lock);
 }
 
+void K32_stm32::switchLoad(bool onoff) {
+  this->send(K32_stm32_api::SET_LOAD_SWITCH, onoff);
+}
+
 
 void K32_stm32::reset() {
   xSemaphoreTake(this->lock, portMAX_DELAY);

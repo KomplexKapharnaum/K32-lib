@@ -34,6 +34,8 @@ class K32_stm32 {
     bool clicked();     // Get Btn Click
     bool dblclicked();  // Get Btn DblClick
 
+    void switchLoad(bool onoff);   // Switch load ON/OFF
+
     void wait();        // Wait for stm32
     void reset();       // Reset board
     void shutdown();    // Shutdown board
@@ -45,7 +47,7 @@ class K32_stm32 {
   private:
     SemaphoreHandle_t lock;
     bool running = false;
-    int _battery = 0;
+    int _battery = -1;
     bool _btn_click = false;
     bool _btn_dblclick = false;
 

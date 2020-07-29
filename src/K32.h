@@ -30,6 +30,7 @@
 #include "network/K32_osc.h"
 #include "network/K32_mqtt.h"
 #include "network/K32_artnet.h"
+#include "xtension/K32_power.h"
 
 class K32
 {
@@ -80,7 +81,7 @@ public:
     K32_osc *osc = NULL;
     K32_mqtt *mqtt = NULL;
     K32_artnet *artnet = NULL;
-
+    K32_power *power = NULL; 
 
     K32_samplerjpeg *samplerjpeg = NULL;
 
@@ -158,23 +159,19 @@ public:
         else LOG("REMOTE: Error HWREVISION not valid please define K32_SET_HWREVISION or HW_REVISION");
     }
 
-    void init_power()
+    void init_power(batteryType type, bool autoGauge)
     {
         if (system->hw() >= 0 && system->hw() <= MAX_HW)
-        {
-            if (system->stm32 != NULL)
-            {
-                system->power = new K32_power(system->stm32, true, CURRENT_PIN[system->hw()]);
-            }
-            else
-            {
+        {   
+            if (mcp == NULL) LOG("POWER: Warning, MCP is not initialized, CALIB button is disabled");
+
+            if (system->stm32 != NULL) 
+                power = new K32_power(system->stm32, mcp, type, autoGauge, CURRENT_PIN[system->hw()]);
+            else 
                 LOG("POWER: Error Missing STM32 Init. Power module can not be used without STM32");
-            }
         }
         else
-        {
             LOG("POWER: Error HWREVISION not valid please define K32_SET_HWREVISION or HW_REVISION");
-        }
     }
 
     void init_wifi(String nameAlias = "")
