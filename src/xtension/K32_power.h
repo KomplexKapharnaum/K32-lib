@@ -20,7 +20,7 @@ Released under GPL v3.0
                                // 11 = H010                                                 
                                // 25 = HO25-P/SP33
 
-#define DEFAULT_BATTERY_RINT 0.13 // Default internal resistance of battery
+#define DEFAULT_BATTERY_RINT 0.12 // Default internal resistance of battery
 #define DEFAULT_MEASURE_OFFSET 2000 // Default current calibration offset
 
 #define CURRENT_ERROR_OFFSET 100    // Offset from measure error (minimal current draw) ~100 mA
@@ -45,7 +45,7 @@ const unsigned int VOLTAGE[2][7] = {
 class K32_power
 {
   public:
-    K32_power(K32_stm32 *stm32, K32_mcp *mcp, batteryType type, bool autoGauge, const int CURRENT_SENSOR_PIN);
+    K32_power(K32_stm32 *stm32, K32_mcp *mcp, batteryType type, bool autoGauge, int fakeExtCurrent, const int CURRENT_SENSOR_PIN);
 
     int measure(int samples=CURRENT_AVG_SAMPLES);
 
@@ -72,13 +72,14 @@ class K32_power
     int _power = 0;
     int _energy = 0;
     int _current = 0;
+    int _fakeExtCurrent = 0;
     TaskHandle_t t_handle = NULL;
 
     bool _error = false ; 
 
     /* Current Sensor specs */
     int currentPin;
-    int currentOffset = 1800;       // Offset of current measurement
+    int measureOffset = 1800;       // Offset of current measurement
     int currentFactor;              // Factor of current measurement
     int calibVoltage = 0;           // Voltage of the battery during calibration of the offset
     float batteryRint;              // Value of internal resistance of the battery

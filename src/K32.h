@@ -159,14 +159,14 @@ public:
         else LOG("REMOTE: Error HWREVISION not valid please define K32_SET_HWREVISION or HW_REVISION");
     }
 
-    void init_power(batteryType type, bool autoGauge)
+    void init_power(batteryType type, bool autoGauge, int fakeExtCurrent=0)
     {
         if (system->hw() >= 0 && system->hw() <= MAX_HW)
         {   
             if (mcp == NULL) LOG("POWER: Warning, MCP is not initialized, CALIB button is disabled");
 
             if (system->stm32 != NULL) 
-                power = new K32_power(system->stm32, mcp, type, autoGauge, CURRENT_PIN[system->hw()]);
+                power = new K32_power(system->stm32, mcp, type, autoGauge, fakeExtCurrent, CURRENT_PIN[system->hw()]);
             else 
                 LOG("POWER: Error Missing STM32 Init. Power module can not be used without STM32");
         }

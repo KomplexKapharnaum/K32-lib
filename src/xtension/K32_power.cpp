@@ -13,7 +13,7 @@ Preferences power_prefs;
  *   PUBLIC
  */
 
-K32_power::K32_power(K32_stm32 *stm32, K32_mcp *mcp, batteryType type, bool autoGauge, const int CURRENT_SENSOR_PIN)
+K32_power::K32_power(K32_stm32 *stm32, K32_mcp *mcp, batteryType type, bool autoGauge, int fakeExtCurrent, const int CURRENT_SENSOR_PIN)
 {
   LOG("POWER : init");
 
@@ -23,6 +23,7 @@ K32_power::K32_power(K32_stm32 *stm32, K32_mcp *mcp, batteryType type, bool auto
   
   this->_stm32 = stm32;
   this->_mcp = mcp;
+  this->_fakeExtCurrent = fakeExtCurrent;
 
   this->autoGauge = autoGauge;
   this->adaptiveGaugeOn = autoGauge;
@@ -38,7 +39,7 @@ K32_power::K32_power(K32_stm32 *stm32, K32_mcp *mcp, batteryType type, bool auto
 
   // Set Current offset
   power_prefs.begin("k32-power", false);
-  this->currentOffset = power_prefs.getUInt("offset", DEFAULT_MEASURE_OFFSET);
+  this->measureOffset = power_prefs.getUInt("offset", DEFAULT_MEASURE_OFFSET);
   // this->batteryRint = power_prefs.getUInt("rint", DEFAULT_BATTERY_RINT);
   this->batteryRint = DEFAULT_BATTERY_RINT;
   power_prefs.end(); 
@@ -95,9 +96,9 @@ void K32_power::calibOffset(int offset)
   LOG("POWER : Make sure current use is near 0 !!!");
 
   this->_lock();
-  this->currentOffset = offset;
+  this->measureOffset = offset;
   power_prefs.begin("k32-power", false);
-  power_prefs.putUInt("offset", this->currentOffset);
+  power_prefs.putUInt("offset", this->measureOffset);
   power_prefs.end() ; 
   this->_unlock();
 
@@ -126,7 +127,7 @@ void K32_power::calibIres()
     //   this->_lock() ; 
     //   // Reading Current Value
     //   currentMeas = analogRead(this->currentPin);
-    //   this->_current = (currentMeas - this->currentOffset) * 1000 / this->currentFactor; // Curent in mA
+    //   this->_current = (currentMeas - this->measureOffset) * 1000 / this->currentFactor; // Curent in mA
     //   voltageMeas = this->_stm32->voltage();
     //   if (abs(voltageMeas - this->calibVoltage) < 300) // Check if voltage value is significantly different
     //   {
@@ -168,7 +169,7 @@ void K32_power::setAdaptiveGauge(bool adaptiveOn)
   LOG("POWER : Switch off adaptive gauge");
 
   // OFF -> set FAKE CURRENT
-  this->_current = CURRENT_FAKE;
+  this->_current = this->_fakeExtCurrent;
   this->firstKick = true;
   this->updateCustom();
 }
@@ -206,7 +207,7 @@ void K32_power::updateCustom()
 {
     if (this->_current < 0) return; // Weird value
 
-    if (this->firstKick || abs(this->_current - this->currentRecord) > 700 ) // If current changed significantly
+    if (this->firstKick || abs(this->_current - this->currentRecord) > 500 ) // If current changed significantly
     {
       this->_lock(); 
 
@@ -295,27 +296,13 @@ void K32_power::task(void *parameter)
     {
       if (!that->_error) LOG("POWER: Current sensor not plugged. Entering error mode ");
       that->_error = true ; 
-      if(that->adaptiveGaugeOn) that->setAdaptiveGauge(false); 
     }
     
     /* Sensor in ERROR: check again */
-    if (that->_error) 
+    if (that->_error && currentMeas > 400) 
     {
-      // Current is back
-      if (currentMeas > 400) {
-        vTaskDelay(pdMS_TO_TICKS(1000));  
-        currentMeas = that->measure(); /* Double check */ 
-        if (currentMeas > 400)
-        {
-          LOG("POWER: Sensor is back !");
-          that->_error = false ; 
-          if (that->autoGauge) that->setAdaptiveGauge(true);
-        }
-      }
-      if (that->_error) {
-        vTaskDelay(pdMS_TO_TICKS(2000));
-        continue;   /* Loop again */
-      }
+      LOG("POWER: Sensor is back !");
+      that->_error = false ; 
     }
 
     /* Check CALIB button */
@@ -338,8 +325,10 @@ void K32_power::task(void *parameter)
       }
     }
 
-    /* Calculate current */ 
-    int a = (currentMeas - that->currentOffset) * 1000 / that->currentFactor + CURRENT_ERROR_OFFSET; // Curent in mA
+    /* Calculate EXT current */ 
+    int a = CURRENT_ERROR_OFFSET; // Curent in mA
+    if (!that->_error) a += (currentMeas - that->measureOffset) * 1000 / that->currentFactor; // external Measure
+    else a += that->_stm32->current() + that->_fakeExtCurrent; // internal Measure
 
     /* Check Current value */ 
     if(abs(a)>20000) 
