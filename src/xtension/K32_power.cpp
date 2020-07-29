@@ -266,8 +266,8 @@ void K32_power::task(void *parameter)
     
     /* Auto determination of number of Cell*/
     v = that->_stm32->voltage();
-    for (int n = 9; n > 0; n--)
-      if (n == 6 || n == 8) continue;
+    for (int n = 7; n > 0; n--)
+      if (n == 6 || n == 5) continue;
       else if (v > n * vCellMin) {
         that->nbOfCell = n;
         break;
