@@ -57,7 +57,7 @@
         {
             "platforms": "espressif32",
             "name": "ESP8266Audio",
-            "version": "https://github.com/earlephilhower/ESP8266Audio#e59319f605d45d06ae0c6a7f983872c0366dd11c"
+            "version": "https://github.com/earlephilhower/ESP8266Audio"
         },
         {
             "platforms": "espressif32",
