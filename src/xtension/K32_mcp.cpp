@@ -114,7 +114,7 @@ void K32_mcp::read_btn_state(void *parameter)
 {
   K32_mcp *that = (K32_mcp *)parameter;
   TickType_t xFrequency = pdMS_TO_TICKS(BTN_CHECK);
-  unsigned long debounceDelay = 80;   // the debounce time; increase if the output flickers
+  unsigned long debounceDelay = 120;   // the debounce time; increase if the output flickers
   unsigned long longPushDelay = 1000; // Delay for a long push of the button
 
   while (true)
@@ -141,23 +141,34 @@ void K32_mcp::read_btn_state(void *parameter)
           {
             that->_lock();
             that->io[i].state = LOW;
-            that->io[i].flag = MCPIO_PRESS;
             that->io[i].lastPushTime = millis(); // Record time of pushing button
             that->_unlock();
-            // LOGF("MCP: PRESS %i\n", i);
           }
 
           // was already pushed
           else 
           {
-            if ((millis() - that->io[i].lastPushTime > longPushDelay) && (that->io[i].lastPushTime != 0))
+            
+            if (that->io[i].lastPushTime != 0)  // NOT laready LONG PRESS
             {
-              that->_lock();
-              that->io[i].flag = MCPIO_PRESS_LONG;   // Long push
-              that->io[i].lastPushTime = 0;          // Reset counter
-              that->_unlock();
-              LOGF("MCP: PRESS LONG %i\n", i);
+              // -> PRESS
+              if (that->io[i].flag != MCPIO_PRESS && (millis() - that->io[i].lastPushTime > debounceDelay)) {
+                that->_lock();
+                that->io[i].flag = MCPIO_PRESS;
+                that->_unlock();
+                LOGF("MCP: PRESS %i\n", i);
+              }
+              
+              // -> LONG
+              else if (that->io[i].flag == MCPIO_PRESS && (millis() - that->io[i].lastPushTime > longPushDelay)) {
+                that->_lock();
+                that->io[i].flag = MCPIO_PRESS_LONG;   // Long push
+                that->io[i].lastPushTime = 0;          // Reset counter
+                that->_unlock();
+                LOGF("MCP: PRESS LONG %i\n", i);
+              }
             }
+
           }
         }
 
@@ -169,14 +180,12 @@ void K32_mcp::read_btn_state(void *parameter)
           {
             that->_lock();
             that->io[i].state = HIGH;
+            that->io[i].lastPushTime = 0;
+
             if (that->io[i].flag == MCPIO_PRESS) 
             {
-              if (millis() - that->io[i].lastPushTime > debounceDelay) {
                 that->io[i].flag = MCPIO_RELEASE_SHORT;
                 LOGF("MCP: RELEASE SHORT %i\n", i);
-              }
-              else 
-                that->io[i].flag = MCPIO_NOT;
             }
             else if (that->io[i].flag == MCPIO_PRESS_LONG)
             {
