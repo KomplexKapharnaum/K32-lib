@@ -154,7 +154,27 @@ public:
     this->_fresh = false;
     return r;
   }
-  
+
+  // CONTROLS
+  //
+
+  K32_modulator *faster() { 
+    this->_period = max(1, (int)(this->_period/1.2)); 
+    return this;
+  }
+  K32_modulator *slower() { 
+    this->_period *= 1.2; 
+    return this;
+  }
+  K32_modulator *bigger() { 
+    this->_maxi = min(255, (int)(this->_maxi*1.2));
+    return this;
+  }
+  K32_modulator *smaller() { 
+    this->_maxi = max(0, (int)(this->_maxi/1.2));
+    return this;
+  }
+
 
 protected:
 

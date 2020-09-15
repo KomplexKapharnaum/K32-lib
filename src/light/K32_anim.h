@@ -160,6 +160,15 @@ class K32_anim {
       return this->mod( modulator, playNow );
     }
 
+    // Get mod by index
+    K32_modulator* mod( int k )  {
+      if (k < ANIM_MOD_SLOTS && this->_modulators[k] != NULL) 
+        return this->_modulators[k];
+
+      LOGF2("ANIM: %s mod not found: %d \n", this->name(), k);
+      return new K32_modulator();
+    }
+
     // get registered modulator
     K32_modulator* mod( String modName) 
     {
@@ -201,7 +210,7 @@ class K32_anim {
     }
 
 
-    // ANIM DATA
+    // ANIM MASTER
     //
     K32_anim* master(uint8_t m) {
       this->_master = m;
