@@ -216,7 +216,8 @@ void splitString(char *data, const char *separator, int index, char *result)
 
 void K32_mqtt::dispatch(char *topic, char *payload, size_t length)
 {
-  payload[length] = 0;
+  if (length > 0) payload[length] = 0;
+  else payload = "";
 
   // TOPIC: k32/all/[motor]   or   k32/c[X]/[motor]   or   k32/e[X]/[motor]
 
@@ -426,6 +427,12 @@ void K32_mqtt::dispatch(char *topic, char *payload, size_t length)
       char modname[16];
       splitString(topic, "/", 4, modname);
 
+      // CONTROL
+      char control[16];
+      splitString(topic, "/", 5, control);
+
+      // LOGF("MQTT: %s\n", action);
+
       // get MOD by name
       if (strcmp(action, "mod") == 0)        
         mod = this->light->anim("manu")->mod( String(modname) );
@@ -436,9 +443,7 @@ void K32_mqtt::dispatch(char *topic, char *payload, size_t length)
 
       else return;
       
-      // CONTROL
-      char control[16];
-      splitString(topic, "/", 5, control);
+      
 
       if (strcmp(control, "faster") == 0) mod->faster();
       else if (strcmp(control, "slower") == 0) mod->slower();

@@ -160,6 +160,7 @@ public:
 
   K32_modulator *faster() { 
     this->_period = max(1, (int)(this->_period/1.2)); 
+    //LOG(this->_period);
     return this;
   }
   K32_modulator *slower() { 

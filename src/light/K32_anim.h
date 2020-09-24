@@ -193,6 +193,13 @@ class K32_anim {
       return false;
     }
 
+    // search registered modulator
+    bool hasmod( int k) 
+    {
+      if (k < ANIM_MOD_SLOTS && this->_modulators[k] != NULL) return true;
+      return false;
+    }
+
     // remove Anonym only / All modulators
     K32_anim* unmod(bool all=false)
     {
