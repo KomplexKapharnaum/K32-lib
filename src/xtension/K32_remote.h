@@ -57,7 +57,7 @@ private:
   remoteState _state = REMOTE_AUTO;
   remoteState _old_state = REMOTE_MANU_LAMP;
   int _macroMax = 0;
-  int _activeMacro = 0;
+  int _activeMacro = -1;
   int _previewMacro = 0;
   int _lamp = -1;
   int _lamp_grad;
