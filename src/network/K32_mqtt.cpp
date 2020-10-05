@@ -216,7 +216,8 @@ void splitString(char *data, const char *separator, int index, char *result)
 
 void K32_mqtt::dispatch(char *topic, char *payload, size_t length)
 {
-  payload[length] = 0;
+  if (length > 0) payload[length] = 0;
+  else payload = "";
 
   // TOPIC: k32/all/[motor]   or   k32/c[X]/[motor]   or   k32/e[X]/[motor]
 
@@ -402,7 +403,7 @@ void K32_mqtt::dispatch(char *topic, char *payload, size_t length)
 
     }
 
-    // MEM
+    // MEM (Manu)
     else if (strcmp(action, "mem") == 0)
     {
       char mem[4];
@@ -416,6 +417,39 @@ void K32_mqtt::dispatch(char *topic, char *payload, size_t length)
     else if (strcmp(action, "stop") == 0 || strcmp(action, "off") == 0 || strcmp(action, "blackout") == 0)
     {
       this->remote->stmBlackout();
+    }
+
+    // MODULATORS (Manu)
+    else if (strcmp(action, "mod") == 0 || strcmp(action, "modi") == 0)
+    { 
+      // Find MOD
+      K32_modulator* mod;
+      char modname[16];
+      splitString(topic, "/", 4, modname);
+
+      // CONTROL
+      char control[16];
+      splitString(topic, "/", 5, control);
+
+      // LOGF("MQTT: %s\n", action);
+
+      // get MOD by name
+      if (strcmp(action, "mod") == 0)        
+        mod = this->light->anim("manu")->mod( String(modname) );
+
+      // get MOD by id
+      else if (strcmp(action, "modi") == 0) 
+        mod = this->light->anim("manu")->mod( atoi(modname) );
+
+      else return;
+      
+      
+
+      if (strcmp(control, "faster") == 0) mod->faster();
+      else if (strcmp(control, "slower") == 0) mod->slower();
+      else if (strcmp(control, "bigger") == 0) mod->bigger();
+      else if (strcmp(control, "smaller") == 0) mod->smaller();
+
     }
 
   }
