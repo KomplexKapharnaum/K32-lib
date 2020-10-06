@@ -39,9 +39,15 @@ void K32_artnet::onDmx( cbPtr callback )
   this->frameCallback = callback;
 }
 
+void K32_artnet::onFullDmx( cbPtr callback ) 
+{
+  this->fullCallback = callback;
+}
+
 
 artnetconf K32_artnet::conf = {0, 0, 0};    
 K32_artnet::cbPtr K32_artnet::frameCallback = nullptr;
+K32_artnet::cbPtr K32_artnet::fullCallback = nullptr;
 int K32_artnet::_lastSequence = 0;
 
 // /*
@@ -70,10 +76,18 @@ void K32_artnet::_onDmxFrame(uint16_t universe, uint16_t length, uint8_t sequenc
 
   K32_artnet::_lastSequence = sequence;
   
-  if (K32_artnet::frameCallback)
+  if (K32_artnet::frameCallback) 
+  {
     K32_artnet::frameCallback( 
       &data[ K32_artnet::conf.address-1 ], 
       min(K32_artnet::conf.framesize, length-(K32_artnet::conf.address-1)) 
     );
+  }
+
+  if (K32_artnet::fullCallback) 
+  {
+    K32_artnet::fullCallback(data, length);
+  }
+
 }
 

@@ -25,10 +25,12 @@ class K32_artnet {
     void start(artnetconf conf);
 
     void onDmx( cbPtr callback );
+    void onFullDmx( cbPtr callback );
 
 
     static artnetconf conf;    
     static cbPtr frameCallback;
+    static cbPtr fullCallback;
     static int _lastSequence;
 
   private:
