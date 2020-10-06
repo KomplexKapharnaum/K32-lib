@@ -28,12 +28,12 @@ const int LEDS_PIN[MAX_HW+1][LED_N_STRIPS] = {
 // PWM PINS
 // {PWM_PIN0, PWM_PIN1}
 //
-#define PWM_N_CHAN 2
+#define PWM_N_CHAN 4
 const int PWM_PIN[MAX_HW+1][PWM_N_CHAN] = {
-  {17, 16},               // HW_REVISION 0
-  {17, 16},               // HW_REVISION 1
-  {17, 16},               // HW_REVISION 2
-  {23, 33}                // HW_REVISION 3: ATOM
+  {17 , 16 , -1 , -1 },               // HW_REVISION 0
+  {17 , 16 , -1 , -1 },               // HW_REVISION 1
+  {14 , 12 , 13 , 15 },               // HW_REVISION 2
+  {23 , 33 , -1 , -1 }                // HW_REVISION 3: ATOM
 };
 
 // AUDIO PINS
