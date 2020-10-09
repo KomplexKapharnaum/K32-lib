@@ -18,7 +18,7 @@
 
 K32_remote::K32_remote(K32_system *system, K32_mcp *mcp) : system(system), mcp(mcp)
 {
-  LOG("4BTNS: init");
+  LOG("REMOTE: init");
 
   this->semalock = xSemaphoreCreateMutex();
 
@@ -274,7 +274,7 @@ void K32_remote::task(void *parameter)
                     that->system->preferences.putUInt("lamp_grad", that->_lamp_grad);
                     that->setState(that->_old_state);
                     #ifdef DEBUG_lib_btn
-                    LOGF("4BTNS: 1/4 Escape STATE =  %d\n", that->_state);
+                    LOGF("REMOTE: 1/4 Escape STATE =  %d\n", that->_state);
                     #endif
                   }
                   // STM: Stop
@@ -321,7 +321,7 @@ void K32_remote::task(void *parameter)
                 // Button 1 + 4 : UNLOCK
                 that->unlock();
                 #ifdef DEBUG_lib_btn
-                  LOG("4BTNS: unlock");
+                  LOG("REMOTE: unlock");
                 #endif
                 break;
 
@@ -374,7 +374,7 @@ void K32_remote::task(void *parameter)
                   else if (that->_state == REMOTE_MANU_LAMP)  that->setState(REMOTE_MANU);
 
                   #ifdef DEBUG_lib_btn
-                              LOGF("4BTNS: Escape STATE =  %d\n", that->_state);
+                              LOGF("REMOTE: Escape STATE =  %d\n", that->_state);
                   #endif
                 }
 
@@ -397,7 +397,7 @@ void K32_remote::task(void *parameter)
                     that->_previewMacro--;
                     if (that->_previewMacro < 0) that->_previewMacro = that->_macroMax - 1;
                     #ifdef DEBUG_lib_btn
-                      LOGF("4BTNS: Preview -- STATE =  %d\n", that->_state);
+                      LOGF("REMOTE: Preview -- STATE =  %d\n", that->_state);
                     #endif
                   }
                   else if (that->_state == REMOTE_MANU_LAMP)
@@ -405,7 +405,7 @@ void K32_remote::task(void *parameter)
                     that->_lamp_grad = max(0, that->_lamp_grad - 1);
                     that->_lamp = that->_lamp_grad;
                     #ifdef DEBUG_lib_btn
-                      LOGF("4BTNS: LAMP -- STATE =  %d\n", that->_state);
+                      LOGF("REMOTE: LAMP -- STATE =  %d\n", that->_state);
                     #endif
                   }
                   else if (that->_state == REMOTE_AUTO) 
@@ -430,7 +430,7 @@ void K32_remote::task(void *parameter)
                     that->_previewMacro++;
                     if (that->_previewMacro >= that->_macroMax) that->_previewMacro = 0;
                     #ifdef DEBUG_lib_btn
-                                  LOGF("4BTNS: Preview ++  STATE =  %d\n", that->_state);
+                                  LOGF("REMOTE: Preview ++  STATE =  %d\n", that->_state);
                     #endif
                   }
                   else if (that->_state == REMOTE_MANU_LAMP)
@@ -438,8 +438,8 @@ void K32_remote::task(void *parameter)
                     that->_lamp_grad = min(255, that->_lamp_grad + 1);
                     that->_lamp = that->_lamp_grad;
                     #ifdef DEBUG_lib_btn
-                                  LOGF("4BTNS: LAMP ++ that->_lamp_grad =  %d\n", that->_lamp_grad);
-                                  LOGF("4BTNS: LAMP ++ STATE =  %d\n", that->_state);
+                                  LOGF("REMOTE: LAMP ++ that->_lamp_grad =  %d\n", that->_lamp_grad);
+                                  LOGF("REMOTE: LAMP ++ STATE =  %d\n", that->_state);
                     #endif
                   }
                   else if (that->_state == REMOTE_AUTO) 
@@ -471,7 +471,7 @@ void K32_remote::task(void *parameter)
                     that->_lamp = -1;
                   }
                   #ifdef DEBUG_lib_btn
-                              LOGF("4BTNS: Go STATE =  %d\n", that->_state);
+                              LOGF("REMOTE: Go STATE =  %d\n", that->_state);
                   #endif
                 }
 
@@ -490,7 +490,7 @@ void K32_remote::task(void *parameter)
                 // Button 1 + 4 : LOCK
                 that->lock();
                 #ifdef DEBUG_lib_btn
-                  LOG("4BTNS: LOCKED");
+                  LOG("REMOTE: LOCKED");
                 #endif
                 break;
 

@@ -407,18 +407,20 @@ void K32_mqtt::dispatch(char *topic, char *payload, size_t length)
     else if (strcmp(action, "master") == 0)
     {
       char master[8];
-      splitString(payload, "§", 0, master);
+      splitString(topic, "/", 4, master);
 
       int masterValue = this->light->anim("manu")->master();
 
-      if (strcmp(master, "more") == 0) masterValue -= 2;
-      else if (strcmp(master, "less") == 0) masterValue += 2;
+      if (strcmp(master, "less") == 0) masterValue -= 2;
+      else if (strcmp(master, "more") == 0) masterValue += 2;
       else masterValue = atoi(master);
 
       if (masterValue > 255) masterValue = 255;
       else if (masterValue < 0) masterValue = 0;
 
       this->light->anim("manu")->master( masterValue );
+      this->light->anim("manu")->push();
+      // LOGF("MQTT: set leds master @%i\n", masterValue);
     }
 
     // MEM (Manu)
