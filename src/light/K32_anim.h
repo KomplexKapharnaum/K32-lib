@@ -223,7 +223,9 @@ class K32_anim {
       this->_master = m;
       return this;
     }
-
+    uint8_t master() {
+      return this->_master;
+    }
 
     // change one element in data
     K32_anim* set(int k, int value) { 
