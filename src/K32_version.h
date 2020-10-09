@@ -30,10 +30,20 @@ const int LEDS_PIN[MAX_HW+1][LED_N_STRIPS] = {
 //
 #define PWM_N_CHAN 4
 const int PWM_PIN[MAX_HW+1][PWM_N_CHAN] = {
-  {17 , 16 , -1 , -1 },               // HW_REVISION 0
-  {17 , 16 , -1 , -1 },               // HW_REVISION 1
-  {14 , 12 , 13 , 15 },               // HW_REVISION 2
-  {23 , 33 , -1 , -1 }                // HW_REVISION 3: ATOM
+  {17, 16, -1, -1 },               // HW_REVISION 0
+  {17, 16, -1, -1 },               // HW_REVISION 1
+  {14, 12, 13, 15 },               // HW_REVISION 2
+  {23, 33, -1, -1 }                // HW_REVISION 3: ATOM
+};
+
+// DMX PINS
+// {DMX_DIRECTION, DMX_OUTPUT, DMX_INPUT}
+//
+const int DMX_PIN[MAX_HW+1][3] = {
+  {-1, -1, -1 },               // HW_REVISION 0
+  {33, 32, 35 },               // HW_REVISION 1
+  { 4, 16, 17 },               // HW_REVISION 2
+  {-1, -1, -1 }                // HW_REVISION 3: ATOM
 };
 
 // AUDIO PINS
@@ -70,10 +80,10 @@ const int MCP_PIN[MAX_HW+1][2] = {
 // {Current Sensor Pin}
 //
 const int CURRENT_PIN[MAX_HW+1] = {
-  35 ,          // HW_REVISION 0
-  35 ,          // HW_REVISION 1
-  35 ,        // HW_REVISION 2
-  33         // HW_REVISION 3 : ATOM
+  35,           // HW_REVISION 0
+  35,           // HW_REVISION 1
+  35,           // HW_REVISION 2
+  33            // HW_REVISION 3 : ATOM
 };
 
 #endif

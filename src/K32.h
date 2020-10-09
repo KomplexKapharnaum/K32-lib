@@ -22,6 +22,7 @@
 #include "system/K32_pwm.h"
 #include "audio/K32_audio.h"
 #include "light/K32_light.h"
+#include "light/K32_dmx.h"
 #include "light/K32_samplerjpeg.h"
 #include "xtension/K32_mcp.h"
 #include "xtension/K32_remote.h"
@@ -81,6 +82,7 @@ public:
     K32_osc *osc = NULL;
     K32_mqtt *mqtt = NULL;
     K32_artnet *artnet = NULL;
+    K32_dmx *dmx = NULL; 
     K32_power *power = NULL; 
 
     K32_samplerjpeg *samplerjpeg = NULL;
@@ -121,6 +123,19 @@ public:
         }
         else
             LOG("LIGHT: Error HWREVISION not valid please define K32_SET_HWREVISION or HW_REVISION");
+    }
+
+    void init_dmx(DmxDirection dir)
+    {
+        if (system->hw() >= 0 && system->hw() <= MAX_HW)
+        {
+            if( DMX_PIN[system->hw()][0] > 0 )
+                dmx = new K32_dmx(DMX_PIN[system->hw()], dir);
+            else
+                LOG("DMX: Error Pinout is invalid");
+        }
+        else
+            LOG("DMX: Error HWREVISION not valid please define K32_SET_HWREVISION or HW_REVISION");
     }
 
     void init_pwm()
