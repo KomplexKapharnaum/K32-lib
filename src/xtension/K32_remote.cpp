@@ -25,8 +25,9 @@ K32_remote::K32_remote(K32_system *system, K32_mcp *mcp) : system(system), mcp(m
   this->_state = REMOTE_AUTO;
   this->_old_state = REMOTE_AUTO;
 
-  for (int i = 0; i < NB_BTN; i++)
-    this->mcp->input(i);
+  if (this->mcp)
+    for (int i = 0; i < NB_BTN; i++)
+      this->mcp->input(i);
 
   // load LampGrad
   this->_lamp_grad = this->system->preferences.getUInt("lamp_grad", 127);
@@ -225,7 +226,8 @@ void K32_remote::task(void *parameter)
     // read and count flags
     for (int i = 0; i < NB_BTN; i++) 
     {
-      flags[i] = that->mcp->flag(i);                                                      // read flag but don't consume yet
+      if (that->mcp) flags[i] = that->mcp->flag(i);          // read flag but don't consume yet
+      else flags[i] = MCPIO_NOT;                                         
 
       if (flags[i] == MCPIO_PRESS || flags[i] == MCPIO_PRESS_LONG) countPressed++;               // count pressed button
       if (flags[i] == MCPIO_PRESS_LONG) countLongPressed++;                                      // count long pressed button
@@ -245,7 +247,7 @@ void K32_remote::task(void *parameter)
 
           for (int i = 0; i < NB_BTN; i++) 
           {
-            that->mcp->consume(i);                                         // Stable state -> consume values
+            if (that->mcp) that->mcp->consume(i);                                         // Stable state -> consume values
             if (flags[i] > actionFlag) actionFlag = flags[i];
             if (flags[i] != MCPIO_NOT) actionCode = actionCode*10+i+1;  
           }

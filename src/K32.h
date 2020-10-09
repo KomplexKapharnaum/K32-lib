@@ -95,7 +95,10 @@ public:
     void init_sd()
     {
         if (system->hw() >= 0 && system->hw() <= MAX_HW)
-            sd = new K32_sd(SD_PIN[system->hw()]);
+            if( SD_PIN[system->hw()][0] > 0 )
+                sd = new K32_sd(SD_PIN[system->hw()]);
+            else
+                LOG("SD: Error Pinout is invalid");
         else
             LOG("SD: Error HWREVISION not valid please define K32_SET_HWREVISION or HW_REVISION");
     }
@@ -103,7 +106,10 @@ public:
     void init_audio()
     {
         if (system->hw() >= 0 && system->hw() <= MAX_HW)
-            audio = new K32_audio(AUDIO_PIN[system->hw()], SD_PIN[system->hw()]);
+            if( AUDIO_PIN[system->hw()][0] > 0 && SD_PIN[system->hw()][0] > 0 )
+                audio = new K32_audio(AUDIO_PIN[system->hw()], SD_PIN[system->hw()]);
+            else
+                LOG("AUDIO: Error Pinout is invalid");
         else
             LOG("AUDIO: Error HWREVISION not valid please define K32_SET_HWREVISION or HW_REVISION");
 
@@ -155,9 +161,12 @@ public:
     {
         if (system->hw() >= 0 && system->hw() <= MAX_HW)
         {
-            mcp = new K32_mcp(MCP_PIN[system->hw()]);
+            if( MCP_PIN[system->hw()][0] > 0 )
+                mcp = new K32_mcp(MCP_PIN[system->hw()]);
+            else
+                LOG("MCP: Error Pinout is invalid");
         }
-        else LOG("REMOTE: Error HWREVISION not valid please define K32_SET_HWREVISION or HW_REVISION");
+        else LOG("MCP: Error HWREVISION not valid please define K32_SET_HWREVISION or HW_REVISION");
     }
 
     void init_remote(int nbOfMacro)
@@ -180,8 +189,12 @@ public:
         {   
             if (mcp == NULL) LOG("POWER: Warning, MCP is not initialized, CALIB button is disabled");
 
-            if (system->stm32 != NULL) 
-                power = new K32_power(system->stm32, mcp, type, autoGauge, fakeExtCurrent, CURRENT_PIN[system->hw()]);
+            if (system->stm32 != NULL) {
+                if( CURRENT_PIN[system->hw()] > 0 )
+                    power = new K32_power(system->stm32, mcp, type, autoGauge, fakeExtCurrent, CURRENT_PIN[system->hw()]);
+                else
+                    LOG("POWER: Error Pinout is invalid");
+            }
             else 
                 LOG("POWER: Error Missing STM32 Init. Power module can not be used without STM32");
         }
