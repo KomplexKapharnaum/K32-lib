@@ -7,8 +7,8 @@
 #define K32_pwm_h
 
 #define PWM_MAXCHANNELS 16
-#define PWM_FREQUENCY 40000
-#define PWM_RESOLUTION 8
+#define PWM_FREQUENCY 60000 //40000
+#define PWM_RESOLUTION 16 //8
 
 #include "system/K32_log.h"
 

@@ -37,7 +37,7 @@ K32_pwm *K32_pwm::set(int channel, int value)
   if (channel < this->chanNumber) 
     if (this->chanState[channel] != value)
     {
-      this->chanState[channel] = value*value/255;
+      this->chanState[channel] = ((value+1)*256)-2;// value*value/255;
       ledcWrite(channel, this->chanState[channel]);
     }
   return this;
