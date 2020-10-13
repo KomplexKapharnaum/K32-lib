@@ -85,13 +85,17 @@ public:
     {
       // Get Modulator value
       xSemaphoreTake(this->paramInUse, portMAX_DELAY);
-      uint8_t val = this->value();
+      int val = this->value();
       xSemaphoreGive(this->paramInUse);
+
+      // CLAMP modulator value to 0->255
+      val = min(255, val);
+      val = max(0, val);
 
       // Apply modulation to dataslots, value of 255 will not do anything
       if (val < 255) {
         for (int s=0; s<ANIM_DATA_SLOTS; s++)
-          if (this->dataslot[s]) animData[s] = scale16by8(animData[s], val);
+          if (this->dataslot[s]) animData[s] = scale16by8(animData[s], (uint8_t)val);
       }
 
       // Did animator produced a different result than last call ?
@@ -103,7 +107,7 @@ public:
   }
 
   // 8Bit Direct value : Defined in SubClass ! 
-  virtual uint8_t value()    { return 255; }
+  virtual int value()    { return 255; }
 
   // change one Params
   K32_modulator *param(int k, int value)
@@ -119,11 +123,11 @@ public:
 
   // set special params
   K32_modulator *mini(int m) {
-    this->_mini = min(m, 255);
+    this->_mini = m;
     return this;
   }
   K32_modulator *maxi(int m) {
-    this->_maxi = max(0, m);
+    this->_maxi = m;
     return this;
   }
   K32_modulator *period(int p) {
