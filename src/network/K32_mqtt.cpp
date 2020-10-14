@@ -414,10 +414,12 @@ void K32_mqtt::dispatch(char *topic, char *payload, size_t length)
       if (strcmp(master, "less") == 0) masterValue -= 2;
       else if (strcmp(master, "more") == 0) masterValue += 2;
       else if (strcmp(master, "fadeout") == 0) {
-        this->light->anim("manu")->mod(new K32_mod_fadeout)->at(5)->at(6)->at(7)->at(8)->period(6000)->trigger();
+        if (!this->light->anim("manu")->hasmod("fadeout"))
+          this->light->anim("manu")->mod(new K32_mod_fadeout)->name("fadeout")->at(5)->at(6)->at(7)->at(8)->period(6000)->trigger();
       }
       else if (strcmp(master, "fadein") == 0) {
-        this->light->anim("manu")->mod(new K32_mod_fadein)->at(5)->at(6)->at(7)->at(8)->period(6000)->trigger();
+        if (!this->light->anim("manu")->hasmod("fadein"))
+          this->light->anim("manu")->mod(new K32_mod_fadein)->name("fadein")->at(5)->at(6)->at(7)->at(8)->period(6000)->trigger();
       }
       else masterValue = atoi(master);
 

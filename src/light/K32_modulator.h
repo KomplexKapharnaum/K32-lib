@@ -38,7 +38,10 @@ public:
 
   // get/set name
   String name() { return this->_name; }
-  void name(String n) { this->_name = n; }
+  K32_modulator*  name(String n) { 
+    this->_name = n; 
+    return this;
+  }
 
   K32_modulator* at(int slot)
   {
