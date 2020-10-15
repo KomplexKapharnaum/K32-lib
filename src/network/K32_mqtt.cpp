@@ -101,7 +101,7 @@ void K32_mqtt::start(mqttconf conf)
 
 }
 
-void K32_mqtt::publish(const char *topic, const char *payload = (const char *)nullptr, uint8_t qos=0, bool retain=false) {
+void K32_mqtt::publish(const char *topic, const char *payload, uint8_t qos, bool retain) {
   this->mqttClient->publish(topic, qos, retain, payload); 
 }
 
