@@ -26,6 +26,7 @@ class K32_mqtt {
   public:
     K32_mqtt(K32_system *system, K32_wifi *wifi, K32_audio *audio, K32_light *light, K32_remote *remote);
     void start(mqttconf conf);
+    void publish(const char *topic, const char *payload = (const char *)nullptr, uint8_t qos=1, bool retain=false);
 
   private:
     SemaphoreHandle_t lock;
