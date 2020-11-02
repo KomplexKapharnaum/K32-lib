@@ -83,6 +83,11 @@
             "platforms": "espressif32",
             "name": "JPEGDecoder",
             "version": "https://github.com/Bodmer/JPEGDecoder"
+        },
+        {
+            "platforms": "espressif32",
+            "name": "LXESP32DMX",
+            "version": "https://github.com/claudeheintz/LXESP32DMX"
         }
     ]
 }
