@@ -2,6 +2,8 @@
 
 ## TODO
 - Use centrale queue (RTOS) with system dispatcher to stack and forward network commands
+- Update Doc !
+- Update Arduin example !
 
 ## INSTALL
 
