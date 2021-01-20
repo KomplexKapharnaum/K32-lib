@@ -129,7 +129,7 @@ void K32_mqtt::beat(void *parameter)
   K32_mqtt* that = (K32_mqtt*) parameter;
   TickType_t xFrequency = pdMS_TO_TICKS(that->conf.beatInterval);
 
-  String myID = String(this->system->id());
+  String myID = String(that->system->id());
 
   while(true) {
     if (that->connected) {
