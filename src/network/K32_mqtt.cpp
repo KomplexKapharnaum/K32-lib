@@ -281,7 +281,7 @@ void K32_mqtt::dispatch(char *topic, char *payload, size_t length)
       char loop[5];
       splitString(payload, "§", 2, loop);
       if (strcmp(loop, "") != 0)
-        this->audio->volume(atoi(loop) > 0);
+        this->audio->loop(atoi(loop) > 0);
     }
 
     // SAMPLER NOTEON
