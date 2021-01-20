@@ -129,9 +129,11 @@ void K32_mqtt::beat(void *parameter)
   K32_mqtt* that = (K32_mqtt*) parameter;
   TickType_t xFrequency = pdMS_TO_TICKS(that->conf.beatInterval);
 
+  String myID = String(this->system->id());
+
   while(true) {
     if (that->connected) {
-      if (that->mqttClient->publish("k32/monitor/beat", 0, false, "1") ) LOG("MQTT: beat published");
+      if (that->mqttClient->publish("k32/monitor/beat", 0, false, myID.c_str()) ) LOG("MQTT: beat published");
       else LOG("MQTT: beat not published");
     }
     vTaskDelay( xFrequency );
