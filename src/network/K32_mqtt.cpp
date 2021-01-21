@@ -418,26 +418,29 @@ void K32_mqtt::dispatch(char *topic, char *payload, size_t length)
 
       if (strcmp(master, "less") == 0) masterValue -= 2;
       else if (strcmp(master, "more") == 0) masterValue += 2;
+      else if (strcmp(master, "full") == 0) masterValue = 255;
       else if (strcmp(master, "fadeout") == 0) {
         if (!this->light->anim("manu")->hasmod("fadeout"))
-          this->light->anim("manu")->mod(new K32_mod_fadeout)->name("fadeout")->at(5)->at(6)->at(7)->at(8)->period(6000)->play();
+          // this->light->anim("manu")->mod(new K32_mod_fadeout)->name("fadeout")->at(5)->at(6)->at(7)->at(8)->period(6000)->play();
+          this->light->anim("manu")->mod(new K32_mod_fadeout)->name("fadeout")->at(0)->period(6000)->play();
         else
           this->light->anim("manu")->mod("fadeout")->play();
       }
       else if (strcmp(master, "fadein") == 0) {
         if (!this->light->anim("manu")->hasmod("fadein"))
-          this->light->anim("manu")->mod(new K32_mod_fadein)->name("fadein")->at(5)->at(6)->at(7)->at(8)->period(6000)->play();
+          // this->light->anim("manu")->mod(new K32_mod_fadein)->name("fadein")->at(5)->at(6)->at(7)->at(8)->period(6000)->play();
+          this->light->anim("manu")->mod(new K32_mod_fadein)->name("fadein")->at(0)->period(6000)->play();
         else
           this->light->anim("manu")->mod("fadein")->play();
       }
-      else masterValue = atoi(master);
-
+      else masterValue = atoi(payload);
+       
       if (masterValue > 255) masterValue = 255;
       else if (masterValue < 0) masterValue = 0;
 
       this->light->anim("manu")->master( masterValue );
       this->light->anim("manu")->push();
-      // LOGF("MQTT: set leds master @%i\n", masterValue);
+      LOGF("MQTT: set leds master @%i\n", masterValue);
     }
 
     // MEM (Manu)
