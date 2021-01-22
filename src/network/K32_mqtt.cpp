@@ -44,6 +44,13 @@ void K32_mqtt::start(mqttconf conf)
     MDNS.addService("_mqttc", "_tcp", 1883);
     mdns_service_instance_name_set("_mqttc", "_tcp", ("MQTTc._"+this->system->name()).c_str());
     
+    // CUSTOM subscriptions
+    for (int k=0; k<subscount; k++) {
+      this->mqttClient->subscribe(subscriptions[k].topic, subscriptions[k].qos);
+      LOGF2("MQTT: subscribed to %s with QOS %i\n", subscriptions[k].topic, subscriptions[k].qos);
+    }
+
+
   });
 
   mqttClient->onDisconnect([this](AsyncMqttClientDisconnectReason reason){
@@ -104,6 +111,25 @@ void K32_mqtt::start(mqttconf conf)
 void K32_mqtt::publish(const char *topic, const char *payload, uint8_t qos, bool retain) {
   this->mqttClient->publish(topic, qos, retain, payload); 
 }
+
+void K32_mqtt::subscribe(mqttsub sub) {
+  if (subscount >= MQTT_SUBS_SLOTS) return; 
+  subscriptions[subscount] = sub;
+  subscount += 1;
+}
+
+
+// void K32_mqtt::onBeat( cbPtr callback ) 
+// {
+//   this->frameCallback = callback;
+// }
+
+
+// void K32_mqtt::onBeacon( cbPtr callback ) 
+// {
+//   this->fullCallback = callback;
+// }
+
 
 // /*
 //  *   PRIVATE
@@ -230,6 +256,12 @@ void K32_mqtt::dispatch(char *topic, char *payload, size_t length)
   LOGINL(topic);
   LOGINL(" ");
   LOG(payload);
+
+  // CUSTOM SUBSCRIBES (takes priority)
+  for (int k=0; k<subscount; k++)
+    if ( strcmp(subscriptions[k].topic, topic) == 0 ) {
+      subscriptions[k].callback(payload, length);
+    }
 
   // ENGINE
   char motor[16];

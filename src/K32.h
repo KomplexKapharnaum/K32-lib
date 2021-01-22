@@ -223,10 +223,9 @@ public:
             LOG("OSC: Warning WIFI should be initialized BEFORE osc");
     }
 
-    void init_mqtt(mqttconf conf)
+    void init_mqtt()
     {
         mqtt = new K32_mqtt(system, wifi, audio, light, remote);
-        mqtt->start(conf);
 
         if (!wifi)
             LOG("MQTT: Warning WIFI should be initialized BEFORE mqtt");

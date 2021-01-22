@@ -15,18 +15,33 @@
 #define CONFIG_ASYNC_TCP_RUNNING_CORE 0
 #include <AsyncMqttClient.h>
 
+#define MQTT_SUBS_SLOTS 16
+
+typedef void (*mqttcbPtr)(char *payload, size_t length);
+
 struct mqttconf
 {
   const char *broker;
   int beatInterval;
   int beaconInterval;
+
 };
+
+struct mqttsub
+{
+  const char* topic;
+  int qos;
+  mqttcbPtr callback;
+};
+
 
 class K32_mqtt {
   public:
     K32_mqtt(K32_system *system, K32_wifi *wifi, K32_audio *audio, K32_light *light, K32_remote *remote);
     void start(mqttconf conf);
     void publish(const char *topic, const char *payload = (const char *)nullptr, uint8_t qos=1, bool retain=false);
+
+    void subscribe(mqttsub sub);
 
   private:
     SemaphoreHandle_t lock;
@@ -45,6 +60,8 @@ class K32_mqtt {
     bool noteOFF = true;
 
     mqttconf conf;
+    mqttsub subscriptions[MQTT_SUBS_SLOTS];
+    int subscount = 0;
 
     K32_system *system;
     K32_wifi *wifi;
