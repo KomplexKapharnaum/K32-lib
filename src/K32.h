@@ -18,6 +18,7 @@
 #include "xtension/K32_power.h"
 #include "system/K32_log.h"
 #include "system/K32_system.h"
+#include "system/K32_intercom.h"
 #include "system/K32_sd.h"
 #include "system/K32_pwm.h"
 #include "audio/K32_audio.h"
@@ -45,6 +46,7 @@ public:
 
         // SYSTEM
         system = new K32_system();
+        intercom = new K32_intercom(system, wifi, audio, light, remote);
         timer = new K32_timer();
 
 // Save NODE_ID in flash
@@ -71,6 +73,7 @@ public:
 
     K32_timer* timer;
     K32_system *system = NULL;
+    K32_intercom *intercom = NULL;
     K32_wifi *wifi = NULL;
     K32_bluetooth *bt = NULL;
     K32_sd *sd = NULL;
@@ -216,27 +219,34 @@ public:
 
     void init_osc(oscconf conf)
     {
-        osc = new K32_osc(system, wifi, audio, light);
-        osc->start(conf);
+        if (!wifi) {
+            LOG("OSC: ERROR wifi should be initialized BEFORE osc..");
+            return;
+        }
 
-        if (!wifi)
-            LOG("OSC: Warning WIFI should be initialized BEFORE osc");
+        osc = new K32_osc(intercom);
+        osc->start(conf);
     }
 
     void init_mqtt()
     {
-        mqtt = new K32_mqtt(system, wifi, audio, light, remote);
+        if (!wifi) {
+            LOG("MQTT: ERROR wifi should be initialized BEFORE mqtt..");
+            return;
+        }
 
-        if (!wifi)
-            LOG("MQTT: Warning WIFI should be initialized BEFORE mqtt");
+        mqtt = new K32_mqtt(intercom);
     }
 
-    void init_artnet(artnetconf conf) {
+    void init_artnet(artnetconf conf) 
+    {
+        if (!wifi) {
+            LOG("ARTNET: ERROR wifi should be initialized BEFORE artnet..");
+            return;
+        }
+
         artnet = new K32_artnet();
         artnet->start(conf);
-
-        if (!wifi)
-            LOG("MQTT: Warning WIFI should be initialized BEFORE artnet");
     }
 
     void init_samplerjpeg()

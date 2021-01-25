@@ -6,11 +6,7 @@
 #ifndef K32_mqtt_h
 #define K32_mqtt_h
 
-#include "system/K32_system.h"
-#include "network/K32_wifi.h"
-#include "audio/K32_audio.h"
-#include "light/K32_light.h"
-#include "xtension/K32_remote.h"
+#include "system/K32_intercom.h"
 
 #define CONFIG_ASYNC_TCP_RUNNING_CORE 0
 #include <AsyncMqttClient.h>
@@ -37,7 +33,7 @@ struct mqttsub
 
 class K32_mqtt {
   public:
-    K32_mqtt(K32_system *system, K32_wifi *wifi, K32_audio *audio, K32_light *light, K32_remote *remote);
+    K32_mqtt(K32_intercom *intercom);
     void start(mqttconf conf);
     void publish(const char *topic, const char *payload = (const char *)nullptr, uint8_t qos=1, bool retain=false);
 
@@ -57,17 +53,13 @@ class K32_mqtt {
     void dispatch(char* topic, char* payload, size_t length);
 
     bool connected;
-    bool noteOFF = true;
+    
 
     mqttconf conf;
     mqttsub subscriptions[MQTT_SUBS_SLOTS];
     int subscount = 0;
 
-    K32_system *system;
-    K32_wifi *wifi;
-    K32_audio *audio;
-    K32_light *light;
-    K32_remote *remote;
+    K32_intercom *intercom;
 };
 
 #endif

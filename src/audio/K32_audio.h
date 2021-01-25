@@ -43,6 +43,8 @@ class K32_audio {
     PCM51xx* pcm;
 
     K32_samplermidi *sampler = NULL;
+    
+    bool noteOFF = true;
 
   private:
     SemaphoreHandle_t lock;

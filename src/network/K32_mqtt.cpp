@@ -12,8 +12,7 @@
  *   PUBLIC
  */
 
-K32_mqtt::K32_mqtt(K32_system *system, K32_wifi *wifi, K32_audio *audio, K32_light *light, K32_remote *remote) 
-                                : system(system), wifi(wifi), audio(audio), light(light), remote(remote) {}
+K32_mqtt::K32_mqtt(K32_intercom *intercom) : intercom(intercom) {}
 
 
 void K32_mqtt::start(mqttconf conf)
@@ -29,8 +28,8 @@ void K32_mqtt::start(mqttconf conf)
     this->connected = true;
     LOG("MQTT: connected");
 
-    String myChan = String(this->system->channel()); 
-    String myID =String(this->system->id());
+    String myChan = String(this->intercom->system->channel()); 
+    String myID =String(this->intercom->system->id());
 
     this->mqttClient->subscribe(("k32/c" + myChan + "/#").c_str(), 1);
     LOG("MQTT: subscribed to " + ("k32/c" + myChan + "/#"));
@@ -42,7 +41,7 @@ void K32_mqtt::start(mqttconf conf)
     LOG("MQTT: subscribed to k32/all/#");
 
     MDNS.addService("_mqttc", "_tcp", 1883);
-    mdns_service_instance_name_set("_mqttc", "_tcp", ("MQTTc._"+this->system->name()).c_str());
+    mdns_service_instance_name_set("_mqttc", "_tcp", ("MQTTc._"+this->intercom->system->name()).c_str());
     
     // CUSTOM subscriptions
     for (int k=0; k<subscount; k++) {
@@ -119,17 +118,6 @@ void K32_mqtt::subscribe(mqttsub sub) {
 }
 
 
-// void K32_mqtt::onBeat( cbPtr callback ) 
-// {
-//   this->frameCallback = callback;
-// }
-
-
-// void K32_mqtt::onBeacon( cbPtr callback ) 
-// {
-//   this->fullCallback = callback;
-// }
-
 
 // /*
 //  *   PRIVATE
@@ -142,7 +130,7 @@ void K32_mqtt::check(void *parameter)
 
   while (true)
   {
-    if (!that->connected && that->wifi && that->wifi->isConnected())
+    if (!that->connected && that->intercom->wifi->isConnected())
         that->mqttClient->connect();
 
     vTaskDelay(xFrequency);
@@ -155,7 +143,7 @@ void K32_mqtt::beat(void *parameter)
   K32_mqtt* that = (K32_mqtt*) parameter;
   TickType_t xFrequency = pdMS_TO_TICKS(that->conf.beatInterval);
 
-  String myID = String(that->system->id());
+  String myID = String(that->intercom->system->id());
 
   while(true) {
     if (that->connected) {
@@ -180,8 +168,8 @@ void K32_mqtt::beacon(void *parameter)
       status="";
 
       // identity
-      status += String(that->system->id())+"§";
-      status += String(that->system->channel())+"§"+"§";
+      status += String(that->intercom->system->id())+"§";
+      status += String(that->intercom->system->channel())+"§"+"§";
       status += String(K32_VERSION)+"§"+"§";
 
       // wifi 
@@ -197,14 +185,14 @@ void K32_mqtt::beacon(void *parameter)
       status += String(true)+"§"+"§";
 
       // energy 
-      if (that->system->stm32) status += String(that->system->stm32->battery())+"§"+"§";
+      if (that->intercom->system->stm32) status += String(that->intercom->system->stm32->battery())+"§"+"§";
       else status += String(0)+"§"+"§";
 
       // audio 
-      if (that->audio) {
-        status += String(that->audio->isSdOK())+"§";
-        (that->audio->media() != "") ? status += String(that->audio->media().c_str()) : status += String("stop")+"§";
-        status += String(that->audio->error().c_str())+"§";
+      if (that->intercom->audio) {
+        status += String(that->intercom->audio->isSdOK())+"§";
+        (that->intercom->audio->media() != "") ? status += String(that->intercom->audio->media().c_str()) : status += String("stop")+"§";
+        status += String(that->intercom->audio->error().c_str())+"§";
       }
       else {
         status += String(false)+"§";   /// TODO : SD check without audio engine
@@ -213,7 +201,7 @@ void K32_mqtt::beacon(void *parameter)
       }
 
       // sampler
-      if (that->audio && that->audio->sampler) status += String(that->audio->sampler->bank())+"§";
+      if (that->intercom->audio && that->intercom->audio->sampler) status += String(that->intercom->audio->sampler->bank())+"§";
       else status += String(0)+"§";
 
       // filesync 
@@ -229,21 +217,7 @@ void K32_mqtt::beacon(void *parameter)
   vTaskDelete(NULL);
 }
 
-void splitString(char *data, const char *separator, int index, char *result)
-{
-  char input[strlen(data)];
-  strcpy(input, data);
 
-  char *command = strtok(input, separator);
-  for (int k = 0; k < index; k++)
-    if (command != NULL)
-      command = strtok(NULL, separator);
-
-  if (command == NULL)
-    strcpy(result, "");
-  else
-    strcpy(result, command);
-}
 
 void K32_mqtt::dispatch(char *topic, char *payload, size_t length)
 {
@@ -251,7 +225,6 @@ void K32_mqtt::dispatch(char *topic, char *payload, size_t length)
   else payload = "";
 
   // TOPIC: k32/all/[motor]   or   k32/c[X]/[motor]   or   k32/e[X]/[motor]
-
   LOGINL("MQTT: recv ");
   LOGINL(topic);
   LOGINL(" ");
@@ -263,268 +236,19 @@ void K32_mqtt::dispatch(char *topic, char *payload, size_t length)
       subscriptions[k].callback(payload, length);
     }
 
-  // ENGINE
-  char motor[16];
-  splitString(topic, "/", 2, motor);
-
-  if (strcmp(motor, "reset") == 0)
-  {
-    this->system->reset();
+  // FORWARD TO INTERCOM
+  char* command;
+  command = strchr(topic, '/')+1;
+  command = strchr(command, '/')+1;
+  
+  argX* args[8];
+  int argCount = 0;
+  char* p = strtok(payload, "§");
+  while(p != NULL && argCount<8) {
+    args[argCount] = new argX(p);
+    argCount++;
+    p = strtok(NULL, "§");
   }
 
-  else if (strcmp(motor, "shutdown") == 0)
-  {
-    this->system->shutdown();
-  }
-
-  else if (strcmp(motor, "channel") == 0)
-  {
-    if (strcmp(payload, "") == 0)
-      return;
-    byte chan = atoi(payload);
-    if (chan > 0)
-    {
-      this->system->channel(chan);
-      delay(100);
-      this->system->reset();
-    }
-  }
-
-  // OSC AUDIO
-  else if (strcmp(motor, "audio") == 0 && this->audio)
-  {
-
-    char action[16];
-    splitString(topic, "/", 3, action);
-
-    // PLAY MEDIA
-    if (strcmp(action, "play") == 0)
-    {
-
-      char path[128];
-      splitString(payload, "§", 0, path);
-      if (strcmp(path, "") == 0)
-        return;
-      this->audio->play(path);
-
-      char volume[5];
-      splitString(payload, "§", 1, volume);
-      if (strcmp(volume, "") != 0)
-        this->audio->volume(atoi(volume));
-
-      char loop[5];
-      splitString(payload, "§", 2, loop);
-      if (strcmp(loop, "") != 0)
-        this->audio->loop(atoi(loop) > 0);
-    }
-
-    // SAMPLER NOTEON
-    else if (strcmp(action, "noteon") == 0)
-    {
-
-      char bank[5];
-      splitString(payload, "§", 0, bank);
-      char note[5];
-      splitString(payload, "§", 1, note);
-
-      if (strcmp(bank, "") == 0 || strcmp(note, "") == 0)
-        return;
-
-      this->audio->sampler->bank(atoi(bank));
-      this->audio->play(this->audio->sampler->path(atoi(note)));
-
-      char velocity[5];
-      splitString(payload, "§", 2, velocity);
-      if (strcmp(velocity, "") != 0)
-        this->audio->volume(atoi(velocity));
-
-      char loop[5];
-      splitString(payload, "§", 3, loop);
-      if (strcmp(loop, "") != 0)
-        this->audio->loop(atoi(loop) > 0);
-    }
-
-    // SAMPELR NOTEOFF
-    else if (strcmp(action, "noteoff") == 0)
-    {
-      char note[5];
-      splitString(payload, "§", 0, note);
-      if (this->audio->media() == this->audio->sampler->path(atoi(note)))
-        this->audio->stop();
-    }
-
-    // STOP
-    else if (strcmp(action, "stop") == 0)
-    {
-      this->audio->stop();
-    }
-
-    // VOLUME
-    else if (strcmp(action, "volume") == 0)
-    {
-      char volume[5];
-      splitString(payload, "§", 0, volume);
-      this->audio->volume(atoi(volume));
-    }
-
-    // LOOP
-    else if (strcmp(action, "loop") == 0)
-    {
-      char loop[5];
-      splitString(payload, "§", 0, loop);
-      this->audio->loop(atoi(loop) > 0);
-    }
-  }
-
-  // MIDI RAW
-  else if (strcmp(motor, "midi") == 0 && this->audio)
-  {
-
-    char val[16];
-    splitString(payload, "-", 0, val);
-    byte event = atoi(val) / 16;
-    splitString(payload, "-", 1, val);
-    byte note = atoi(val);
-    splitString(payload, "-", 2, val);
-    byte velo = atoi(val);
-
-    // NOTE OFF
-    if (this->noteOFF && (event == 8 || (event == 9 && velo == 0)))
-    {
-      if (this->audio->media() == this->audio->sampler->path(note))
-        this->audio->stop();
-    }
-
-    // NOTE ON
-    else if (event == 9)
-      this->audio->play(this->audio->sampler->path(note), velo);
-
-    // CC
-    else if (event == 11)
-    {
-
-      // LOOP
-      if (note == 1)
-        this->audio->loop((velo > 63));
-
-      // NOTEOFF enable
-      else if (note == 2)
-        this->noteOFF = (velo < 63);
-
-      // VOLUME
-      else if (note == 7)
-        this->audio->volume(velo);
-
-      // BANK SELECT
-      // else if (note == 32) this->audio->sampler->bank(velo+1);
-
-      // STOP ALL
-      else if (note == 119 or note == 120)
-        this->audio->stop();
-    }
-  }
-
-  // OSC LIGHT
-  else if (strcmp(motor, "leds") == 0 && this->light)
-  {
-
-    char action[16];
-    splitString(topic, "/", 3, action);
-
-    // ALL
-    if (strcmp(action, "all") == 0)
-    {
-      char color[8];
-      splitString(payload, "§", 0, color);
-      // TODO SET COLOR ALL !
-
-    }
-
-    // ALL
-    else if (strcmp(action, "master") == 0)
-    {
-      char master[8];
-      splitString(topic, "/", 4, master);
-
-      int masterValue = this->light->anim("manu")->master();
-
-      if (strcmp(master, "less") == 0) masterValue -= 2;
-      else if (strcmp(master, "more") == 0) masterValue += 2;
-      else if (strcmp(master, "full") == 0) masterValue = 255;
-      else if (strcmp(master, "fadeout") == 0) {
-        if (!this->light->anim("manu")->hasmod("fadeout"))
-          // this->light->anim("manu")->mod(new K32_mod_fadeout)->name("fadeout")->at(5)->at(6)->at(7)->at(8)->period(6000)->play();
-          this->light->anim("manu")->mod(new K32_mod_fadeout)->name("fadeout")->at(0)->period(6000)->play();
-        else
-          this->light->anim("manu")->mod("fadeout")->play();
-      }
-      else if (strcmp(master, "fadein") == 0) {
-        if (!this->light->anim("manu")->hasmod("fadein"))
-          // this->light->anim("manu")->mod(new K32_mod_fadein)->name("fadein")->at(5)->at(6)->at(7)->at(8)->period(6000)->play();
-          this->light->anim("manu")->mod(new K32_mod_fadein)->name("fadein")->at(0)->period(6000)->play();
-        else
-          this->light->anim("manu")->mod("fadein")->play();
-      }
-      else masterValue = atoi(payload);
-       
-      if (masterValue > 255) masterValue = 255;
-      else if (masterValue < 0) masterValue = 0;
-
-      this->light->anim("manu")->master( masterValue );
-      this->light->anim("manu")->push();
-      LOGF("MQTT: set leds master @%i\n", masterValue);
-    }
-
-    // MEM (Manu)
-    else if (strcmp(action, "mem") == 0)
-    {
-      char mem[4];
-      splitString(payload, "§", 0, mem);
-      
-      if (this->remote)
-        this->remote->stmSetMacro( atoi(mem) );
-    }
-
-    // STOP
-    else if (strcmp(action, "stop") == 0 || strcmp(action, "off") == 0 || strcmp(action, "blackout") == 0)
-    {
-      this->remote->stmBlackout();
-    }
-
-    // MODULATORS (Manu)
-    else if (strcmp(action, "mod") == 0 || strcmp(action, "modi") == 0)
-    { 
-      // Find MOD
-      K32_modulator* mod;
-      char modname[16];
-      splitString(topic, "/", 4, modname);
-
-      // CONTROL
-      char control[16];
-      splitString(topic, "/", 5, control);
-
-      // LOGF("MQTT: %s\n", action);
-
-      // get MOD by name
-      if (strcmp(action, "mod") == 0)        
-        mod = this->light->anim("manu")->mod( String(modname) );
-
-      // get MOD by id
-      else if (strcmp(action, "modi") == 0) 
-        mod = this->light->anim("manu")->mod( atoi(modname) );
-
-      else return;
-      
-      
-
-      if (strcmp(control, "faster") == 0) mod->faster();
-      else if (strcmp(control, "slower") == 0) mod->slower();
-      else if (strcmp(control, "bigger") == 0) mod->bigger();
-      else if (strcmp(control, "smaller") == 0) mod->smaller();
-
-    }
-
-
-
-  }
+  this->intercom->dispatch(command, args, argCount);
 }
