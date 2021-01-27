@@ -210,7 +210,7 @@ void K32_mqtt::beacon(void *parameter)
       status += String(0)+"§";   // SYNC count files
       status += String("");  // SYNC erro
 
-      that->mqttClient->publish("k32/monitor/status", 1, true, status.c_str()) ; 
+      that->mqttClient->publish("k32/monitor/status", 0, true, status.c_str()) ; 
     }
     vTaskDelay( xFrequency );
   }
