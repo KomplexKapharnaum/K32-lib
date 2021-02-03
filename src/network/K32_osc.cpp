@@ -50,7 +50,7 @@ String K32_oscmsg::getStr(int position) {
  *   PUBLIC
  */
 
-K32_osc::K32_osc(K32_intercom *intercom) : intercom(intercom) {}
+K32_osc::K32_osc(K32_intercom *intercom, K32_system* system, K32_wifi* wifi) : intercom(intercom), system(system), wifi(wifi) {}
 
 
 void K32_osc::start(oscconf conf)
@@ -107,39 +107,39 @@ OSCMessage K32_osc::status() {
     OSCMessage msg("/status");
 
     // identity
-    msg.add(intercom->system->id());
-    msg.add(intercom->system->channel());
+    msg.add(system->id());
+    msg.add(system->channel());
     msg.add(K32_VERSION);
 
     // wifi 
-    byte mac[6];
-    WiFi.macAddress(mac);
-    char shortmac[16];
-    sprintf(shortmac, "%02X:%02X:%02X", mac[3], mac[4], mac[5]);
-    msg.add(shortmac);
-    msg.add(WiFi.localIP().toString().c_str());
-    msg.add(WiFi.RSSI());
-    (this->linkedIP) ? msg.add(true) : msg.add(false);
+    // byte mac[6];
+    // WiFi.macAddress(mac);
+    // char shortmac[16];
+    // sprintf(shortmac, "%02X:%02X:%02X", mac[3], mac[4], mac[5]);
+    // msg.add(shortmac);
+    // msg.add(WiFi.localIP().toString().c_str());
+    // msg.add(WiFi.RSSI());
+    // (this->linkedIP) ? msg.add(true) : msg.add(false);
     
     // energy 
-    if (intercom->system->stm32) msg.add(intercom->system->stm32->battery());
-    else msg.add(0);
+    // if (intercom->system->stm32) msg.add(intercom->system->stm32->battery());
+    // else msg.add(0);
 
     // audio 
-    if (intercom->audio) {
-      msg.add(intercom->audio->isSdOK());
-      (intercom->audio->media() != "") ? msg.add(intercom->audio->media().c_str()) : msg.add("stop");
-      msg.add(intercom->audio->error().c_str());
-    }
-    else {
-      msg.add(false);   /// TODO : SD check without audio engine
-      msg.add("stop");
-      msg.add("");
-    }
+    // if (intercom->audio) {
+    //   msg.add(intercom->audio->isSdOK());
+    //   (intercom->audio->media() != "") ? msg.add(intercom->audio->media().c_str()) : msg.add("stop");
+    //   msg.add(intercom->audio->error().c_str());
+    // }
+    // else {
+    //   msg.add(false);   /// TODO : SD check without audio engine
+    //   msg.add("stop");
+    //   msg.add("");
+    // }
 
     // sampler
-    if (intercom->audio && intercom->audio->sampler) msg.add(intercom->audio->sampler->bank());
-    else msg.add(0);
+    // if (intercom->audio && intercom->audio->sampler) msg.add(intercom->audio->sampler->bank());
+    // else msg.add(0);
 
     // filesync 
     // msg.add(sync_size());
@@ -151,9 +151,9 @@ OSCMessage K32_osc::status() {
 }
 
 void K32_osc::send( OSCMessage msg ) {
-  if (intercom->wifi->isConnected() && this->conf.port_out > 0) { 
+  if (wifi->isConnected() && this->conf.port_out > 0) { 
     xSemaphoreTake(this->lock, portMAX_DELAY);
-    IPAddress dest = (this->linkedIP) ? this->linkedIP : intercom->wifi->broadcastIP();
+    IPAddress dest = (this->linkedIP) ? this->linkedIP : wifi->broadcastIP();
     this->sendSock->beginPacket( dest, this->conf.port_out);
     msg.send(*this->sendSock);
     this->sendSock->endPacket();
@@ -190,10 +190,10 @@ void K32_osc::beacon( void * parameter ) {
 
     while(true) 
     {
-      if (that->intercom->wifi->isConnected()) { 
+      if (that->wifi->isConnected()) { 
         // send
         xSemaphoreTake(that->lock, portMAX_DELAY);
-        IPAddress dest = (that->linkedIP) ? that->linkedIP : that->intercom->wifi->broadcastIP();
+        IPAddress dest = (that->linkedIP) ? that->linkedIP : that->wifi->broadcastIP();
         sock.beginPacket( dest, that->conf.port_out);
         that->status().send(sock);
         sock.endPacket();
@@ -217,18 +217,18 @@ void K32_osc::server( void * parameter ) {
    IPAddress remoteIP;
 
    // Wait for WIFI to first connect
-   while(!that->intercom->wifi->isConnected()) delay( 300 );
+   while(!that->wifi->isConnected()) delay( 300 );
    
    MDNS.addService("_osc", "_udp", that->conf.port_in);
-   mdns_service_instance_name_set("_osc", "_udp", ("OSC._"+that->intercom->system->name()).c_str());
+   mdns_service_instance_name_set("_osc", "_udp", ("OSC._"+that->system->name()).c_str());
 
    LOGF("OSC: listening on port %d\n", that->conf.port_in);
 
    char idpath[8];
-   sprintf(idpath, "/e%u", that->intercom->system->id()); 
+   sprintf(idpath, "/e%u", that->system->id()); 
 
    char chpath[8];
-   sprintf(chpath, "/c%u", that->intercom->system->channel());
+   sprintf(chpath, "/c%u", that->system->channel());
 
    while(true) {
      
@@ -282,20 +282,18 @@ void K32_osc::server( void * parameter ) {
           //
           auto router = [](K32_osc* that, K32_oscmsg &msg, int offset){
 
-            char* command;
             char path[32];
             msg.getAddress(path, 1);
-            command = strchr(path, '/')+1;
 
-            const int argCount = msg.size();
-            argX* args[argCount];
-            for(int k=0; k<argCount; k++) {
-              if (msg.isInt(k)) args[k] = new argX((int) msg.getInt(k));
-              else if (msg.isString(k)) args[k] = new argX(msg.getStr(k).c_str());
-              else args[k] = new argX("");
+            Orderz* newOrder = new Orderz( strchr(path, '/')+1 );
+
+            for(int k=0; k<msg.size(); k++) {
+              if (msg.isInt(k))         newOrder->addData(msg.getInt(k));
+              else if (msg.isString(k)) newOrder->addData(msg.getStr(k).c_str());
+              else newOrder->addData("?");
             }
-            
-            that->intercom->dispatch(command, args, argCount);
+
+            that->intercom->queue( newOrder );
 
           };
 

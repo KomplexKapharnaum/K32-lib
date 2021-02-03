@@ -12,7 +12,7 @@
  *   PUBLIC
  */
 
-K32_mqtt::K32_mqtt(K32_intercom *intercom) : intercom(intercom) {}
+K32_mqtt::K32_mqtt(K32_intercom *intercom, K32_system* system, K32_wifi* wifi) : intercom(intercom), system(system), wifi(wifi) {}
 
 
 void K32_mqtt::start(mqttconf conf)
@@ -28,8 +28,8 @@ void K32_mqtt::start(mqttconf conf)
     this->connected = true;
     LOG("MQTT: connected");
 
-    String myChan = String(this->intercom->system->channel()); 
-    String myID =String(this->intercom->system->id());
+    String myChan = String(this->system->channel()); 
+    String myID =String(this->system->id());
 
     this->mqttClient->subscribe(("k32/c" + myChan + "/#").c_str(), 1);
     LOG("MQTT: subscribed to " + ("k32/c" + myChan + "/#"));
@@ -41,7 +41,7 @@ void K32_mqtt::start(mqttconf conf)
     LOG("MQTT: subscribed to k32/all/#");
 
     MDNS.addService("_mqttc", "_tcp", 1883);
-    mdns_service_instance_name_set("_mqttc", "_tcp", ("MQTTc._"+this->intercom->system->name()).c_str());
+    mdns_service_instance_name_set("_mqttc", "_tcp", ("MQTTc._"+this->system->name()).c_str());
     
     // CUSTOM subscriptions
     for (int k=0; k<subscount; k++) {
@@ -130,7 +130,7 @@ void K32_mqtt::check(void *parameter)
 
   while (true)
   {
-    if (!that->connected && that->intercom->wifi->isConnected())
+    if (!that->connected && that->wifi->isConnected())
         that->mqttClient->connect();
 
     vTaskDelay(xFrequency);
@@ -143,7 +143,7 @@ void K32_mqtt::beat(void *parameter)
   K32_mqtt* that = (K32_mqtt*) parameter;
   TickType_t xFrequency = pdMS_TO_TICKS(that->conf.beatInterval);
 
-  String myID = String(that->intercom->system->id());
+  String myID = String(that->system->id());
 
   while(true) {
     if (that->connected) {
@@ -168,8 +168,8 @@ void K32_mqtt::beacon(void *parameter)
       status="";
 
       // identity
-      status += String(that->intercom->system->id())+"§";
-      status += String(that->intercom->system->channel())+"§"+"§";
+      status += String(that->system->id())+"§";
+      status += String(that->system->channel())+"§"+"§";
       status += String(K32_VERSION)+"§"+"§";
 
       // wifi 
@@ -185,24 +185,24 @@ void K32_mqtt::beacon(void *parameter)
       status += String(true)+"§"+"§";
 
       // energy 
-      if (that->intercom->system->stm32) status += String(that->intercom->system->stm32->battery())+"§"+"§";
-      else status += String(0)+"§"+"§";
+      // if (that->system->stm32) status += String(that->system->stm32->battery())+"§"+"§";
+      // else status += String(0)+"§"+"§";
 
       // audio 
-      if (that->intercom->audio) {
-        status += String(that->intercom->audio->isSdOK())+"§";
-        (that->intercom->audio->media() != "") ? status += String(that->intercom->audio->media().c_str()) : status += String("stop")+"§";
-        status += String(that->intercom->audio->error().c_str())+"§";
-      }
-      else {
-        status += String(false)+"§";   /// TODO : SD check without audio engine
-        status += String("stop")+"§";
-        status += String("")+"§";
-      }
+      // if (that->intercom->audio) {
+      //   status += String(that->intercom->audio->isSdOK())+"§";
+      //   (that->intercom->audio->media() != "") ? status += String(that->intercom->audio->media().c_str()) : status += String("stop")+"§";
+      //   status += String(that->intercom->audio->error().c_str())+"§";
+      // }
+      // else {
+      //   status += String(false)+"§";   /// TODO : SD check without audio engine
+      //   status += String("stop")+"§";
+      //   status += String("")+"§";
+      // }
 
       // sampler
-      if (that->intercom->audio && that->intercom->audio->sampler) status += String(that->intercom->audio->sampler->bank())+"§";
-      else status += String(0)+"§";
+      // if (that->intercom->audio && that->intercom->audio->sampler) status += String(that->intercom->audio->sampler->bank())+"§";
+      // else status += String(0)+"§";
 
       // filesync 
       // status += String(sync_size());
@@ -240,15 +240,15 @@ void K32_mqtt::dispatch(char *topic, char *payload, size_t length)
   char* command;
   command = strchr(topic, '/')+1;
   command = strchr(command, '/')+1;
+
+  Orderz* newOrder = new Orderz(command);
   
-  argX* args[8];
   int argCount = 0;
   char* p = strtok(payload, "§");
-  while(p != NULL && argCount<8) {
-    args[argCount] = new argX(p);
-    argCount++;
+  while(p != NULL) {
+    newOrder->addData(p);
     p = strtok(NULL, "§");
   }
 
-  this->intercom->dispatch(command, args, argCount);
+  this->intercom->queue( newOrder );
 }

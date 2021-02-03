@@ -7,6 +7,8 @@
 #define K32_osc_h
 
 #include "system/K32_intercom.h"
+#include "system/K32_system.h"
+#include "network/K32_wifi.h"
 
 #include <WiFi.h>
 #include <WiFiUdp.h>
@@ -24,7 +26,7 @@ struct oscconf
 
 class K32_osc {
   public:
-    K32_osc(K32_intercom *intercom);
+    K32_osc(K32_intercom *intercom, K32_system* system, K32_wifi* wifi);
 
     void start(oscconf conf);
 
@@ -48,6 +50,8 @@ class K32_osc {
     oscconf conf;
 
     K32_intercom *intercom;
+    K32_system *system;
+    K32_wifi *wifi;
 };
 
 // OSCMessage overload
