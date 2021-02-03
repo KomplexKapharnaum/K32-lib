@@ -243,7 +243,6 @@ void K32_mqtt::dispatch(char *topic, char *payload, size_t length)
 
   Orderz* newOrder = new Orderz(command);
   
-  int argCount = 0;
   char* p = strtok(payload, "§");
   while(p != NULL) {
     newOrder->addData(p);

@@ -10,6 +10,7 @@
 
 #include "K32_version.h"
 #include "K32_stm32.h"
+#include "K32_intercom.h"
 
 
 class K32_system {
@@ -99,6 +100,30 @@ class K32_system {
 
     int ledpin(int i) {
       return LEDS_PIN[hw()][i];
+    }
+
+    // EXECUTE standardized command
+    void command(Orderz* order) 
+    {
+      // RESET
+      if (strcmp(order->action, "reset") == 0) 
+          this->reset();
+
+      // SHUTDOWN
+      else if (strcmp(order->action, "shutdown") == 0) 
+          this->shutdown();
+
+      // SET CHANNEL
+      else if (strcmp(order->action, "channel") == 0)
+      {
+          if (order->count() < 1) return;
+          byte chan = order->getData(0)->toInt();
+          if (chan > 0) {
+            this->channel(chan);
+            delay(100);
+            this->reset();
+          }
+      }
     }
 
     K32_stm32 *stm32 = NULL;

@@ -60,9 +60,7 @@
         /unloop                          = set unloop
         /noteon [int] [int] [int] [bool] = sampler play: bank note (volume) (loop)
         /noteoff [int]                   = sampler stop note if playing: note
-
-
-    /midi [int] [int] [int]     = raw midi: event note velocity
+        /midi [int] [int] [int]          = raw midi: event note velocity
 
 
     /leds

@@ -190,6 +190,116 @@ String K32_audio::error() {
   return c;
 }
 
+// EXECUTE standardized command
+void K32_audio::command(Orderz* order) {
+  // PLAY MEDIA
+  if (strcmp(order->action, "play") == 0)
+  {
+      if (order->count() < 1) return;
+      this->play(order->getData(0)->toStr());
+
+      if (order->count() < 2) return;
+      this->volume(order->getData(1)->toInt());
+
+      if (order->count() < 3) return;
+      this->loop(order->getData(2)->toInt() > 0);
+  }
+
+  // SAMPLER NOTEON
+  else if (strcmp(order->action, "noteon") == 0)
+  {
+      if (order->count() < 2) return;
+      this->sampler->bank( order->getData(0)->toInt() );
+      this->play( this->sampler->path( order->getData(1)->toInt() ) );
+
+      if (order->count() < 3) return;
+      this->volume(order->getData(2)->toInt());
+
+      if (order->count() < 4) return;
+      this->loop(order->getData(3)->toInt() > 0);
+  }
+
+  // SAMPELR NOTEOFF
+  else if (strcmp(order->action, "noteoff") == 0)
+  {
+      if (order->count() < 1) return;
+      if (this->media() == this->sampler->path( order->getData(0)->toInt()) )
+      this->stop();
+  }
+
+  // STOP
+  else if (strcmp(order->action, "stop") == 0)
+  {
+      this->stop();
+  }
+
+  // VOLUME
+  else if (strcmp(order->action, "volume") == 0)
+  {
+      if (order->count() < 1) return;
+      this->volume(order->getData(0)->toInt());
+  }
+
+  // LOOP
+  else if (strcmp(order->action, "loop") == 0)
+  {
+      if (order->count() == 0) this->loop(true);
+      else this->loop(order->getData(0)->toInt() > 0);
+  }
+
+  // UNLOOP
+  else if (strcmp(order->action, "unloop") == 0)
+  {
+      this->loop(false);
+  }
+
+  // RAW MIDI
+  else if (strcmp(order->action, "midi") == 0) {
+
+    if (order->count() < 3) return;
+
+    byte event = order->getData(0)->toInt() / 16;
+    byte note  = order->getData(1)->toInt();
+    byte velo  = order->getData(2)->toInt();
+
+    // NOTE OFF
+    if (this->noteOFF && (event == 8 || (event == 9 && velo == 0)))
+    {
+        if (this->media() == this->sampler->path(note))
+        this->stop();
+    }
+
+    // NOTE ON
+    else if (event == 9)
+        this->play(this->sampler->path(note), velo);
+
+    // CC
+    else if (event == 11)
+    {
+        // LOOP
+        if (note == 1)
+        this->loop((velo > 63));
+
+        // NOTEOFF enable
+        else if (note == 2)
+        this->noteOFF = (velo < 63);
+
+        // VOLUME
+        else if (note == 7)
+        this->volume(velo);
+
+        // BANK SELECT
+        // else if (note == 32) this->sampler->bank(velo+1);
+
+        // STOP ALL
+        else if (note == 119 or note == 120)
+        this->stop();
+    }
+
+  }
+  return;
+}
+
 /*
  *   PRIVATE
  */

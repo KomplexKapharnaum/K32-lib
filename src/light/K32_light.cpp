@@ -181,7 +181,115 @@ void K32_light::fps(int f) {
 }
 
 
+void K32_light::command(Orderz* order) 
+{
+  // ALL
+  if (strcmp(order->action, "all") == 0 || strcmp(order->action, "strip") == 0 || strcmp(order->action, "pixel") == 0)
+  {
+      int offset = 0;
+      if (strcmp(order->action, "strip") == 0) offset = 1;
+      if (strcmp(order->action, "pixel") == 0) offset = 2;
 
+      if (order->count() < offset+1) return;
+      int red, green, blue, white = 0;
+      
+      red = order->getData(offset+0)->toInt();
+      if (order->count() > offset+2) {
+          green = order->getData(offset+1)->toInt();
+          blue  = order->getData(offset+2)->toInt();
+          if (order->count() > offset+3) 
+              white = order->getData(offset+3)->toInt();
+      }
+      else { green = red; blue = red; white = red; }
+
+      this->blackout();
+
+      if (strcmp(order->action, "all") == 0) 
+        this->all( red, green, blue, white );
+      else if (strcmp(order->action, "strip") == 0) 
+        this->strip(order->getData(0)->toInt())->all( red, green, blue, white );
+      else if (strcmp(order->action, "pixel") == 0) 
+        this->strip(order->getData(0)->toInt())->pix( order->getData(1)->toInt(), red, green, blue, white );
+
+      this->show();
+  }
+
+  // MASTER
+  else if (strcmp(order->action, "master") == 0)
+  {
+      int masterValue = this->anim("manu")->master();
+
+      if (strcmp(order->subaction, "less") == 0)       masterValue -= 2;
+      else if (strcmp(order->subaction, "more") == 0)  masterValue += 2;
+      else if (strcmp(order->subaction, "full") == 0)  masterValue = 255;
+      else if (strcmp(order->subaction, "fadeout") == 0) {
+      if (!this->anim("manu")->hasmod("fadeout"))
+          this->anim("manu")->mod(new K32_mod_fadeout)->name("fadeout")->at(0)->period(6000)->play();
+      else
+          this->anim("manu")->mod("fadeout")->play();
+      }
+      else if (strcmp(order->subaction, "fadein") == 0) {
+      if (!this->anim("manu")->hasmod("fadein"))
+          this->anim("manu")->mod(new K32_mod_fadein)->name("fadein")->at(0)->period(6000)->play();
+      else
+          this->anim("manu")->mod("fadein")->play();
+      }
+      else if (order->count() > 0) masterValue = order->getData(0)->toInt();
+
+      this->anim("manu")->master( masterValue );
+      this->anim("manu")->push();
+  }
+
+  // MEM (Manu)
+  else if (strcmp(order->action, "mem") == 0)
+  {
+      LOGF("DISPATCH: leds/mem %i\n",  order->getData(0)->toInt());
+
+
+      if (order->count() > 1) {
+        int masterValue = order->getData(1)->toInt();
+        this->anim("manu")->master( order->getData(1)->toInt() );
+      }
+
+      // reset order
+      if (order->count() > 0) {
+        int mem = order->getData(0)->toInt();
+        order->reset("remote/macro")->addData(mem);
+      }
+
+  }
+
+  // STOP
+  else if (strcmp(order->action, "stop") == 0 || strcmp(order->action, "off") == 0 || strcmp(order->action, "blackout") == 0)
+  {
+      // reset order
+      order->reset("remote/stop");
+  }
+
+  // MODULATORS (Manu)
+  else if (strcmp(order->action, "mod") == 0 || strcmp(order->action, "modi") == 0)
+  { 
+      if (order->count() < 1) return;
+
+      // Find MOD
+      K32_modulator* mod;
+
+      // get MOD by name
+      if (strcmp(order->action, "mod") == 0)        
+      mod = this->anim("manu")->mod( String(order->getData(0)->toStr()) );
+
+      // get MOD by id
+      else if (strcmp(order->action, "modi") == 0) 
+      mod = this->anim("manu")->mod( order->getData(0)->toInt() );
+
+      if (strcmp(order->subaction, "faster") == 0) mod->faster();
+      else if (strcmp(order->subaction, "slower") == 0) mod->slower();
+      else if (strcmp(order->subaction, "bigger") == 0) mod->bigger();
+      else if (strcmp(order->subaction, "smaller") == 0) mod->smaller();
+  }
+
+  return;
+}
 
 /*
  *   PRIVATE

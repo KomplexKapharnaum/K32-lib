@@ -285,15 +285,15 @@ void K32_osc::server( void * parameter ) {
             char path[32];
             msg.getAddress(path, 1);
 
-            Orderz* newOrder = new Orderz( strchr(path, '/')+1 );
+            // Orderz newOrder = that->intercom->newOrder( strchr(path, '/')+1 );
 
-            for(int k=0; k<msg.size(); k++) {
-              if (msg.isInt(k))         newOrder->addData(msg.getInt(k));
-              else if (msg.isString(k)) newOrder->addData(msg.getStr(k).c_str());
-              else newOrder->addData("?");
-            }
+            // for(int k=0; k<msg.size(); k++) {
+            //   if (msg.isInt(k))         newOrder->addData(msg.getInt(k));
+            //   else if (msg.isString(k)) newOrder->addData(msg.getStr(k).c_str());
+            //   else newOrder->addData("?");
+            // }
 
-            that->intercom->queue( newOrder );
+            // that->intercom->queue( newOrder );
 
           };
 

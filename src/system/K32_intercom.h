@@ -33,75 +33,86 @@ class argX
     bool strInited = false;
     
     int toInt() { 
-      if (type == STR) return -10; //return atoi(argStr); 
+      if (type == STR) return atoi(argStr); 
       return argInt;
     }
     const char* toStr() {
-      // if (type == INT && !strInited) {
-      //   char str[33];
-      //   sprintf(str, "%d", argInt);
-      //   argStr = (char *) malloc(strlen(str) + 1); 
-      //   strcpy(argStr, str);
-      //   strInited = true;
-      // }
-      // return argStr; 
-      return "ok";
+      if (type == INT && !strInited) {
+        char str[33];
+        sprintf(str, "%d", argInt);
+        argStr = (char *) malloc(strlen(str) + 1); 
+        strcpy(argStr, str);
+        strInited = true;
+      }
+      return argStr; 
     }
 
-    // ~argX() {
-    //   // if (strInited) free(argStr);
-    //   // LOG("ARG destroyed");
-    // }
+    ~argX() {
+      if (strInited) free(argStr);
+    }
 };
 
 
 class Orderz 
 {
   public:
-    Orderz(char* command) {
+    Orderz() {}
+
+    Orderz(const char* command) {
+      reset(command);
+    }
+
+    Orderz* reset(const char* command) {
+      clear();
       splitString(command, "/", 0, engine);
       splitString(command, "/", 1, action);
       splitString(command, "/", 2, subaction);
+      workable = true;
+      return this;
     }
 
     void addData(int value) {
-      // _data[_dataCount] = new argX(value);
-      _data[_dataCount] = value;
-      _dataCount++;
+      data[dataCount] = new argX(value);
+      dataCount++;
     }
 
     void addData(const char* value) {
-      // _data[_dataCount] = new argX(value);
-      _data[_dataCount] = -10;
-      _dataCount++;
+      data[dataCount] = new argX(value);
+      dataCount++;
+    }
+
+    int count() {
+      return dataCount;
     }
 
     argX* getData(int index) {
-      // if (index<_dataCount) return _data[index];
-      // else 
-      return NULL;
+      return data[index];
     }
 
-    int dataCount() {
-      return _dataCount;
+    void clear() {
+      for (int k=0; k<dataCount; k++) delete(data[k]);
+      dataCount = 0;
+      workable = false;
+    }
+
+    bool consume() {
+      bool w = workable;
+      workable = false;
+      return w;
     }
 
     char engine[8];
     char action[8];
     char subaction[8];
-
-    // ~Orderz() {
-    //   // for(int k=0; k<_dataCount; k++) delete(_data[k]);
-    //   // LOG("Orderz destroyed");
-    // }
-    int _dataCount = 0;
-    // argX* _data[16];
-    int _data[16];
+    
 
   private:
 
-
-    void splitString(char *data, const char *separator, int index, char *result)
+    bool workable = false;
+    int dataCount = 0;
+    argX* data[16];
+    
+    void splitString(const char *data, const char *separator, int index, char *result)
     {
       char input[strlen(data)];
       strcpy(input, data);
@@ -123,30 +134,26 @@ class K32_intercom
 {
   public:
     K32_intercom() {
-        orderzQueue = xQueueCreate( 10, sizeof( Orderz ) );
+        orderzQueue = xQueueCreate( 10, sizeof(Orderz) );
       }
 
     void queue(Orderz* order)
     {
-      LOGINL("COM: queue ");
-      LOGINL(order->engine);
-      LOGINL(" ");
-      LOGINL(order->getData(0)->toStr());
-      LOGINL(" ");
-      LOGINL(order->getData(1)->toStr());
-      LOG();
-
-      xQueueSend(orderzQueue, &order, portMAX_DELAY);
+      xQueueSend(orderzQueue, &(*order), portMAX_DELAY);
+      delete(order);
     }
 
-    Orderz* next() {
-      Orderz* nextOrder;
-      if ( xQueueReceive(orderzQueue, &nextOrder, portMAX_DELAY) ) return nextOrder;
-      else return NULL;
+
+    Orderz next() {
+      Orderz nextOrder;
+      xQueueReceive(orderzQueue, &nextOrder, portMAX_DELAY);
+      return nextOrder;
     }
 
   private:
     QueueHandle_t orderzQueue;
+
+    
 };
 
 

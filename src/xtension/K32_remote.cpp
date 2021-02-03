@@ -191,6 +191,20 @@ int K32_remote::getSendMacro()
   return data;
 }
 
+void K32_remote::command(Orderz* order) 
+{
+  if (strcmp(order->action, "stop") == 0 || strcmp(order->action, "off") == 0 || strcmp(order->action, "blackout") == 0)
+  {
+      this->stmBlackout();
+  }
+
+  else if (strcmp(order->action, "macro") == 0)
+  {
+      this->stmSetMacro( order->getData(0)->toInt() );
+  }
+
+}
+
 ////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////

@@ -8,6 +8,7 @@
 
 #include <HTTPClient.h>
 #include "system/K32_log.h"
+#include "system/K32_intercom.h"
 #include "K32_samplermidi.h"
 
 
@@ -39,6 +40,9 @@ class K32_audio {
     bool isPlaying();
     String media();
     String error();
+
+    // EXECUTE standardized command
+    void command(Orderz* order); 
 
     PCM51xx* pcm;
 

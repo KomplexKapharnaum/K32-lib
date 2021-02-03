@@ -15,6 +15,7 @@
 
 #include "K32_ledstrip.h"
 #include "K32_anim.h"
+#include "system/K32_intercom.h"
 
 //
 // NOTE: to be able to use a modulator, it must be included here
@@ -75,6 +76,7 @@ class K32_light {
     // Set FPS
     void fps(int f = -1);
     
+    void command(Orderz* order);
 
   private:
     

@@ -50,6 +50,8 @@ public:
   int getLampGrad();
   int getSendMacro();
 
+  void command(Orderz* order);
+
 private:
   SemaphoreHandle_t semalock;
   ioflag buttons[NB_BTN];
