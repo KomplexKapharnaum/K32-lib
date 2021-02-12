@@ -222,6 +222,8 @@ void K32_light::command(Orderz* order)
       if (strcmp(order->subaction, "less") == 0)       masterValue -= 2;
       else if (strcmp(order->subaction, "more") == 0)  masterValue += 2;
       else if (strcmp(order->subaction, "full") == 0)  masterValue = 255;
+      else if (strcmp(order->subaction, "tenmore") == 0)  masterValue += 10;
+      else if (strcmp(order->subaction, "tenless") == 0)  masterValue -= 10;
       else if (strcmp(order->subaction, "fadeout") == 0) {
       if (!this->anim("manu")->hasmod("fadeout"))
           this->anim("manu")->mod(new K32_mod_fadeout)->name("fadeout")->at(0)->period(6000)->play();
