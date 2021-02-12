@@ -8,7 +8,6 @@
 
 #include "Arduino.h"
 #include "system/K32_log.h"
-#include <ArduinoJson.h>
 #include "freertos/ringbuf.h"
 
 enum argType { INT, STR };

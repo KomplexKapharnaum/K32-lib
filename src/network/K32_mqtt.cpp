@@ -51,6 +51,7 @@ void K32_mqtt::start(mqttconf conf)
 
 
   });
+  
 
   mqttClient->onDisconnect([this](AsyncMqttClientDisconnectReason reason){
     this->connected = false;
@@ -117,6 +118,10 @@ void K32_mqtt::subscribe(mqttsub sub) {
   subscount += 1;
 }
 
+void K32_mqtt::broker(const char *_broker) {
+  this->conf.broker = _broker;
+  mqttClient->setServer(conf.broker, 1883);
+}
 
 
 // /*
