@@ -111,6 +111,11 @@ void K32_wifi::connect()
   }
 }
 
+void K32_wifi::disconnect()
+{
+  WiFi.disconnect();
+}
+
 void K32_wifi::add(const char *ssid) {
 
 }
