@@ -72,6 +72,8 @@
             /full       = set master @255
             /less       = set master -2
             /more       = set master +2
+            /tenless    = set master -10
+            /tenmore    = set master +10
             /fadeout    = fadeout in 6 seconds
             /fadein     = fadein in 6 seconds
 
