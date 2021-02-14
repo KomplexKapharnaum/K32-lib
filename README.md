@@ -30,7 +30,7 @@
     k32/c[chan]  = all device with channel [chan]
     k32/e[id]    = specific device with [id]
 
-    NB: Arguments are packed as strings in payload using § as separator
+    NB: Arguments are packed as strings in payload using | as separator
 
 
 ### OSC base path:

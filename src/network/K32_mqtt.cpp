@@ -59,7 +59,7 @@ void K32_mqtt::start(mqttconf conf)
   });
 
   mqttClient->onMessage([this](char *topic, char *payload, AsyncMqttClientMessageProperties properties, size_t len, size_t index, size_t total){
-    // LOG("Publish received.");
+    // LOG("MQTT received.");
     // LOGINL("  topic: ");
     // LOG(topic);
     // LOGINL("  qos: ");
@@ -74,7 +74,34 @@ void K32_mqtt::start(mqttconf conf)
     // LOG(index);
     // LOGINL("  total: ");
     // LOG(total);
-    this->dispatch(topic, payload, len);
+
+    char useload[len+1];
+    strncpy(useload, payload, len);
+    useload[len] = 0;
+
+    // TOPIC: k32/all/[motor]   or   k32/c[X]/[motor]   or   k32/e[X]/[motor]
+    LOGF3("MQTT: recv %s with payload(%d) %s\n", topic, len, useload);
+
+    // CUSTOM SUBSCRIBES (takes priority)
+    for (int k=0; k<subscount; k++)
+      if ( strcmp(subscriptions[k].topic, topic) == 0 ) {
+        subscriptions[k].callback(useload, len);
+      }
+
+    // FORWARD TO INTERCOM
+    char* command;
+    command = strchr(topic, '/')+1;
+    command = strchr(command, '/')+1;
+
+    Orderz* newOrder = new Orderz(command);
+    
+    char* p = strtok(useload, "|");
+    while(p != NULL) {
+      newOrder->addData(p);
+      p = strtok(NULL, "|");
+    }
+
+    this->intercom->queue( newOrder );
   });
 
   // LOOP client
@@ -173,46 +200,46 @@ void K32_mqtt::beacon(void *parameter)
       status="";
 
       // identity
-      status += String(that->system->id())+"§";
-      status += String(that->system->channel())+"§"+"§";
-      status += String(K32_VERSION)+"§"+"§";
+      status += String(that->system->id())+"|";
+      status += String(that->system->channel())+"|"+"|";
+      status += String(K32_VERSION)+"|"+"|";
 
       // wifi 
       byte mac[6];
       WiFi.macAddress(mac);
       char shortmac[16];
       sprintf(shortmac, "%02X:%02X:%02X", mac[3], mac[4], mac[5]);
-      status += String(shortmac)+"§"+"§";
-      status += String(WiFi.localIP().toString().c_str())+"§"+"§";
-      status += String(WiFi.RSSI())+"§"+"§";
+      status += String(shortmac)+"|"+"|";
+      status += String(WiFi.localIP().toString().c_str())+"|"+"|";
+      status += String(WiFi.RSSI())+"|"+"|";
 
       // (this->linkedIP) ? status += String(true) : status += String(false);
-      status += String(true)+"§"+"§";
+      status += String(true)+"|"+"|";
 
       // energy 
-      // if (that->system->stm32) status += String(that->system->stm32->battery())+"§"+"§";
-      // else status += String(0)+"§"+"§";
+      // if (that->system->stm32) status += String(that->system->stm32->battery())+"|"+"|";
+      // else status += String(0)+"|"+"|";
 
       // audio 
       // if (that->intercom->audio) {
-      //   status += String(that->intercom->audio->isSdOK())+"§";
-      //   (that->intercom->audio->media() != "") ? status += String(that->intercom->audio->media().c_str()) : status += String("stop")+"§";
-      //   status += String(that->intercom->audio->error().c_str())+"§";
+      //   status += String(that->intercom->audio->isSdOK())+"|";
+      //   (that->intercom->audio->media() != "") ? status += String(that->intercom->audio->media().c_str()) : status += String("stop")+"|";
+      //   status += String(that->intercom->audio->error().c_str())+"|";
       // }
       // else {
-      //   status += String(false)+"§";   /// TODO : SD check without audio engine
-      //   status += String("stop")+"§";
-      //   status += String("")+"§";
+      //   status += String(false)+"|";   /// TODO : SD check without audio engine
+      //   status += String("stop")+"|";
+      //   status += String("")+"|";
       // }
 
       // sampler
-      // if (that->intercom->audio && that->intercom->audio->sampler) status += String(that->intercom->audio->sampler->bank())+"§";
-      // else status += String(0)+"§";
+      // if (that->intercom->audio && that->intercom->audio->sampler) status += String(that->intercom->audio->sampler->bank())+"|";
+      // else status += String(0)+"|";
 
       // filesync 
       // status += String(sync_size());
       // status += String(sync_getStatus().c_str());
-      status += String(0)+"§";   // SYNC count files
+      status += String(0)+"|";   // SYNC count files
       status += String("");  // SYNC erro
 
       that->mqttClient->publish("k32/monitor/status", 0, true, status.c_str()) ; 
@@ -220,39 +247,4 @@ void K32_mqtt::beacon(void *parameter)
     vTaskDelay( xFrequency );
   }
   vTaskDelete(NULL);
-}
-
-
-
-void K32_mqtt::dispatch(char *topic, char *payload, size_t length)
-{
-  if (length > 0) payload[length] = 0;
-  else payload = "";
-
-  // TOPIC: k32/all/[motor]   or   k32/c[X]/[motor]   or   k32/e[X]/[motor]
-  LOGINL("MQTT: recv ");
-  LOGINL(topic);
-  LOGINL(" ");
-  LOG(payload);
-
-  // CUSTOM SUBSCRIBES (takes priority)
-  for (int k=0; k<subscount; k++)
-    if ( strcmp(subscriptions[k].topic, topic) == 0 ) {
-      subscriptions[k].callback(payload, length);
-    }
-
-  // FORWARD TO INTERCOM
-  char* command;
-  command = strchr(topic, '/')+1;
-  command = strchr(command, '/')+1;
-
-  Orderz* newOrder = new Orderz(command);
-  
-  char* p = strtok(payload, "§");
-  while(p != NULL) {
-    newOrder->addData(p);
-    p = strtok(NULL, "§");
-  }
-
-  this->intercom->queue( newOrder );
 }

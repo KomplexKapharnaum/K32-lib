@@ -50,12 +50,9 @@ class K32_mqtt {
     static void beacon( void * parameter );
 
     void onMqttDisconnect(AsyncMqttClientDisconnectReason reason);
-    void onMqttMessage(char* topic, char* payload, AsyncMqttClientMessageProperties properties, size_t len, size_t index, size_t total) ;
-
-    void dispatch(char* topic, char* payload, size_t length);
+    void onMqttMessage(char* topic, char* payload, AsyncMqttClientMessageProperties properties, size_t length, size_t index, size_t total);
 
     bool connected;
-    
 
     mqttconf conf;
     mqttsub subscriptions[MQTT_SUBS_SLOTS];
