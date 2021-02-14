@@ -30,6 +30,8 @@ class K32_wifi {
     void connect(const char* ssid, const char* password = NULL);
     void connect();
 
+    void disconnect();
+
     void add(const char* ssid);
     void add(const char* ssid, const char* password);
     void add(const char* ssid, const char* password, String ip, String mask, String gateway);
