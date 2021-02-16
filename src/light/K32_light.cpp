@@ -43,6 +43,13 @@ void K32_light::cloneStrips(int masterStrip) {
   if (masterStrip < this->_nstrips) this->_masterClone = masterStrip;
 }
 
+// link every strip to Dmx out
+void K32_light::cloneDmxStrips(bool clone_Dmx, uint8_t clone_dmx_start) {
+  if (clone_Dmx){
+    LOG("LEDS: clone DMX start");
+  }
+}
+
 // link every strip to masterStrip
 void K32_light::copyStrip(stripcopy copy) {
   if (_copyMax<LEDS_MAX_COPY) 
@@ -97,6 +104,17 @@ void K32_light::show() {
     this->_strips[this->_masterClone]->getBuffer(cloneBuffer, cloneSize);
   }
 
+  pixelColor_t* cloneDmxBuffer = NULL;
+  int cloneDmxSize = 0;
+  if (clone_Dmx){
+    cloneDmxSize = this->_strips[0]->size();
+    cloneDmxBuffer = static_cast<pixelColor_t*>(malloc(cloneDmxSize * sizeof(pixelColor_t)));
+    this->_strips[0]->getBuffer(cloneDmxBuffer, cloneDmxSize);
+    this->setMultiple(cloneDmxBuffer, cloneDmxSize, clone_dmx_start);
+    free(cloneDmxBuffer);
+  }
+    
+  
   for (int s=0; s<this->_nstrips; s++)  
   {
     // Clone from master strip
