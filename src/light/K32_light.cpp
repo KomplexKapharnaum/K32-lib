@@ -261,6 +261,18 @@ void K32_light::command(Orderz* order)
 
   }
 
+  // FRAME
+  else if (strcmp(order->action, "frame") == 0)
+  {
+      LOG("DISPATCH: leds/frame");
+
+      for(int k=0; k<order->count(); k++) {
+        int v = order->getData(k)->toInt(); 
+        if (v >= 0) this->anim("manu")->set(k, v);
+      }
+      this->anim("manu")->push();
+  }
+
   // STOP
   else if (strcmp(order->action, "stop") == 0 || strcmp(order->action, "off") == 0 || strcmp(order->action, "blackout") == 0)
   {
@@ -269,25 +281,49 @@ void K32_light::command(Orderz* order)
   }
 
   // MODULATORS (Manu)
-  else if (strcmp(order->action, "mod") == 0 || strcmp(order->action, "modi") == 0)
+  else if (strcmp(order->action, "mod") == 0 || strcmp(order->action, "modi") == 0 || strcmp(order->action, "modall") == 0) 
   { 
-      if (order->count() < 1) return;
+      int startmod = -1;
+      int stopmod = -1;
 
-      // Find MOD
-      K32_modulator* mod;
+      // select mod by name
+      if (strcmp(order->action, "mod") == 0 && order->count() >= 1) {
+        startmod = this->anim("manu")->modindex( String(order->getData(0)->toStr()) );
+        stopmod = startmod+1;
+      }
 
-      // get MOD by name
-      if (strcmp(order->action, "mod") == 0)        
-      mod = this->anim("manu")->mod( String(order->getData(0)->toStr()) );
+      // select mod by index
+      else if (strcmp(order->action, "modi") == 0  && order->count() >= 1)  {
+        startmod = order->getData(0)->toInt();
+        stopmod = startmod+1;
+      }
 
-      // get MOD by id
-      else if (strcmp(order->action, "modi") == 0) 
-      mod = this->anim("manu")->mod( order->getData(0)->toInt() );
+      // select all mod 
+      else if (strcmp(order->action, "modall") == 0) {
+        startmod = 0;
+        stopmod = ANIM_MOD_SLOTS;
+      }
 
-      if (strcmp(order->subaction, "faster") == 0) mod->faster();
-      else if (strcmp(order->subaction, "slower") == 0) mod->slower();
-      else if (strcmp(order->subaction, "bigger") == 0) mod->bigger();
-      else if (strcmp(order->subaction, "smaller") == 0) mod->smaller();
+      // no mod found selected: exit
+      if (startmod < 0) return;
+
+      // apply to mod selection
+      for(int k=startmod; k<stopmod; k++) {
+        if (!this->anim("manu")->hasmod(k)) 
+          continue;
+        
+        if (strcmp(order->subaction, "faster") == 0) 
+          this->anim("manu")->mod(k)->faster();
+
+        else if (strcmp(order->subaction, "slower") == 0) 
+          this->anim("manu")->mod(k)->slower();
+
+        else if (strcmp(order->subaction, "bigger") == 0) 
+          this->anim("manu")->mod(k)->bigger();
+
+        else if (strcmp(order->subaction, "smaller") == 0) 
+          this->anim("manu")->mod(k)->smaller();
+      }
   }
 
   return;

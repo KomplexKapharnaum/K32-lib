@@ -79,12 +79,15 @@
 
         /mem [int] [int]      = play: macro (master)
 
+        /frame [int] ...      = dmx-in frame (-1 to ignore value)
+
         /stop           = all black
         /off            = all black
         /blackout       = all black
 
         /mod  [name]    = select modulator by name (name is an argument)
         /modi [index]   = select modulator by index (index is an argument)
+        /modall         = select all modulators
             /faster     = set selected mod faster
             /slower     = set selected mod slower
             /bigger     = set selected mod bigger (increase amplitude)

@@ -83,6 +83,7 @@ void K32_mqtt::start(mqttconf conf)
     LOGF3("MQTT: recv %s with payload(%d) %s\n", topic, len, useload);
 
     // CUSTOM SUBSCRIBES (takes priority)
+    // TODO: move outside mqtt thread (-> use K32::run)
     for (int k=0; k<subscount; k++)
       if ( strcmp(subscriptions[k].topic, topic) == 0 ) {
         subscriptions[k].callback(useload, len);

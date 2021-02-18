@@ -200,6 +200,16 @@ class K32_anim {
       return false;
     }
 
+    // get mod index from name
+    int modindex( String modName) 
+    {
+      for (int k=0; k<ANIM_MOD_SLOTS; k++)
+        if(this->_modulators[k] != NULL)
+          if (this->_modulators[k]->name() == modName)
+            return k;
+      return -1;
+    }
+
     // remove Anonym only / All modulators
     K32_anim* unmod(bool all=false)
     {
