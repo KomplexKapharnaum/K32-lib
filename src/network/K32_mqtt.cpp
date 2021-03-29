@@ -151,6 +151,10 @@ void K32_mqtt::broker(const char *_broker) {
   mqttClient->setServer(conf.broker, 1883);
 }
 
+bool K32_mqtt::isConnected() {
+  return this->connected;
+}
+
 
 // /*
 //  *   PRIVATE

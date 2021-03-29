@@ -41,6 +41,8 @@ class K32_mqtt {
     void publish(const char *topic, const char *payload = (const char *)nullptr, uint8_t qos=1, bool retain=false);
     void subscribe(mqttsub sub);
 
+    bool isConnected();
+
   private:
     SemaphoreHandle_t lock;
     AsyncMqttClient* mqttClient;
