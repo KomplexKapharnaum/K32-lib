@@ -25,9 +25,9 @@ void K32_artnet::start(artnetconf conf)
   // LOOP client
   xTaskCreatePinnedToCore(this->check,    // function
                           "artnet_check", // name
-                          5000,           // stack memory
+                          10000,           // stack memory
                           (void *)this,   // args
-                          0,              // priority
+                          1,              // priority
                           NULL,           // handler
                           0);             // core
 
@@ -58,7 +58,7 @@ int K32_artnet::_lastSequence = 0;
 void K32_artnet::check(void *parameter)
 {
   K32_artnet *that = (K32_artnet *)parameter;
-  TickType_t xFrequency = pdMS_TO_TICKS(5);
+  TickType_t xFrequency = pdMS_TO_TICKS(1);
 
   while (true)
   {
