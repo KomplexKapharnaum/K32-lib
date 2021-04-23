@@ -38,9 +38,15 @@ K32_remote::K32_remote(K32_system *system, K32_mcp *mcp) : system(system), mcp(m
               5000,          // stack memory
               (void *)this,  // args
               0,             // priority
-              NULL);         // handler
+              &xHandle);         // handler
 
 };
+
+void K32_remote::stop()
+{
+  if (xHandle != NULL) vTaskDelete(xHandle);
+  xHandle = NULL;
+}
 
 void K32_remote::_semalock()
 {

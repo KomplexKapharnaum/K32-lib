@@ -15,11 +15,37 @@
  *   PUBLIC
  */
 
-K32_wifi::K32_wifi(String nameDevice) : nameDevice(nameDevice)
+K32_wifi::K32_wifi(String nameDevice, K32_intercom *intercom) : nameDevice(nameDevice), intercom(intercom)
 {
   this->lock = xSemaphoreCreateMutex();
 
   ArduinoOTA.setHostname(this->nameDevice.c_str());
+  ArduinoOTA.setTimeout(2000);
+  ArduinoOTA
+    .onStart([this]() {
+
+      String type;
+      if (ArduinoOTA.getCommand() == U_FLASH)
+        type = "sketch";
+      else // U_SPIFFS
+        type = "filesystem";
+
+      // NOTE: if updating SPIFFS this would be the place to unmount SPIFFS using SPIFFS.end()
+      LOG("OTA Start updating " + type);
+
+      this->otaProgress = true;
+      this->intercom->queue( "k32/ota" );
+    })
+    .onEnd([this]() {
+      this->otaProgress = false;
+      this->intercom->queue( "system/reset" );
+    })
+    .onError([this](ota_error_t error) {
+      this->otaProgress = false;
+      this->intercom->queue( "system/reset" );
+    });
+
+
   this->_broadcastIP = IPAddress(255, 255, 255, 255);
 
   this->_staticIP = "";
@@ -42,9 +68,14 @@ K32_wifi::K32_wifi(String nameDevice) : nameDevice(nameDevice)
               0);                // core
 };
 
-void K32_wifi::ota(bool enable)
+void K32_wifi::enableOta(bool enable)
 {
   this->otaEnable = enable;
+}
+
+bool K32_wifi::otaInProgress()
+{
+  return this->otaProgress;
 }
 
 void K32_wifi::staticIP(String ip, String gateway, String mask)
@@ -265,6 +296,8 @@ void K32_wifi::task(void *parameter)
     if (K32_wifi::didDisconnect)
     {
       LOG("WIFI: disconnected");
+      ArduinoOTA.end();
+
       K32_wifi::ok = false;
       K32_wifi::didDisconnect = false;
       that->engageConnection = -1 * KWIFI_CONNECTION_TIMEOUT;
@@ -326,8 +359,7 @@ void K32_wifi::task(void *parameter)
     }
 
     // OTA Loop
-    if (that->otaEnable && that->isConnected())
-      ArduinoOTA.handle();
+    ArduinoOTA.handle();
 
     vTaskDelay(xFrequency);
   }

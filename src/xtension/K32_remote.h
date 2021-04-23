@@ -31,6 +31,7 @@ class K32_remote
 {
 public:
   K32_remote(K32_system *system, K32_mcp *mcp);
+  void stop();
 
   void setState(remoteState state);
   void setMacroMax(uint8_t macroMax);
@@ -73,6 +74,8 @@ private:
 
   K32_system *system;
   K32_mcp *mcp;
+
+  TaskHandle_t xHandle = NULL;
 
 };
 

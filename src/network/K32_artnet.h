@@ -7,7 +7,7 @@
 #define K32_artnet_h
 
 #include <ArtnetWifi.h> //https://github.com/rstephan/ArtnetWifi
-
+#include "system/K32_intercom.h"
 
 struct artnetconf
 {
@@ -23,6 +23,7 @@ class K32_artnet {
     
     K32_artnet();
     void start(artnetconf conf);
+    void stop();
 
     void onDmx( cbPtr callback );
     void onFullDmx( cbPtr callback );
@@ -39,6 +40,8 @@ class K32_artnet {
 
     static void check(void * parameter);
     static void _onDmxFrame(uint16_t universe, uint16_t length, uint8_t sequence, uint8_t *data);
+
+    TaskHandle_t xHandle = NULL;
 
 };
 

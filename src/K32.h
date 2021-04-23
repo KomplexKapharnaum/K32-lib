@@ -217,7 +217,7 @@ public:
     {
         if (nameAlias != "")
             nameAlias = "-" + nameAlias;
-        wifi = new K32_wifi(system->name() + nameAlias);
+        wifi = new K32_wifi(system->name() + nameAlias, intercom);
     }
 
     void init_bt(String name = "")
@@ -264,6 +264,11 @@ public:
 
 
 
+
+    // DISPACTH COMMANDS from InterCom
+    /////////////////////
+
+
     void dispatch(Orderz* order) 
     {
         while (order->consume()) 
@@ -283,6 +288,28 @@ public:
             // REMOTE
             else if (strcmp(order->engine, "remote") == 0 && this->remote)  
                 this->remote->command(order);
+
+            // K32
+            else if (strcmp(order->engine, "k32") == 0 )  {
+
+                // OTA Started -> stop all !
+                if (strcmp(order->action, "ota") == 0 )
+                {
+                    LOG("OTA started, stopping all services");
+                    if (this->artnet)   this->artnet->stop();
+                    if (this->mqtt)     this->mqtt->stop();
+                    if (this->osc)      this->osc->stop();
+
+                    if (this->remote)    this->remote->stop(); 
+                    if (this->audio)    this->audio->stop(); 
+                    if (this->light)    {
+                        this->light->fps(1);
+                        this->light->stop();
+                    }
+
+                }
+
+            }
         }
         order->clear();
     }

@@ -49,7 +49,6 @@ void K32_mqtt::start(mqttconf conf)
       LOGF2("MQTT: subscribed to %s with QOS %i\n", subscriptions[k].topic, subscriptions[k].qos);
     }
 
-
   });
   
 
@@ -111,7 +110,7 @@ void K32_mqtt::start(mqttconf conf)
                           2000,         // stack memory
                           (void *)this,  // args
                           0,             // priority
-                          NULL,          // handler
+                          &xHandle1,          // handler
                           0);            // core
 
   // BEAT
@@ -121,7 +120,7 @@ void K32_mqtt::start(mqttconf conf)
                             2000,         // stack memory
                             (void *)this, // args
                             0,            // priority
-                            NULL,         // handler
+                            &xHandle2,         // handler
                             0);           // core
 
   // BEACON
@@ -131,9 +130,23 @@ void K32_mqtt::start(mqttconf conf)
                             5000,         // stack memory
                             (void *)this, // args
                             1,            // priority
-                            NULL,         // handler
+                            &xHandle3,         // handler
                             0);           // core
 
+}
+
+void K32_mqtt::stop() 
+{
+
+  if (xHandle1 != NULL) vTaskDelete(xHandle1);
+  if (xHandle2 != NULL) vTaskDelete(xHandle2);
+  if (xHandle3 != NULL) vTaskDelete(xHandle3);
+  xHandle1 = NULL;
+  xHandle2 = NULL;
+  xHandle3 = NULL;
+
+  mqttClient->disconnect();
+  
 }
 
 void K32_mqtt::publish(const char *topic, const char *payload, uint8_t qos, bool retain) {

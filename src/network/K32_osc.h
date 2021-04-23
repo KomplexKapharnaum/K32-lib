@@ -29,6 +29,7 @@ class K32_osc {
     K32_osc(K32_intercom *intercom, K32_system* system, K32_wifi* wifi);
 
     void start(oscconf conf);
+    void stop();
 
     const char* id_path();
     const char* chan_path();
@@ -52,6 +53,10 @@ class K32_osc {
     K32_intercom *intercom;
     K32_system *system;
     K32_wifi *wifi;
+
+    TaskHandle_t xHandle1 = NULL;
+    TaskHandle_t xHandle2 = NULL;
+    TaskHandle_t xHandle3 = NULL;
 };
 
 // OSCMessage overload

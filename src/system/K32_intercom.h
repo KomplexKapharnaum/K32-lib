@@ -142,6 +142,13 @@ class K32_intercom
       delete(order);
     }
 
+    void queue(const char* command)
+    {
+      Orderz* order = new Orderz(command);
+      xQueueSend(orderzQueue, &(*order), portMAX_DELAY);
+      delete(order);
+    }
+
 
     Orderz next() {
       Orderz nextOrder;

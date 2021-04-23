@@ -9,6 +9,7 @@
 #define KWIFI_CONNECTION_TIMEOUT 10000
 
 #include "system/K32_log.h"
+#include "system/K32_intercom.h"
 #include <WiFi.h>
 
 struct wificonf
@@ -18,11 +19,13 @@ struct wificonf
   const char *ip;
 };
 
+
 class K32_wifi {
   public:
-    K32_wifi(String nameDevice);
+    K32_wifi(String nameDevice, K32_intercom *intercom);
 
-    void ota(bool enable);
+    void enableOta(bool enable);
+    bool otaInProgress();
 
     void staticIP(String ip, String gateway, String mask);
     void staticIP(String ip);
@@ -56,7 +59,8 @@ class K32_wifi {
     SemaphoreHandle_t lock;
     static void task( void * parameter );
 
-    byte otaEnable = true;
+    bool otaEnable = true;
+    bool otaProgress = false;
 
     static bool ok;
     static bool didConnect;
@@ -78,6 +82,7 @@ class K32_wifi {
     void (*conCallback)(void);
     void (*disconCallback)(void);
 
+    K32_intercom *intercom;
 };
 
 

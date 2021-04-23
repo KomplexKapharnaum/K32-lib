@@ -11,7 +11,8 @@
  *   PUBLIC
  */
 
-K32_artnet::K32_artnet() {
+K32_artnet::K32_artnet()
+{
   this->artnet = new ArtnetWifi();
 }
 
@@ -28,11 +29,16 @@ void K32_artnet::start(artnetconf conf)
                           10000,           // stack memory
                           (void *)this,   // args
                           1,              // priority
-                          NULL,           // handler
+                          &xHandle,       // handler
                           0);             // core
 
 }
 
+void K32_artnet::stop()
+{
+  if (xHandle != NULL) vTaskDelete(xHandle);
+  xHandle = NULL;
+}
 
 void K32_artnet::onDmx( cbPtr callback ) 
 {

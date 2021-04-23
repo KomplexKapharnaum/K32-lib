@@ -70,7 +70,7 @@ void K32_osc::start(oscconf conf)
                   10000,               // stack memory
                   (void*)this,        // args
                   5,                  // priority
-                  NULL,              // handler
+                  &xHandle1,              // handler
                   0);                // core 
   }
 
@@ -84,7 +84,7 @@ void K32_osc::start(oscconf conf)
                   2000,              // stack memory
                   (void*)this,        // args
                   0,                  // priority
-                  NULL,              // handler
+                  &xHandle2,              // handler
                   0);                // core 
 
     // LOOP beacon
@@ -94,12 +94,25 @@ void K32_osc::start(oscconf conf)
                   2000,              // stack memory
                   (void*)this,        // args
                   1,                  // priority
-                  NULL,              // handler
+                  &xHandle3,              // handler
                   0);                // core 
   }
 
   
 };
+
+void K32_osc::stop() 
+{
+  if (xHandle1 != NULL) vTaskDelete(xHandle1);
+  if (xHandle2 != NULL) vTaskDelete(xHandle2);
+  if (xHandle3 != NULL) vTaskDelete(xHandle3);
+  xHandle1 = NULL;
+  xHandle2 = NULL;
+  xHandle3 = NULL;
+
+  this->udp->stop();
+  this->sendSock->stop();
+}
 
 
 OSCMessage K32_osc::status() {
