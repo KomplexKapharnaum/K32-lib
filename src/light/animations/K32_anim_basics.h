@@ -27,25 +27,12 @@ class K32_anim_test : public K32_anim {
     // Loop
     void draw (int data[ANIM_DATA_SLOTS])
     {
-      #ifdef ELP_Start
-      int out_r_g_b[size() * 3] = {0};
-      #endif   
-
       int stepMS = data[0];
 
       // RED
       //
 
       this->all( CRGBW{255,0,0} );
-
-      #ifdef ELP_Start
-      for (int i=0; i< size() * 3; i++) 
-        if (i%3 == 0) out_r_g_b[i] = master();
-        else out_r_g_b[i] = 0;
-
-      k32->dmx->setMultiple(out_r_g_b, size()*3, ELP_Start);
-      #endif 
-
       this->pause(stepMS);
 
 
@@ -53,52 +40,18 @@ class K32_anim_test : public K32_anim {
       //
 
       this->all( CRGBW{0,255,0} );
-
-      #ifdef ELP_Start
-      for (int i=0; i< size() * 3; i++) 
-        if (i%3 == 1) out_r_g_b[i] = master();
-        else out_r_g_b[i] = 0;
-        
-      k32->dmx->setMultiple(out_r_g_b, size()*3, ELP_Start);
-      #endif 
-
       this->pause(stepMS);
 
       // BLUE 
       //
 
       this->all( CRGBW{0,0,255} );
-
-      #ifdef ELP_Start
-      for (int i=0; i< size() * 3; i++) 
-        if (i%3 == 2) out_r_g_b[i] = master();
-        else out_r_g_b[i] = 0;
-        
-      k32->dmx->setMultiple(out_r_g_b, size()*3, ELP_Start);
-      #endif 
-
       this->pause(stepMS);
 
       // WHITE 
       //
-
       this->all( CRGBW{0,0,0,255} );
-
-      #ifdef ELP_Start
-      for (int i=0; i< size() * 3; i++) 
-        out_r_g_b[i] = master();
-        
-      k32->dmx->setMultiple(out_r_g_b, size()*3, ELP_Start);
-      #endif 
-
       this->pause(stepMS);
-
-      #ifdef ELP_Start
-      for (int i=0; i< size() * 3; i++) 
-        out_r_g_b[i] = 0;
-        
-      k32->dmx->setMultiple(out_r_g_b, size()*3, ELP_Start);
-      #endif 
 
       this->clear();
     };
