@@ -54,6 +54,7 @@ void K32_mqtt::start(mqttconf conf)
 
   mqttClient->onDisconnect([this](AsyncMqttClientDisconnectReason reason){
     this->connected = false;
+    mqttClient->disconnect();
     LOG("MQTT: disconnected");
   });
 
@@ -105,33 +106,33 @@ void K32_mqtt::start(mqttconf conf)
   });
 
   // LOOP client
-  xTaskCreatePinnedToCore(this->check,    // function
+  xTaskCreate(this->check,    // function
                           "mqtt_check", // name
                           2000,         // stack memory
                           (void *)this,  // args
                           0,             // priority
-                          &xHandle1,          // handler
-                          0);            // core
+                          &xHandle1          // handler
+                          );            // core
 
   // BEAT
   if (this->conf.beatInterval > 0)
-    xTaskCreatePinnedToCore(this->beat,   // function
+    xTaskCreate(this->beat,   // function
                             "mqtt_beat",  // server name
                             2000,         // stack memory
                             (void *)this, // args
                             0,            // priority
-                            &xHandle2,         // handler
-                            0);           // core
+                            &xHandle2         // handler
+                            );           // core
 
   // BEACON
   if (this->conf.beaconInterval > 0)
-    xTaskCreatePinnedToCore(this->beacon,   // function
+    xTaskCreate(this->beacon,   // function
                             "mqtt_beacon",  // server name
                             5000,         // stack memory
                             (void *)this, // args
-                            1,            // priority
-                            &xHandle3,         // handler
-                            0);           // core
+                            0,            // priority
+                            &xHandle3     // handler
+                            );           // core
 
 }
 
@@ -180,8 +181,10 @@ void K32_mqtt::check(void *parameter)
 
   while (true)
   {
-    if (!that->connected && that->wifi->isConnected())
+    if (!that->connected && that->wifi->isConnected()) {
         that->mqttClient->connect();
+        LOG("MQTT: reconnecting");
+    }
 
     vTaskDelay(xFrequency);
   }

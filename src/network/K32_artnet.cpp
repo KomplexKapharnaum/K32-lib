@@ -24,13 +24,13 @@ void K32_artnet::start(artnetconf conf)
   this->artnet->setArtDmxCallback( this->_onDmxFrame );
 
   // LOOP client
-  xTaskCreatePinnedToCore(this->check,    // function
+  xTaskCreate(this->check,    // function
                           "artnet_check", // name
                           10000,           // stack memory
                           (void *)this,   // args
-                          1,              // priority
-                          &xHandle,       // handler
-                          0);             // core
+                          5,              // priority
+                          &xHandle       // handler
+                          );             // core
 
 }
 
@@ -64,11 +64,12 @@ int K32_artnet::_lastSequence = 0;
 void K32_artnet::check(void *parameter)
 {
   K32_artnet *that = (K32_artnet *)parameter;
-  TickType_t xFrequency = pdMS_TO_TICKS(1);
+  TickType_t xFrequency = pdMS_TO_TICKS(2);
 
   while (true)
   {
-    while(that->artnet->read() > 0) {}
+    // while(that->artnet->read() > 0) {}
+    that->artnet->read();
     vTaskDelay(xFrequency);
   }
   vTaskDelete(NULL);

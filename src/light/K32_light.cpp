@@ -19,7 +19,7 @@ void K32_light::start() {
                     "modulate_task",            // task name
                     10000,                   // stack memory
                     (void*)this,            // args
-                    3,                      // priority
+                    4,                      // priority
                     NULL );                 // handler
 }
 
