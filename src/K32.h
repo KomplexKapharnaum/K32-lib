@@ -142,9 +142,13 @@ public:
             LOG("LIGHT: Error HWREVISION not valid please define K32_SET_HWREVISION or HW_REVISION");
     }
 
-    void init_dmx(DmxDirection dir)
+    void init_dmx(DmxDirection dir, const int pinout[3] = NULL)
     {
-        if (system->hw() >= 0 && system->hw() <= MAX_HW)
+        if (pinout != NULL) 
+        {
+            dmx = new K32_dmx(pinout, dir);
+        }
+        else if (system->hw() >= 0 && system->hw() <= MAX_HW)
         {
             if( DMX_PIN[system->hw()][0] > 0 )
                 dmx = new K32_dmx(DMX_PIN[system->hw()], dir);
