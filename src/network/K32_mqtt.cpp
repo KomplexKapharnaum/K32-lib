@@ -12,7 +12,7 @@
  *   PUBLIC
  */
 
-K32_mqtt::K32_mqtt(K32_intercom *intercom, K32_system* system, K32_wifi* wifi) : intercom(intercom), system(system), wifi(wifi) {}
+K32_mqtt::K32_mqtt(K32* k32, K32_wifi* wifi) : K32_plugin("mqtt", k32), wifi(wifi) {}
 
 
 void K32_mqtt::start(mqttconf conf)
@@ -28,8 +28,8 @@ void K32_mqtt::start(mqttconf conf)
     this->connected = true;
     LOG("MQTT: connected");
 
-    String myChan = String(this->system->channel()); 
-    String myID =String(this->system->id());
+    String myChan = String(k32->system->channel()); 
+    String myID =String(k32->system->id());
 
     this->mqttClient->subscribe(("k32/c" + myChan + "/#").c_str(), 1);
     LOG("MQTT: subscribed to " + ("k32/c" + myChan + "/#"));
@@ -41,7 +41,7 @@ void K32_mqtt::start(mqttconf conf)
     LOG("MQTT: subscribed to k32/all/#");
 
     MDNS.addService("_mqttc", "_tcp", 1883);
-    mdns_service_instance_name_set("_mqttc", "_tcp", ("MQTTc._"+this->system->name()).c_str());
+    mdns_service_instance_name_set("_mqttc", "_tcp", ("MQTTc._"+k32->system->name()).c_str());
     
     // CUSTOM subscriptions
     for (int k=0; k<subscount; k++) {
@@ -92,17 +92,22 @@ void K32_mqtt::start(mqttconf conf)
     // FORWARD TO INTERCOM
     char* command;
     command = strchr(topic, '/')+1;
-    command = strchr(command, '/')+1;
 
-    Orderz* newOrder = new Orderz(command);
+    // Orderz* newOrder = new Orderz(command);
     
-    char* p = strtok(useload, "|");
-    while(p != NULL) {
-      newOrder->addData(p);
-      p = strtok(NULL, "|");
-    }
+    // char* p = strtok(useload, "|");
+    // while(p != NULL) {
+    //   newOrder->addData(p);
+    //   p = strtok(NULL, "|");
+    // }
+    
+    // this->intercom->queue( newOrder );
 
-    this->intercom->queue( newOrder );
+    // this->intercom->queue( "super/genial" );
+
+    LOG("emit");
+    this->intercom->ee.emit("cool", nullptr);
+    LOG("done emit");
   });
 
   // LOOP client
@@ -196,7 +201,7 @@ void K32_mqtt::beat(void *parameter)
   K32_mqtt* that = (K32_mqtt*) parameter;
   TickType_t xFrequency = pdMS_TO_TICKS(that->conf.beatInterval);
 
-  String myID = String(that->system->id());
+  String myID = String(that->k32->system->id());
 
   while(true) {
     if (that->connected) {
@@ -221,8 +226,8 @@ void K32_mqtt::beacon(void *parameter)
       status="";
 
       // identity
-      status += String(that->system->id())+"|";
-      status += String(that->system->channel())+"|"+"|";
+      status += String(that->k32->system->id())+"|";
+      status += String(that->k32->system->channel())+"|"+"|";
       status += String(K32_VERSION)+"|"+"|";
 
       // wifi 
@@ -238,7 +243,7 @@ void K32_mqtt::beacon(void *parameter)
       status += String(true)+"|"+"|";
 
       // energy 
-      // if (that->system->stm32) status += String(that->system->stm32->battery())+"|"+"|";
+      // if (that->k32->system->stm32) status += String(that->k32->system->stm32->battery())+"|"+"|";
       // else status += String(0)+"|"+"|";
 
       // audio 

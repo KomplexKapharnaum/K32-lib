@@ -7,8 +7,7 @@
 #define K32_audio_h
 
 #include <HTTPClient.h>
-#include "system/K32_log.h"
-#include "system/K32_intercom.h"
+#include "core/K32_plugin.h"
 #include "K32_samplermidi.h"
 
 
@@ -22,9 +21,9 @@
 #include "PCM51xx.h"
 
 
-class K32_audio {
+class K32_audio : K32_plugin {
   public:
-    K32_audio(const int AUDIO_PIN[5], const int SD_PIN[4]);
+    K32_audio(K32* k32, const int AUDIO_PIN[5], const int SD_PIN[4]);
 
     bool isEngineOK();
     bool isSdOK();

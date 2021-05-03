@@ -6,11 +6,10 @@
 #ifndef K32_mqtt_h
 #define K32_mqtt_h
 
-#include "system/K32_intercom.h"
-#include "system/K32_system.h"
+#include "core/K32_plugin.h"
 #include "network/K32_wifi.h"
 
-#define CONFIG_ASYNC_TCP_RUNNING_CORE 0
+#define CONFIG_ASYNC_TCP_RUNNING_CORE 1
 #include <AsyncMqttClient.h>
 
 #define MQTT_SUBS_SLOTS 16
@@ -33,9 +32,9 @@ struct mqttsub
 };
 
 
-class K32_mqtt {
+class K32_mqtt : K32_plugin {
   public:
-    K32_mqtt(K32_intercom *intercom, K32_system* system, K32_wifi* wifi);
+    K32_mqtt(K32* k32, K32_wifi* wifi);
     void start(mqttconf conf);
     void stop();
     void broker(const char *_broker);

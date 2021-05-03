@@ -10,7 +10,8 @@
  *   PUBLIC
  */
 
-K32_stm32::K32_stm32(bool startListening) {
+K32_stm32::K32_stm32(K32* k32, bool startListening) : K32_plugin("stm32", k32) 
+{
   this->lock = xSemaphoreCreateMutex();
   Serial.begin(115200, SERIAL_8N1);
   Serial.setTimeout(10);
@@ -123,15 +124,6 @@ void K32_stm32::reset() {
   xSemaphoreTake(this->lock, portMAX_DELAY);
   this->send(K32_stm32_api::SET_LOAD_SWITCH, 0);
   this->send(K32_stm32_api::REQUEST_RESET);
-  delay(1000);
-  LOG("STM did not reset, going with soft reset");
-  WiFi.disconnect();
-  delay(500);
-  // Hard restart
-  esp_task_wdt_init(1,true);
-  esp_task_wdt_add(NULL);
-  while(true);
-  //
   xSemaphoreGive(this->lock);
 }
 
@@ -141,6 +133,14 @@ void K32_stm32::shutdown() {
   this->send(K32_stm32_api::SET_LOAD_SWITCH, 0);
   this->send(K32_stm32_api::SHUTDOWN);
   xSemaphoreGive(this->lock);
+}
+
+void K32_stm32::command(Orderz* order) {
+  // RESET
+  if (strcmp(order->action, "reset") == 0)  this->reset();
+
+  // SHUTDOWN
+  else if (strcmp(order->action, "shutdown") == 0)  this->shutdown();
 }
 
 

@@ -7,20 +7,16 @@
 #include "light/K32_light.h"
 
 
-K32_light::K32_light() 
+K32_light::K32_light(K32* k32) : K32_plugin("leds", k32)
 {
   digitalLeds_init();
 
-}
-
-void K32_light::start() {
-  LOG("start light");
-   xTaskCreate( this->refresh,           // function
-                    "modulate_task",            // task name
-                    10000,                   // stack memory
-                    (void*)this,            // args
-                    4,                      // priority
-                    NULL );                 // handler
+  xTaskCreate( this->refresh,           // function
+                  "modulate_task",            // task name
+                  10000,                   // stack memory
+                  (void*)this,            // args
+                  4,                      // priority
+                  NULL );                 // handler
 }
 
 void K32_light::addStrip(const int pin, led_types type, int size)

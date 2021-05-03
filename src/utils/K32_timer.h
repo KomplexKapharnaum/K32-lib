@@ -20,7 +20,6 @@ class K32_timer : public Timer {
               (void *)this,                 // args
               0,                            // priority
               NULL);                        // handler
-
         }
 
         static void task(void *parameter)
@@ -32,7 +31,6 @@ class K32_timer : public Timer {
             }
             vTaskDelete(NULL);
         }
-
 };
 
 #endif

@@ -7,8 +7,11 @@
 #define K32_intercom_h
 
 #include "Arduino.h"
+#include "core/K32_order.h"
 #include "system/K32_log.h"
 #include "freertos/ringbuf.h"
+
+// #include <EventEmitter.h>
 
 enum argType { INT, STR };
 class argX
@@ -126,27 +129,30 @@ class Orderz
     }
 };
 
-
-
-
 class K32_intercom 
 {
   public:
     K32_intercom() {
-        orderzQueue = xQueueCreate( 10, sizeof(Orderz) );
+        orderzQueue = xQueueCreate( 10, sizeof(Orderz *) );
       }
 
     void queue(Orderz* order)
     {
-      xQueueSend(orderzQueue, &(*order), portMAX_DELAY);
+      LOG("ICOM: new order");
+      xQueueSend(orderzQueue, ( void * ) &order, portMAX_DELAY);
+      LOG("ICOM: added to queue");
       delete(order);
+      LOG("ICOM: deleted");
     }
 
     void queue(const char* command)
     {
       Orderz* order = new Orderz(command);
-      xQueueSend(orderzQueue, &(*order), portMAX_DELAY);
+      LOG("ICOM: new order");
+      xQueueSend(orderzQueue, ( void * ) &order, portMAX_DELAY);
+      LOG("ICOM: added to queue");
       delete(order);
+      LOG("ICOM: deleted");
     }
 
 
@@ -156,9 +162,10 @@ class K32_intercom
       return nextOrder;
     }
 
+    // EventEmitter<Orderz*> ee;
+
   private:
     QueueHandle_t orderzQueue;
-
     
 };
 

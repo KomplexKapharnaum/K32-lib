@@ -7,7 +7,6 @@
 #define K32_artnet_h
 
 #include <ArtnetWifi.h> //https://github.com/rstephan/ArtnetWifi
-#include "system/K32_intercom.h"
 
 struct artnetconf
 {

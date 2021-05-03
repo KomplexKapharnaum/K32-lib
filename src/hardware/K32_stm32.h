@@ -9,14 +9,12 @@
 #define STM32_CHECK 200           // task loop in ms
 #define STM32_CHECK_BATT 5000     // check battery in ms
 
-#include "system/K32_log.h"
+#include "core/K32_plugin.h"
 #include "K32_stm32_api.h"
-#include "esp_task_wdt.h"
-#include <WiFi.h>
 
-class K32_stm32 {
+class K32_stm32 : K32_plugin {
   public:
-    K32_stm32(bool startListening = true);
+    K32_stm32(K32* k32, bool startListening = true);
 
     void listen();      // Start monitoring thread
     void listen(bool btn, bool battery);      // Start monitoring thread (configurable)
@@ -43,6 +41,8 @@ class K32_stm32 {
     void send(K32_stm32_api::CommandType cmd, int arg);
     void send(K32_stm32_api::CommandType cmd);
     long get(K32_stm32_api::CommandType cmd);
+
+    void command(Orderz* order);
 
   private:
     SemaphoreHandle_t lock;

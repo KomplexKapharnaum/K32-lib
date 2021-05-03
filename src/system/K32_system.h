@@ -7,20 +7,21 @@
 #define K32_system_h
 
 #include <Preferences.h>
+#include "esp_task_wdt.h"
+
+#include "core/K32_module.h"
 
 #include "K32_version.h"
-#include "K32_stm32.h"
-#include "K32_intercom.h"
 
-
-class K32_system {
+class K32_system : K32_module {
   public:
-    K32_system() {
+    K32_system() : K32_module("system") {
       this->lock = xSemaphoreCreateMutex();
 
       xSemaphoreTake(this->lock, portMAX_DELAY);
       preferences.begin("k32-app", false);
       xSemaphoreGive(this->lock);
+
     };
 
     int id() {
@@ -87,15 +88,25 @@ class K32_system {
       xSemaphoreTake(this->lock, portMAX_DELAY);
       preferences.end();
       xSemaphoreGive(this->lock);
-      if (stm32) stm32->reset();
-      while (true);
+      intercom->queue( "stm32/reset" );
+
+      delay(10);
+      ESP.restart();
+
+      delay(10);
+      LOG("ESP did not reset, going with soft reset");
+      // Hard restart
+      esp_task_wdt_init(1,true);
+      esp_task_wdt_add(NULL);
+      while(true);
+      //
     }
 
     void shutdown() {
       xSemaphoreTake(this->lock, portMAX_DELAY);
       preferences.end();
       xSemaphoreGive(this->lock);
-      if (stm32) stm32->shutdown();
+      intercom->queue( "stm32/shutdown" );
     }
 
     int ledpin(int i) {
@@ -125,9 +136,6 @@ class K32_system {
           }
       }
     }
-
-    K32_stm32 *stm32 = NULL;
-  
     Preferences preferences;
     
   private:

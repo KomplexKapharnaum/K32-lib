@@ -8,8 +8,8 @@ Released under GPL v3.0
 
 #include "system/K32_log.h"
 #include "xtension/K32_mcp.h"
-#include "system/K32_stm32.h"
-#include "system/K32_stm32_api.h"
+#include "hardware/K32_stm32.h"
+#include "hardware/K32_stm32_api.h"
 #include "Arduino.h"
 
 #define CALIB_BUTTON 7

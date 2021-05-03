@@ -50,12 +50,15 @@ String K32_oscmsg::getStr(int position) {
  *   PUBLIC
  */
 
-K32_osc::K32_osc(K32_intercom *intercom, K32_system* system, K32_wifi* wifi) : intercom(intercom), system(system), wifi(wifi) {}
-
-
-void K32_osc::start(oscconf conf)
-{ 
+K32_osc::K32_osc(K32* k32, K32_wifi* wifi, oscconf conf) : K32_plugin("osc", k32), wifi(wifi) 
+{
   this->conf = conf;
+  this->start();
+}
+
+
+void K32_osc::start()
+{ 
   this->lock = xSemaphoreCreateMutex();
   this->udp = new WiFiUDP();
   this->sendSock = new WiFiUDP();
@@ -120,8 +123,8 @@ OSCMessage K32_osc::status() {
     OSCMessage msg("/status");
 
     // identity
-    msg.add(system->id());
-    msg.add(system->channel());
+    msg.add(k32->system->id());
+    msg.add(k32->system->channel());
     msg.add(K32_VERSION);
 
     // wifi 
@@ -233,15 +236,15 @@ void K32_osc::server( void * parameter ) {
    while(!that->wifi->isConnected()) delay( 300 );
    
    MDNS.addService("_osc", "_udp", that->conf.port_in);
-   mdns_service_instance_name_set("_osc", "_udp", ("OSC._"+that->system->name()).c_str());
+   mdns_service_instance_name_set("_osc", "_udp", ("OSC._"+that->k32->system->name()).c_str());
 
    LOGF("OSC: listening on port %d\n", that->conf.port_in);
 
    char idpath[8];
-   sprintf(idpath, "/e%u", that->system->id()); 
+   sprintf(idpath, "/e%u", that->k32->system->id()); 
 
    char chpath[8];
-   sprintf(chpath, "/c%u", that->system->channel());
+   sprintf(chpath, "/c%u", that->k32->system->channel());
 
    while(true) {
      

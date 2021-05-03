@@ -7,18 +7,129 @@
 #define K32_h
 
 #include <Arduino.h>
-#include <BluetoothSerial.h>
 
+#include "system/K32_log.h"
+#include "core/K32_module.h"
+#include "core/K32_intercom.h"
+
+#include "system/K32_system.h"
+
+
+
+class K32
+{
+private:
+    K32_module* _modules[32];
+    int _moduleCount = 0;
+
+public:
+
+    K32_system *system;
+    K32_intercom *intercom;
+
+    K32()
+    {
+        // LOG
+        LOGSETUP();
+        LOG("\n\n.:: K32 ::.");
+        
+        // SYSTEM
+        intercom = new K32_intercom();
+
+        // SYSTEM
+        system = new K32_system();
+        attach((K32_module*)system);
+
+
+        // Save NODE_ID in flash
+        #ifdef K32_SET_NODEID
+            system->id(K32_SET_NODEID);
+            system->channel(15);
+        #endif
+
+        LOGINL("Node id: ");
+        LOG(system->id());
+
+        // Save HW_REVISION in flash
+        #ifdef K32_SET_HWREVISION
+            system->hw(K32_SET_HWREVISION);
+        #elif HW_REVISION
+            system->hw(HW_REVISION);
+        #endif
+
+        LOGINL("HW rev: ");
+        LOG(system->hw());
+
+        LOG("");
+        delay(100);
+
+        // RUN Thread
+        xTaskCreate( this->run,       // function
+                  "run",              // name
+                  10000,              // stack memory
+                  (void*)this,        // args
+                  5,                  // priority
+                  NULL);
+    }
+
+    void attach(K32_module* module) {
+        _modules[_moduleCount] = module;
+        _moduleCount += 1;
+
+        module->link(intercom);
+    }
+    
+    K32_module* module(String name) {
+        for (int i=0; i<_moduleCount; i++)
+            if (_modules[i]->name() == name) return _modules[i];
+        LOG("K32: module "+name+" not found..");
+        return new K32_module("");
+    }
+
+    // DISPACTH COMMANDS from InterCom
+    /////////////////////
+
+
+    void dispatch(Orderz* order) 
+    {
+        while (order->consume()) {
+            module(order->engine)->execute(order);
+            // this->intercom->ee.emit(order->engine, order);
+        }
+        order->clear();
+    }
+
+    static void run( void * parameter ) 
+    {   
+        K32* that = (K32*) parameter;
+
+        while(true) 
+        { 
+            LOG("K32: waiting order");
+            Orderz nextOrder = that->intercom->next();
+            LOG("K32: order obtained");
+            that->dispatch(&nextOrder);
+            LOG("K32: order dispatched");
+        }
+        vTaskDelete(NULL);
+    }
+
+    
+
+};
+
+
+#ifdef ZZZ
 
 #define min(m, n) ((m) < (n) ? (m) : (n))
 #define max(m, n) ((m) > (n) ? (m) : (n))
 
+#include <BluetoothSerial.h>
+
 #include "K32_version.h"
-#include "system/K32_timer.h"
+
 #include "xtension/K32_power.h"
-#include "system/K32_log.h"
-#include "system/K32_system.h"
-#include "system/K32_intercom.h"
+#include "system/K32_timer.h"
 #include "system/K32_sd.h"
 #include "system/K32_pwm.h"
 #include "audio/K32_audio.h"
@@ -80,8 +191,6 @@ public:
 
 
     K32_timer* timer;
-    K32_system *system      = NULL;
-    K32_intercom *intercom  = NULL;
     K32_wifi *wifi          = NULL;
     K32_bluetooth *bt       = NULL;
     K32_sd *sd              = NULL;
@@ -279,19 +388,19 @@ public:
         {    
             // SYSTEM
             if (strcmp(order->engine, "system") == 0) 
-                this->system->command(order);
+                this->system->execute(order);
 
             // AUDIO
             else if (strcmp(order->engine, "audio") == 0 && this->audio) 
-                this->audio->command(order);
+                this->audio->execute(order);
 
             // LEDS
             else if (strcmp(order->engine, "leds") == 0 && this->light)  
-                this->light->command(order);
+                this->light->execute(order);
 
             // REMOTE
             else if (strcmp(order->engine, "remote") == 0 && this->remote)  
-                this->remote->command(order);
+                this->remote->execute(order);
 
             // K32
             else if (strcmp(order->engine, "k32") == 0 )  {
@@ -334,4 +443,5 @@ public:
 
 };
 
+#endif
 #endif

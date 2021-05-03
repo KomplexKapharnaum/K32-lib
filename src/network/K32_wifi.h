@@ -8,8 +8,7 @@
 
 #define KWIFI_CONNECTION_TIMEOUT 10000
 
-#include "system/K32_log.h"
-#include "system/K32_intercom.h"
+#include "core/K32_plugin.h"
 #include <WiFi.h>
 
 struct wificonf
@@ -20,9 +19,9 @@ struct wificonf
 };
 
 
-class K32_wifi {
+class K32_wifi : K32_plugin {
   public:
-    K32_wifi(String nameDevice, K32_intercom *intercom);
+    K32_wifi(K32* k32, String nameDevice);
 
     void enableOta(bool enable);
     bool otaInProgress();

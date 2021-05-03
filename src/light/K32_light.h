@@ -13,9 +13,9 @@
 #define LEDS_MAX_COPY     16
 
 
+#include "core/K32_plugin.h"
 #include "K32_ledstrip.h"
 #include "K32_anim.h"
-#include "system/K32_intercom.h"
 
 //
 // NOTE: to be able to use a modulator, it must be included here
@@ -41,11 +41,9 @@ struct stripcopy
 
 
 
-class K32_light {
+class K32_light : K32_plugin {
   public:
-    K32_light();
-
-    void start();
+    K32_light(K32* k32);
     
     // STRIPS
     //

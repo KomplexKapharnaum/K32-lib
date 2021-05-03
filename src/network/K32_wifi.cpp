@@ -15,7 +15,7 @@
  *   PUBLIC
  */
 
-K32_wifi::K32_wifi(String nameDevice, K32_intercom *intercom) : nameDevice(nameDevice), intercom(intercom)
+K32_wifi::K32_wifi(K32* k32, String nameDevice) : K32_plugin("wifi", k32), nameDevice(nameDevice)
 {
   this->lock = xSemaphoreCreateMutex();
 

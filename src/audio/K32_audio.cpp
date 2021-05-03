@@ -15,7 +15,7 @@
 #include "AudioGeneratorAAC.h"
 
 
-K32_audio::K32_audio(const int AUDIO_PIN[5], const int SD_PIN[4]) {
+K32_audio::K32_audio(K32* k32, const int AUDIO_PIN[5], const int SD_PIN[4])  : K32_plugin("audio", k32) {
   LOG("AUDIO: init");
 
   this->lock = xSemaphoreCreateMutex();

@@ -6,7 +6,7 @@
 #ifndef K32_osc_h
 #define K32_osc_h
 
-#include "system/K32_intercom.h"
+#include "core/K32_plugin.h"
 #include "system/K32_system.h"
 #include "network/K32_wifi.h"
 
@@ -24,11 +24,11 @@ struct oscconf
   int beaconInterval;
 };
 
-class K32_osc {
+class K32_osc : K32_plugin {
   public:
-    K32_osc(K32_intercom *intercom, K32_system* system, K32_wifi* wifi);
+    K32_osc(K32* k32, K32_wifi* wifi, oscconf conf);
 
-    void start(oscconf conf);
+    void start();
     void stop();
 
     const char* id_path();
