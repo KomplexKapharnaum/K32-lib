@@ -1,0 +1,51 @@
+{
+    "name": "K32-network",
+    "version": "3.0.0",
+    "keywords": "ESP32 KXKM",
+    "description": "ESP32 K-framework",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/KomplexKapharnaum/K32-network"
+    },
+    "authors": [{
+            "name": "Thomas BOHL",
+            "email": "t_bohl@kxkm.net",
+            "maintainer": true
+        },
+        {
+            "name": "Richard FONTAINE"
+        },
+        {
+            "name": "Clément Gangnieux"
+        },
+        {
+            "name": "Tom MAGNIER"
+        }
+    ],
+    "homepage": "https://github.com/KomplexKapharnaum/K32-network",
+    "frameworks": "Arduino",
+    "examples": [
+        "examples/*/*.ino"
+    ],
+    "dependencies": [{
+            "platforms": "espressif32",
+            "name": "OSC",
+            "version": "https://github.com/CNMAT/OSC.git"
+        },
+        {
+            "platforms": "espressif32",
+            "name": "ArtNet",
+            "version": "https://github.com/hideakitai/ArtNet"
+        },
+        {
+            "platforms": "espressif32",
+            "name": "ESP32Ping",
+            "version": "https://github.com/marian-craciunescu/ESP32Ping"
+        },
+        {
+            "platforms": "espressif32",
+            "name": "K32-core",
+            "version": "https://github.com/KomplexKapharnaum/K32-core"
+        }
+    ]
+}
