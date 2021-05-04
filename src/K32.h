@@ -39,9 +39,11 @@ class K32
 public:
     K32()
     {
+        // SERIAL
+        Serial.begin(115200, SERIAL_8N1);
+        Serial.setTimeout(10);
 
         // LOG
-        LOGSETUP();
         LOG("\n\n.:: K32 ::.");
 
         // SYSTEM
