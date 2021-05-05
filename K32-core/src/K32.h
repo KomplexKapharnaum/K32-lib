@@ -8,6 +8,7 @@
 
 #include <Arduino.h>
 
+#include "K32_version.h"
 #include "K32_system.h"
 #include "utils/K32_timer.h"
 

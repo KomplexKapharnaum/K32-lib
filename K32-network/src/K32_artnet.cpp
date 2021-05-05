@@ -25,7 +25,7 @@ void K32_artnet::start()
                           "artnet_check", // name
                           10000,           // stack memory
                           (void *)this,   // args
-                          5,              // priority
+                          10,              // priority
                           &xHandle       // handler
                           );             // core
 
@@ -47,6 +47,9 @@ void K32_artnet::onFullDmx( cbPtr callback )
   this->fullCallback = callback;
 }
 
+void K32_artnet::command(Orderz* order) {
+  // TODO: orderz ARTNET
+}
 
 artnetconf K32_artnet::conf = {0, 0, 0};    
 K32_artnet::cbPtr K32_artnet::frameCallback = nullptr;

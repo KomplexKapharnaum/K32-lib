@@ -34,6 +34,8 @@ class K32_artnet : K32_plugin {
     static cbPtr fullCallback;
     static int _lastSequence;
 
+    void command(Orderz* order);
+    
   private:
 
     ArtnetWiFiReceiver* artnet;

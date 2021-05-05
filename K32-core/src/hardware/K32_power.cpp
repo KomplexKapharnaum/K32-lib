@@ -13,29 +13,24 @@ Preferences power_prefs;
  *   PUBLIC
  */
 
-K32_power::K32_power(K32_stm32 *stm32, K32_mcp *mcp, batteryType type, bool autoGauge, int fakeExtCurrent, const int CURRENT_SENSOR_PIN)
+K32_power::K32_power(K32_stm32 *stm32, batteryType type, bool autoGauge)
 {
+  this->_stm32 = stm32;
+
   LOG("POWER : init");
 
   this->lock = xSemaphoreCreateMutex();
   this->battType = type;
-  this->currentPin = CURRENT_SENSOR_PIN;
   
-  this->_stm32 = stm32;
-  this->_mcp = mcp;
-  this->_fakeExtCurrent = fakeExtCurrent;
-
   this->autoGauge = autoGauge;
-  this->adaptiveGaugeOn = autoGauge;
+  this->setAdaptiveGauge(autoGauge);
+
+  this->_fakeExternalCurrent = 0;
+  this->currentPin = -1;
 
   // Calib button
   if (this->_mcp)
     this->_mcp->input(CALIB_BUTTON);
-
-  // Set Current factor depending on HW specifications
-  if (CURRENT_SENSOR_TYPE == 10) this->currentFactor = 57;        // original: 60
-  else if (CURRENT_SENSOR_TYPE == 25) this->currentFactor = 24;
-  else if (CURRENT_SENSOR_TYPE == 11) this->currentFactor = 110;
 
   // Set Current offset
   power_prefs.begin("k32-power", false);
@@ -45,32 +40,45 @@ K32_power::K32_power(K32_stm32 *stm32, K32_mcp *mcp, batteryType type, bool auto
   power_prefs.end(); 
 
   // Start main task
-  if (CURRENT_SENSOR_TYPE > 0)
+  if (this->_stm32)
     xTaskCreate(this->task,
                 "power_task",
                 5000,
                 (void *)this,
                 0, // priority
                 &t_handle); 
+  
+  else LOG("POWER: disabled since no stm32 available");
 };
+
+
+
+void K32_power::setExternalCurrentSensor(sensorType sensor, const int pin, int fakeExternalCurrent) 
+{
+  this->currentFactor = sensor;
+  this->currentPin = pin;
+  this->_fakeExternalCurrent = fakeExternalCurrent;
+}
+
+void K32_power::setMCPcalib(K32_mcp *mcp) {
+    this->_mcp = mcp;
+}
 
 int K32_power::current()
 {
   int a = 0;
-  if (CURRENT_SENSOR_TYPE > 0 && !this->_error) {
+  if (!this->_error) {
     this->_lock();
     a = this->_current;
     this->_unlock();
   }
-  else a = this->_stm32->current();
   return a;
 }
 
 int K32_power::power()
 {
-  int v = this->_stm32->voltage();
-  if (v > 0) return this->current() * v / 1000; // Power in mW
-  else return 0;
+  if (this->_stm32) return this->current() * this->_stm32->voltage() / 1000; // Power in mW
+  else  return 0; 
 }
 
 int K32_power::energy()
@@ -169,7 +177,7 @@ void K32_power::setAdaptiveGauge(bool adaptiveOn)
   LOG("POWER : Switch off adaptive gauge");
 
   // OFF -> set FAKE CURRENT
-  this->_current = this->_fakeExtCurrent;
+  this->_current = this->_fakeExternalCurrent;
   this->firstKick = true;
   this->updateCustom();
 }
@@ -192,19 +200,10 @@ void K32_power::_unlock()
 }
 
 
-// int K32_power::voltageBreak(uint8_t i) 
-// {
-//   int minVoltage;
-//   minVoltage = VOLTAGE[this->battType][i] * this->nbOfCell;
-//   if (i < 6) minVoltage = minVoltage *(100-VOLTAGE_DROP_PCT)/100;
-//   int v = VOLTAGE[this->battType][i] * this->nbOfCell - this->batteryRint * this->current();
-//   if (v < minVoltage) v = minVoltage;
-//   return v;
-// }
-
-
 void K32_power::updateCustom()
 {
+    if (!this->_stm32) return;
+
     if (this->_current < 0) return; // Weird value
 
     if (this->firstKick || abs(this->_current - this->currentRecord) > 500 ) // If current changed significantly
@@ -236,18 +235,45 @@ void K32_power::updateCustom()
 }
 
 
-int K32_power::measure(int samples)
+int K32_power::rawExtMeasure(int samples)
 {
-  /* Warning this function is blocking for ~100ms ! */
-  long meas = 0; 
-  for (int i =0; i<samples; i++)
+  int meas = 0;
+  if (this->currentPin > 0)
   {
-    meas += analogRead(this->currentPin);
-    vTaskDelay( pdMS_TO_TICKS(2) );
+    /* Warning this function is blocking for ~100ms ! */
+    for (int i =0; i<samples; i++)
+    {
+      meas += analogRead(this->currentPin);
+      vTaskDelay( pdMS_TO_TICKS(2) );
+    }
+    meas = meas / samples;
   }
-  meas = meas / samples ; 
+  
   return meas;
 }
+
+int K32_power::extCurrent()
+{
+  int meas = this->rawExtMeasure();
+
+  // Valid measure
+  if (meas > 200 && meas < 20000) 
+  {
+    if (this->_error) LOG("POWER: Current sensor is back !");
+    this->_error = false; 
+    meas = (meas - this->measureOffset) * 1000 / this->currentFactor;
+  }
+
+  // Invalid measure -> use fake current value
+  else {
+    if (!this->_error) LOG("POWER: Current sensor lost.. fallback to STM32 ");
+    this->_error = true; 
+    meas = this->_fakeExternalCurrent;  // Sensor is down, use fakecurrent..
+  }
+
+  return meas;
+}
+
 
 
 void K32_power::task(void *parameter)
@@ -284,27 +310,10 @@ void K32_power::task(void *parameter)
 
   // CURRENT MEASURE
   //
-  TickType_t xFrequency = pdMS_TO_TICKS(POWER_CHECK);
+  TickType_t xFrequency = pdMS_TO_TICKS(1000);
   int currentMeas = 0;
   while (true)
   { 
-    // Read sensor
-    currentMeas = that->measure();
-
-    /* Check sensor state */ 
-    if (currentMeas < 200)
-    {
-      if (!that->_error) LOG("POWER: Current sensor not plugged. Entering error mode ");
-      that->_error = true ; 
-    }
-    
-    /* Sensor in ERROR: check again */
-    if (that->_error && currentMeas > 400) 
-    {
-      LOG("POWER: Sensor is back !");
-      that->_error = false ; 
-    }
-
     /* Check CALIB button */
     if (that->_mcp) 
     {
@@ -313,42 +322,35 @@ void K32_power::task(void *parameter)
       // Long Push -> Offset
       if (calibBtn == MCPIO_PRESS_LONG || calibBtn == MCPIO_RELEASE_LONG) 
       {  
+        LOGF2("POWER: Long push on calibration button %d %d \n", currentMeas, that->_stm32->current());
         that->_stm32->switchLoad(false);
         vTaskDelay(pdMS_TO_TICKS(1000));
-        currentMeas = that->measure(500);
-        LOGF2("POWER: Long push on calibration button %d %d \n", currentMeas, that->_stm32->current());
-        that->calibOffset(currentMeas);
+        int raw = that->rawExtMeasure(500);
+        that->calibOffset(raw);
         that->_mcp->consume(CALIB_BUTTON);
         that->_stm32->switchLoad(true);
         vTaskDelay(pdMS_TO_TICKS(1000));
-        currentMeas = that->measure();
       }
     }
+    
 
-    /* Calculate EXT current */ 
-    int a = CURRENT_ERROR_OFFSET; // Curent in mA
-    if (!that->_error) a += (currentMeas - that->measureOffset) * 1000 / that->currentFactor; // external Measure
-    else a += that->_stm32->current() + that->_fakeExtCurrent; // internal Measure
+    // Error offset
+    currentMeas = CURRENT_ERROR_OFFSET; 
 
-    /* Check Current value */ 
-    if(abs(a)>20000) 
-    {
-      LOGF("POWER: Error with current sensor value %d mA", a); 
-      that->_error = true;
-      that->setAdaptiveGauge(false);
-      continue;   /* Loop again */
-    }
+    // STM32 sensor
+    if (that->_stm32) currentMeas += that->_stm32->current();
+    
+    // External Sensor
+    currentMeas += that->extCurrent();
 
     /* Set current */
     that->_lock(); 
-    that->_current = a;
-    // LOGF3("POWER: Current calc=%d stm32=%d pct=%d \n", a, that->_stm32->current(), that->_stm32->battery());
+    that->_current = currentMeas;
     that->_unlock();
     
     /* Update Adaptative profile */ 
     if(that->adaptiveGaugeOn) that->updateCustom(); 
     
     vTaskDelay(xFrequency);  
-
   }
 }

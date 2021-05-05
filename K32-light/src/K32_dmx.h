@@ -15,21 +15,32 @@ class K32_dmx {
   public:
     K32_dmx(const int DMX_PIN[3], DmxDirection dir) {
       
+      // DIR pin
+      if (DMX_PIN[0] > 0) {
+        pinMode(DMX_PIN[0], OUTPUT);
+        digitalWrite(DMX_PIN[0], (dir == DMX_OUT)?HIGH:LOW);
+      }
+      
+      // DMX out
       if (dir == DMX_OUT) 
       {
-        pinMode(DMX_PIN[0], OUTPUT);
-        digitalWrite(DMX_PIN[0], HIGH);
-
-        pinMode(DMX_PIN[1], OUTPUT);
-        ESP32DMX.startOutput(DMX_PIN[1]);
+        if (DMX_PIN[1] > 0) {
+          pinMode(DMX_PIN[1], OUTPUT);
+          ESP32DMX.startOutput(DMX_PIN[1]);
+          outputOK = true;
+        }
+        else LOG("DMX: invalid OUTPUT pin, DMXout disabled !");
       }
-      else  // TODO: implement dmx in !
-      {
-        pinMode(DMX_PIN[0], OUTPUT);
-        digitalWrite(DMX_PIN[0], LOW);
 
-        pinMode(DMX_PIN[2], INPUT);
-        // ESP32DMX.startInput(DMX_PIN[2]);   
+      // DMX in  // TODO: implement dmx in !
+      else 
+      {
+        if (DMX_PIN[2] > 0) {
+          // pinMode(DMX_PIN[2], INPUT);
+          // ESP32DMX.startInput(DMX_PIN[2]);
+          // inputOK = true;   
+        }
+        else LOG("DMX: invalid INPUT pin, DMXin disabled !");
       }
       
 
@@ -38,25 +49,30 @@ class K32_dmx {
     // SET one value
     K32_dmx* set(int index, int value) 
     {
-      xSemaphoreTake(ESP32DMX.lxDataLock, portMAX_DELAY);
-      ESP32DMX.setSlot(index, value);
-      xSemaphoreGive(ESP32DMX.lxDataLock);
+      if (outputOK) {
+        xSemaphoreTake(ESP32DMX.lxDataLock, portMAX_DELAY);
+        ESP32DMX.setSlot(index, value);
+        xSemaphoreGive(ESP32DMX.lxDataLock);
+      }
       return this;
     }
 
     // SET multiple values
     K32_dmx* setMultiple(int* values, int size, int offsetAdr = 1) 
     {
-      xSemaphoreTake(ESP32DMX.lxDataLock, portMAX_DELAY);
-      for (int i = 0; i < size; i++)
-        ESP32DMX.setSlot(i+offsetAdr, values[i]);
-      xSemaphoreGive(ESP32DMX.lxDataLock);
+      // if (outputOK) {
+      //   xSemaphoreTake(ESP32DMX.lxDataLock, portMAX_DELAY);
+      //   for (int i = 0; i < size; i++)
+      //     ESP32DMX.setSlot(i+offsetAdr, values[i]);
+      //   xSemaphoreGive(ESP32DMX.lxDataLock);
+      // }
       return this;
     }
 
 
   private:
-
+    bool outputOK = false;
+    bool inputOK = false;
 };
 
 #endif

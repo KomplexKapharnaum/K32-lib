@@ -14,8 +14,8 @@ Released under GPL v3.0
 #define DEBUG_lib_btn 1
 
 
-#include "K32_system.h"
-#include "hardware/K32_mcp.h"
+#include <class/K32_plugin.h>
+#include <hardware/K32_mcp.h>
 
 
 enum remoteState
@@ -26,10 +26,10 @@ enum remoteState
   REMOTE_MANU_LAMP        // 3
 };
 
-class K32_remote
+class K32_remote : K32_plugin
 {
 public:
-  K32_remote(K32_system *system, K32_mcp *mcp);
+  K32_remote(K32* k32, K32_mcp *mcp);
   void stop();
 
   void setState(remoteState state);
@@ -71,7 +71,6 @@ private:
 
   static void task(void *parameter);
 
-  K32_system *system;
   K32_mcp *mcp;
 
   TaskHandle_t xHandle = NULL;

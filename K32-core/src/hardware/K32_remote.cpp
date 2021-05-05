@@ -16,8 +16,9 @@
 
 ////////////////////////////////////////////////////////////////////////////////////////
 
-K32_remote::K32_remote(K32_system *system, K32_mcp *mcp) : system(system), mcp(mcp)
+K32_remote::K32_remote(K32* k32, K32_mcp *mcp) : K32_plugin("remote", k32)
 {
+  this->mcp = mcp;
   LOG("REMOTE: init");
 
   this->semalock = xSemaphoreCreateMutex();
@@ -30,7 +31,7 @@ K32_remote::K32_remote(K32_system *system, K32_mcp *mcp) : system(system), mcp(m
       this->mcp->input(i);
 
   // load LampGrad
-  this->_lamp_grad = this->system->preferences.getUInt("lamp_grad", 127);
+  this->_lamp_grad = k32->system->preferences.getUInt("lamp_grad", 127);
 
   // Start main task
   xTaskCreate(this->task,    // function
@@ -69,6 +70,7 @@ void K32_remote::setMacroMax(uint8_t macroMax)
 {
   this->_semalock();
   this->_macroMax = macroMax;
+  if (_macroMax<1) _macroMax = 1;
   // this->_activeMacro = this->_macroMax-1;
   // this->_previewMacro = this->_macroMax-1;
   this->_semaunlock();
@@ -80,7 +82,7 @@ void K32_remote::setState(remoteState state)
   
   // Exit from REMOTE_MANU_LAMP: save grad !
   if (this->_state == REMOTE_MANU_LAMP) {
-    this->system->preferences.putUInt("lamp_grad", this->_lamp_grad);
+    k32->system->preferences.putUInt("lamp_grad", this->_lamp_grad);
     this->_lamp = -1;
   }
 
@@ -211,6 +213,7 @@ void K32_remote::command(Orderz* order)
 
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////
@@ -291,7 +294,7 @@ void K32_remote::task(void *parameter)
                   // Lamp: Save + Escape
                   if (that->_state == REMOTE_MANU_LAMP) 
                   {
-                    that->system->preferences.putUInt("lamp_grad", that->_lamp_grad);
+                    that->k32->system->preferences.putUInt("lamp_grad", that->_lamp_grad);
                     that->setState(that->_old_state);
                     #ifdef DEBUG_lib_btn
                     LOGF("REMOTE: 1/4 Escape STATE =  %d\n", that->_state);
@@ -486,7 +489,7 @@ void K32_remote::task(void *parameter)
                   }
                   else if (that->_state == REMOTE_MANU_LAMP)
                   {
-                    that->system->preferences.putUInt("lamp_grad", that->_lamp_grad);
+                    that->k32->system->preferences.putUInt("lamp_grad", that->_lamp_grad);
                     that->_state = REMOTE_MANU;
                     that->_lamp = -1;
                   }

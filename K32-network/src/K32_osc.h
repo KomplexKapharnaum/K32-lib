@@ -20,22 +20,25 @@ struct oscconf
   int port_in;
   int port_out;
   int beatInterval;
-  int beaconInterval;
+  int statusInterval;
 };
 
 class K32_osc : K32_plugin {
   public:
-    K32_osc(K32* k32, K32_wifi* wifi, oscconf conf);
+    K32_osc(K32* k32, K32_wifi* wifi); // TODO: remove wifi dependancy (use intercom)
 
-    void start();
+    void start(oscconf conf);
     void stop();
 
     const char* id_path();
     const char* chan_path();
 
-    OSCMessage status();
+    OSCMessage statusMsg();
+    OSCMessage beatMsg();
 
     void send(OSCMessage msg);
+
+    void command(Orderz* order);
 
   private:
     SemaphoreHandle_t lock;

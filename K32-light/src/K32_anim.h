@@ -267,6 +267,13 @@ class K32_anim {
       return this->push(dframe, size);
     }
 
+    // new data push (const uint8_t[], size)
+    K32_anim* push(const uint8_t* frame, int size) {
+      int dframe[size];
+      for(int i=0; i<size; i++) dframe[i] = frame[i];
+      return this->push(dframe, size);
+    }
+
     // refresh data 
     K32_anim* push() {
       xSemaphoreGive(this->newData);

@@ -21,7 +21,9 @@ struct wificonf
 
 class K32_wifi : K32_plugin {
   public:
-    K32_wifi(K32* k32, String nameDevice);
+    K32_wifi(K32* k32);
+
+    void setHostname(String name); 
 
     void enableOta(bool enable);
     bool otaInProgress();

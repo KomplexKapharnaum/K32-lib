@@ -14,23 +14,23 @@ Released under GPL v3.0
 
 #define CALIB_BUTTON 7
 
-#define POWER_CHECK 1000        // task loop in ms
-#define CURRENT_SENSOR_TYPE 10 // Current sensor type : 0 = no sensor (info given by OSC) ; 
-                               // 10 = HO10-P/SP33                                          
-                               // 11 = H010                                                 
-                               // 25 = HO25-P/SP33
-
-#define DEFAULT_BATTERY_RINT 0.12 // Default internal resistance of battery
 #define DEFAULT_MEASURE_OFFSET 2000 // Default current calibration offset
+#define DEFAULT_BATTERY_RINT 0.12 // Default internal resistance of battery
 
 #define CURRENT_ERROR_OFFSET 100    // Offset from measure error (minimal current draw) ~100 mA
 #define CURRENT_AVG_SAMPLES  300    // Number of samples to average measure
-#define CURRENT_FAKE         12500  // fake current when sensor is unplugged
 
 enum batteryType
 {
   LIPO,
   LIFE
+};
+
+enum sensorType     // Values gives current factor
+{
+  HO10_P_SP33 = 57,
+  H010        = 110,
+  HO25_P_SP33 = 24
 };
 
 /* All voltages are given in mV, cf. batteryType for order */
@@ -45,7 +45,7 @@ const unsigned int VOLTAGE[2][7] = {
 class K32_power
 {
   public:
-    K32_power(K32_stm32 *stm32, K32_mcp *mcp, batteryType type, bool autoGauge, int fakeExtCurrent, const int CURRENT_SENSOR_PIN);
+    K32_power(K32_stm32 *stm32, batteryType type, bool autoGauge);
 
     int measure(int samples=CURRENT_AVG_SAMPLES);
 
@@ -53,26 +53,26 @@ class K32_power
     int power();                                                            // Get instant Load power consumption (W)
     int energy();                                                           // Get Energy consummed since last reset (Wh)
     void reset();                                                           // Reset energy time counter
-    
-    void calibBtn();                                                        // Check if CALIB btn pressed
-    void calibOffset(int offset);                                           // Calibrate current sensor. Call this function when Current flowing through sensor is 0.
-    void calibIres();                                                       // Calibrate current sensor. ??
+        
+    void setExternalCurrentSensor(sensorType sensor, const int pin, int fakeExternalCurrent=0);        // Set current sensor type and pin
     
     void setAdaptiveGauge(bool adaptiveOn);                                 // Function to activate adaptive gauge visualisation depending on current.
                                                                             // Set adaptiveOn to true to set adaptive gauge algo
                                                                             // type between LIPO and LIFE
     
+    void setMCPcalib(K32_mcp *mcp);
+
     bool charge;
     int SOC;
 
   private:
     SemaphoreHandle_t lock;
-    K32_stm32 *_stm32;
-    K32_mcp *_mcp;
+    K32_stm32 *_stm32 = nullptr;
+    K32_mcp *_mcp = nullptr;
     int _power = 0;
     int _energy = 0;
     int _current = 0;
-    int _fakeExtCurrent = 0;
+    int _fakeExternalCurrent = 0;
     TaskHandle_t t_handle = NULL;
 
     bool _error = false ; 
@@ -80,7 +80,7 @@ class K32_power
     /* Current Sensor specs */
     int currentPin;
     int measureOffset = 1800;       // Offset of current measurement
-    int currentFactor;              // Factor of current measurement
+    sensorType currentFactor;       // Factor of current measurement
     int calibVoltage = 0;           // Voltage of the battery during calibration of the offset
     float batteryRint;              // Value of internal resistance of the battery
 
@@ -97,7 +97,12 @@ class K32_power
     // int profileOn = -1; // Index of operating profile (-1 stands for default mode)
 
     void updateCustom(); 
+    int rawExtMeasure(int samples=CURRENT_AVG_SAMPLES);
+    int extCurrent();
 
+    void calibOffset(int offset);                                           // Calibrate current sensor. Call this function when Current flowing through sensor is 0.
+    void calibIres();                                                       // Calibrate current sensor. ??
+    
     void _lock();
     void _unlock();
 

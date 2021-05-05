@@ -17,6 +17,8 @@ K32_light::K32_light(K32* k32) : K32_plugin("leds", k32)
                   (void*)this,            // args
                   4,                      // priority
                   NULL );                 // handler
+
+  pwm = new K32_pwm(k32);
 }
 
 void K32_light::addStrip(const int pin, led_types type, int size)
@@ -54,6 +56,14 @@ K32_ledstrip* K32_light::strip(int s) {
 
 K32_light* K32_light::strips() {
   return this;
+}
+
+void K32_light::addDMX(const int DMX_PIN[3], DmxDirection dir) {
+  dmx = new K32_dmx(DMX_PIN, dir);
+}
+
+void K32_light::addDMX(K32_dmx* d) {
+  dmx = d;
 }
 
 K32_light* K32_light::black()
@@ -241,8 +251,7 @@ void K32_light::command(Orderz* order)
   // MEM (Manu)
   else if (strcmp(order->action, "mem") == 0)
   {
-      LOGF("DISPATCH: leds/mem %i\n",  order->getData(0)->toInt());
-
+      LOGF("LIGHT: leds/mem %i\n",  order->getData(0)->toInt());
 
       if (order->count() > 1) {
         int masterValue = order->getData(1)->toInt();

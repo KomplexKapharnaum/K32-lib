@@ -50,15 +50,13 @@ String K32_oscmsg::getStr(int position) {
  *   PUBLIC
  */
 
-K32_osc::K32_osc(K32* k32, K32_wifi* wifi, oscconf conf) : K32_plugin("osc", k32), wifi(wifi) 
-{
-  this->conf = conf;
-  this->start();
-}
+K32_osc::K32_osc(K32* k32, K32_wifi* wifi) : K32_plugin("osc", k32), wifi(wifi) {}
 
 
-void K32_osc::start()
+void K32_osc::start(oscconf conf)
 { 
+  this->conf = conf;
+
   this->lock = xSemaphoreCreateMutex();
   this->udp = new WiFiUDP();
   this->sendSock = new WiFiUDP();
@@ -91,7 +89,7 @@ void K32_osc::start()
                   );                // core 
 
     // LOOP beacon
-    if (this->conf.beaconInterval > 0)
+    if (this->conf.statusInterval > 0)
       xTaskCreate( this->beacon,          // function
                   "osc_beacon",         // server name
                   2000,              // stack memory
@@ -117,8 +115,15 @@ void K32_osc::stop()
   this->sendSock->stop();
 }
 
+OSCMessage K32_osc::beatMsg() 
+{
+    OSCMessage msg("/beat");
+    msg.add(k32->system->id());
+    return msg;
+}
 
-OSCMessage K32_osc::status() {
+
+OSCMessage K32_osc::statusMsg() {
 
     OSCMessage msg("/status");
 
@@ -166,8 +171,10 @@ OSCMessage K32_osc::status() {
     return msg;
 }
 
-void K32_osc::send( OSCMessage msg ) {
-  if (wifi->isConnected() && this->conf.port_out > 0) { 
+void K32_osc::send( OSCMessage msg ) 
+{
+  if (wifi->isConnected() && this->conf.port_out > 0) 
+  { 
     xSemaphoreTake(this->lock, portMAX_DELAY);
     IPAddress dest = (this->linkedIP) ? this->linkedIP : wifi->broadcastIP();
     this->sendSock->beginPacket( dest, this->conf.port_out);
@@ -175,6 +182,11 @@ void K32_osc::send( OSCMessage msg ) {
     this->sendSock->endPacket();
     xSemaphoreGive(this->lock);
   }
+}
+
+
+void K32_osc::command(Orderz* order) {
+  // TODO: orderz OSC
 }
 
 
@@ -189,7 +201,7 @@ void K32_osc::beat( void * parameter ) {
 
     while(true) 
     { 
-      that->send( OSCMessage("/beat") );
+      that->send( that->beatMsg() );
       vTaskDelay( xFrequency );
     }
 
@@ -201,22 +213,12 @@ void K32_osc::beat( void * parameter ) {
 void K32_osc::beacon( void * parameter ) {
 
     K32_osc* that = (K32_osc*) parameter;
-    TickType_t xFrequency = pdMS_TO_TICKS(that->conf.beaconInterval);
+    TickType_t xFrequency = pdMS_TO_TICKS(that->conf.statusInterval);
     WiFiUDP sock;
 
     while(true) 
     {
-      if (that->wifi->isConnected()) { 
-        // send
-        xSemaphoreTake(that->lock, portMAX_DELAY);
-        IPAddress dest = (that->linkedIP) ? that->linkedIP : that->wifi->broadcastIP();
-        sock.beginPacket( dest, that->conf.port_out);
-        that->status().send(sock);
-        sock.endPacket();
-        xSemaphoreGive(that->lock);
-        // LOG("beacon");
-      }
-
+      that->send( that->statusMsg() );
       vTaskDelay( xFrequency );
     }
 
@@ -290,7 +292,7 @@ void K32_osc::server( void * parameter ) {
 
             if (that->conf.port_out > 0) {
               that->udp->beginPacket(that->udp->remoteIP(), that->conf.port_out);
-              that->status().send(*that->udp);
+              that->statusMsg().send(*that->udp);
               that->udp->endPacket();
             }
           });

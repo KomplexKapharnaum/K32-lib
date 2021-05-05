@@ -51,7 +51,7 @@ esp_err_t K32_mqtt::mqtt_event(esp_mqtt_event_handle_t event)
         } 
 
         case MQTT_EVENT_DISCONNECTED:
-            that->connected = true;
+            that->connected = false;
             LOG("MQTT: disconnected");
             break;
 
@@ -110,11 +110,16 @@ esp_err_t K32_mqtt::mqtt_event(esp_mqtt_event_handle_t event)
 }
 
 
-K32_mqtt::K32_mqtt(K32* k32, K32_wifi* wifi, mqttconf conf) : K32_plugin("mqtt", k32), wifi(wifi) 
+K32_mqtt::K32_mqtt(K32* k32, K32_wifi* wifi) : K32_plugin("mqtt", k32), wifi(wifi)
 {
-  this->conf = conf;
   lock = xSemaphoreCreateMutex();
   connected = false;
+}
+
+
+void K32_mqtt::start(mqttconf conf)
+{
+  this->conf = conf;
 
   // INIT
   esp_mqtt_client_config_t mqtt_cfg = {0};
@@ -123,12 +128,6 @@ K32_mqtt::K32_mqtt(K32* k32, K32_wifi* wifi, mqttconf conf) : K32_plugin("mqtt",
   mqtt_cfg.user_context = (void *)this;
   mqttClient = esp_mqtt_client_init(&mqtt_cfg);
 
-  this->start();
-}
-
-
-void K32_mqtt::start()
-{
   // LOOP client
   xTaskCreate(this->check,    // function
                           "mqtt_check", // name
@@ -149,7 +148,7 @@ void K32_mqtt::start()
                             );           // core
 
   // BEACON
-  if (this->conf.beaconInterval > 0)
+  if (this->conf.statusInterval > 0)
     xTaskCreate(this->beacon,   // function
                             "mqtt_beacon",  // server name
                             5000,         // stack memory
@@ -191,6 +190,9 @@ bool K32_mqtt::isConnected() {
   return this->connected;
 }
 
+void K32_mqtt::command(Orderz* order) {
+  // TODO: orderz MQTT
+}
 
 // /*
 //  *   PRIVATE
@@ -229,7 +231,7 @@ void K32_mqtt::beat(void *parameter)
   while(true) {
     if (that->connected) {
       that->publish("k32/monitor/beat", myID.c_str());
-      LOG("MQTT: beat published");
+      // LOG("MQTT: beat published");
     }
     vTaskDelay( xFrequency );
   }
@@ -240,7 +242,7 @@ void K32_mqtt::beat(void *parameter)
 void K32_mqtt::beacon(void *parameter)
 {
   K32_mqtt* that = (K32_mqtt*) parameter;
-  TickType_t xFrequency = pdMS_TO_TICKS(that->conf.beaconInterval);
+  TickType_t xFrequency = pdMS_TO_TICKS(that->conf.statusInterval);
   String status="";
 
   while(true) {
@@ -291,9 +293,13 @@ void K32_mqtt::beacon(void *parameter)
       status += String(0)+"|";   // SYNC count files
       status += String("");  // SYNC erro
 
-      // that->mqttClient->publish("k32/monitor/status", status.c_str(), 0, true) ; 
+      that->publish("k32/monitor/status", status.c_str(), 0, true); 
     }
     vTaskDelay( xFrequency );
   }
   vTaskDelete(NULL);
 }
+
+
+
+

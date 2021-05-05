@@ -15,7 +15,7 @@
  *   PUBLIC
  */
 
-K32_wifi::K32_wifi(K32* k32, String nameDevice) : K32_plugin("wifi", k32), nameDevice(nameDevice)
+K32_wifi::K32_wifi(K32* k32) : K32_plugin("wifi", k32)
 {
   this->lock = xSemaphoreCreateMutex();
 
@@ -67,6 +67,11 @@ K32_wifi::K32_wifi(K32* k32, String nameDevice) : K32_plugin("wifi", k32), nameD
               NULL,              // handler
               0);                // core
 };
+
+void K32_wifi::setHostname(String name) {
+  this->nameDevice = name;
+  ArduinoOTA.setHostname(this->nameDevice.c_str());
+}
 
 void K32_wifi::enableOta(bool enable)
 {

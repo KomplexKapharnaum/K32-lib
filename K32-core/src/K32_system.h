@@ -67,6 +67,8 @@ class K32_system : K32_module {
         xSemaphoreTake(this->lock, portMAX_DELAY);
         hw = preferences.getUInt("hw", 0);
         xSemaphoreGive(this->lock);
+        if (hw < 0) hw = 0;
+        if (hw > MAX_HW) hw = MAX_HW;
         return hw;
       #endif
     }

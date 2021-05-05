@@ -15,6 +15,8 @@
 
 #include <class/K32_plugin.h>
 #include "K32_ledstrip.h"
+#include "K32_dmx.h"
+#include <hardware/K32_pwm.h>
 #include "K32_anim.h"
 
 //
@@ -54,6 +56,11 @@ class K32_light : K32_plugin {
     K32_ledstrip* strip(int s);
     K32_light* strips();
 
+    // DMX
+    //
+    void addDMX(const int DMX_PIN[3], DmxDirection dir);
+    void addDMX(K32_dmx* d);
+
     K32_light* black();
     K32_light* all(pixelColor_t color);
     K32_light* all(int red, int green, int blue, int white = 0);
@@ -76,6 +83,9 @@ class K32_light : K32_plugin {
     
     void command(Orderz* order);
 
+    K32_dmx* dmx = nullptr;
+    K32_pwm* pwm = nullptr;
+
   private:
     
     static int _nstrips;
@@ -84,6 +94,7 @@ class K32_light : K32_plugin {
     K32_anim* _anims[LEDS_ANIMS_SLOTS];
     int _animcounter = 0;
 
+    
     static void refresh( void * parameter ) ;
     int _fps = LEDS_SHOW_FPS;
 

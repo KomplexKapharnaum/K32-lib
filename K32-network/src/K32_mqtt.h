@@ -19,7 +19,7 @@ struct mqttconf
 {
   const char *broker;
   int beatInterval;
-  int beaconInterval;
+  int statusInterval;
 
 };
 
@@ -33,14 +33,16 @@ struct mqttsub
 
 class K32_mqtt : K32_plugin {
   public:
-    K32_mqtt(K32* k32, K32_wifi* wifi, mqttconf conf);
-    void start();
+    K32_mqtt(K32* k32, K32_wifi* wifi);  // TODO: remove wifi dependancy (use intercom)
+    void start(mqttconf conf);
     void stop();
     void broker(const char *_broker);
     void publish(const char *topic, const char *payload = (const char *)nullptr, uint8_t qos=0, bool retain=false);
     void subscribe(mqttsub sub);
 
     bool isConnected();
+
+    void command(Orderz* order);
 
   private:
     SemaphoreHandle_t lock;

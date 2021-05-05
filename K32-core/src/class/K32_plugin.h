@@ -16,9 +16,7 @@ class K32_plugin : public K32_module {
             k32 = k;
             if (k32 != nullptr) k32->attach(this);
         }
-
-
-
+        
     protected:
         K32* k32 = nullptr;
 
