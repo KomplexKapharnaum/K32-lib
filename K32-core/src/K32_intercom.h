@@ -58,6 +58,10 @@ class Orderz
   public:
     Orderz() {}
 
+    ~Orderz() {
+      clear();
+    }
+
     Orderz(const char* command, bool isCmd = false) : isCmd(isCmd) {
       set(command);
     }

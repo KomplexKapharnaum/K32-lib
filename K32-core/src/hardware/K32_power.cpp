@@ -302,7 +302,7 @@ void K32_power::task(void *parameter)
     /* Retry */
     if (that->nbOfCell == 0) {
       LOGF2("POWER: Can't detect number of cells. voltage=%d cells=%d\n", v, that->nbOfCell);
-      if (wait < 5000) wait *= 1.1;
+      if (wait < 30000) wait *= 1.1;
     }
   }
   LOGF2("POWER: Nb cells detected: voltage=%d cells=%d\n", v, that->nbOfCell);

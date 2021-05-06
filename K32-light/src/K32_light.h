@@ -15,7 +15,7 @@
 
 #include <class/K32_plugin.h>
 #include "K32_ledstrip.h"
-#include "K32_dmx.h"
+#include <K32_dmx.h>
 #include <hardware/K32_pwm.h>
 #include "K32_anim.h"
 

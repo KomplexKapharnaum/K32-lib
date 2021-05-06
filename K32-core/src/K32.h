@@ -131,8 +131,7 @@ public:
                 this->intercom->ee->emit(order->engine, order);
                 this->intercom->ee->emit(order->engine_action, order);
             }
-        }
-        delete(order);            
+        }            
     }
 
     static void run( void * parameter ) 
@@ -146,6 +145,7 @@ public:
             // LOG("K32: order obtained");
             that->dispatch(nextOrder);
             // LOG("K32: order dispatched");
+            delete(nextOrder);
         }
         vTaskDelete(NULL);
     }
