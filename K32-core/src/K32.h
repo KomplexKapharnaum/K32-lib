@@ -282,7 +282,7 @@ public:
             light = new K32_light();
             for(int k=0; k<LED_N_STRIPS; k++)
                 if(LEDS_PIN[system->hw()][k] > 0)
-                    light->addStrip(LEDS_PIN[system->hw()][k], (led_types)rubanType, rubanSize);
+                    light->addFixture(LEDS_PIN[system->hw()][k], (led_types)rubanType, rubanSize);
             light->start();
         }
         else

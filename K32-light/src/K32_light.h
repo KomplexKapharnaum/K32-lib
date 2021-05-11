@@ -6,17 +6,16 @@
 #ifndef K32_light_h
 #define K32_light_h
 
-#define LEDS_MAXSTRIPS    8    // There is 8 RMT channels on ESP32
-#define LEDS_ANIMATE_FPS  100   // Anims modulation FPS
-#define LEDS_SHOW_FPS     100   // Show RMT push FPS
-#define LEDS_ANIMS_SLOTS  16
-#define LEDS_MAX_COPY     16
+#define LIGHT_MAXFIXTURES   8     // There is 8 RMT channels on ESP32 for leds strips
+#define LIGHT_ANIMATE_FPS  100     // Anims modulation FPS
+#define LIGHT_SHOW_FPS     100     // Show RMT push FPS
+#define LIGHT_ANIMS_SLOTS  16      
+#define LIGHT_MAX_COPY     16
 
 
 #include <class/K32_plugin.h>
-#include "K32_ledstrip.h"
-#include <K32_dmx.h>
 #include <hardware/K32_pwm.h>
+#include "fixtures/K32_fixture.h"
 #include "K32_anim.h"
 
 //
@@ -34,10 +33,10 @@
 
 struct stripcopy
 {
-  int srcStrip;
+  K32_fixture* srcFixture;
   int srcStart;
   int srcStop;
-  int destStrip;
+  K32_fixture* destFixture;
   int destPos;
 };
 
@@ -49,17 +48,12 @@ class K32_light : K32_plugin {
     
     // STRIPS
     //
-    void addStrip(const int pin, led_types type, int size = 0);
-    void cloneStrips(int masterStrip=0);
-    void copyStrip(stripcopy copy);
+    K32_fixture* addFixture(K32_fixture* fix);
+    void cloneFixturesFrom(K32_fixture* masterFixture);
+    void copyFixture(stripcopy copy);
 
-    K32_ledstrip* strip(int s);
-    K32_light* strips();
-
-    // DMX
-    //
-    void addDMX(const int DMX_PIN[3], DmxDirection dir);
-    void addDMX(K32_dmx* d);
+    K32_fixture* fixture(int s);
+    K32_light* fixtures();
 
     K32_light* black();
     K32_light* all(pixelColor_t color);
@@ -75,7 +69,7 @@ class K32_light : K32_plugin {
     //  ANIM
     //
     K32_anim* anim( String animName = "");
-    K32_anim* anim( int stripN, String animName, K32_anim* anim, int size = 0, int offset = 0);
+    K32_anim* anim( K32_fixture* fix, String animName, K32_anim* anim, int size = 0, int offset = 0);
     void stop();
 
     // Set FPS
@@ -83,25 +77,24 @@ class K32_light : K32_plugin {
     
     void command(Orderz* order);
 
-    K32_dmx* dmx = nullptr;
     K32_pwm* pwm = nullptr;
 
   private:
     
-    static int _nstrips;
-    K32_ledstrip* _strips[LEDS_MAXSTRIPS];
+    static int _nfixtures;
+    K32_fixture* _fixtures[LIGHT_MAXFIXTURES];
 
-    K32_anim* _anims[LEDS_ANIMS_SLOTS];
+    K32_anim* _anims[LIGHT_ANIMS_SLOTS];
     int _animcounter = 0;
 
     
     static void refresh( void * parameter ) ;
-    int _fps = LEDS_SHOW_FPS;
+    int _fps = LIGHT_SHOW_FPS;
 
-    int _masterClone = -1;
+    K32_fixture* _masterClone = nullptr;
 
     int _copyMax = 0;
-    stripcopy _copylist[LEDS_MAX_COPY];
+    stripcopy _copylist[LIGHT_MAX_COPY];
 };
 
 

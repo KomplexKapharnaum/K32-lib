@@ -21,60 +21,49 @@ K32_light::K32_light(K32* k32) : K32_plugin("leds", k32)
   pwm = new K32_pwm(k32);
 }
 
-void K32_light::addStrip(const int pin, led_types type, int size)
+K32_fixture* K32_light::addFixture(K32_fixture* fix)
 {
-  if (size == 0) size = LEDSTRIP_MAXPIXEL;
-
-  if (this->_nstrips >= LEDS_MAXSTRIPS) {
-    LOG("LEDS: no more strip can be attached..");
-    return;
+  if (this->_nfixtures >= LIGHT_MAXFIXTURES) {
+    LOG("LIGHT: no more fixture can be attached..");
+    return fix;
   }
+  this->_fixtures[this->_nfixtures] = fix;
+  this->_nfixtures += 1;
 
-  int s = this->_nstrips;
-  this->_nstrips += 1;
-  
-  this->_strips[s] = new K32_ledstrip(s, pin, type, size);
+  return fix;
 }
 
 // link every strip to masterStrip
-void K32_light::cloneStrips(int masterStrip) {
-  if (masterStrip < this->_nstrips) this->_masterClone = masterStrip;
+void K32_light::cloneFixturesFrom(K32_fixture* masterFixture) {
+  this->_masterClone = masterFixture;
 }
 
 // link every strip to masterStrip
-void K32_light::copyStrip(stripcopy copy) {
-  if (_copyMax<LEDS_MAX_COPY) 
+void K32_light::copyFixture(stripcopy copy) {
+  if (_copyMax<LIGHT_MAX_COPY) 
   {
     _copylist[_copyMax] = copy;
     _copyMax += 1;
   }
 }
 
-K32_ledstrip* K32_light::strip(int s) {
-  return this->_strips[s];
+K32_fixture* K32_light::fixture(int s) {
+  return this->_fixtures[s];
 }
 
-K32_light* K32_light::strips() {
+K32_light* K32_light::fixtures() {
   return this;
-}
-
-void K32_light::addDMX(const int DMX_PIN[3], DmxDirection dir) {
-  dmx = new K32_dmx(DMX_PIN, dir);
-}
-
-void K32_light::addDMX(K32_dmx* d) {
-  dmx = d;
 }
 
 K32_light* K32_light::black()
 {
-  for (int s = 0; s < this->_nstrips; s++) this->_strips[s]->black();
+  for (int s = 0; s < this->_nfixtures; s++) this->_fixtures[s]->black();
   return this;
 }
 
 K32_light* K32_light::all(pixelColor_t color)
 {
-  for (int s = 0; s < this->_nstrips; s++) this->_strips[s]->all(color);
+  for (int s = 0; s < this->_nfixtures; s++) this->_fixtures[s]->all(color);
   return this;
 }
 
@@ -84,7 +73,7 @@ K32_light* K32_light::all(int red, int green, int blue, int white)
 }
 
 K32_light* K32_light::pix(int pixel, pixelColor_t color) {
-  for (int s = 0; s < this->_nstrips; s++) this->_strips[s]->pix(pixel, color);
+  for (int s = 0; s < this->_nfixtures; s++) this->_fixtures[s]->pix(pixel, color);
   return this;
 }
 
@@ -92,39 +81,41 @@ K32_light* K32_light::pix(int pixel, int red, int green, int blue, int white) {
   return this->pix( pixel, pixelFromRGBW(red, green, blue, white) );
 }
 
-void K32_light::show() {
-
-  // Clone from master strip (if _masterClone exist)
+void K32_light::show() 
+{
+  // CLONE ALL from master strip (if _masterClone exist)
   pixelColor_t* cloneBuffer = NULL;
   int cloneSize = 0;
-  if (this->_masterClone >= 0) {
-    cloneSize = this->_strips[this->_masterClone]->size();
+  if (this->_masterClone && this->_masterClone->dirty()) {
+    cloneSize = this->_masterClone->size();
     cloneBuffer = static_cast<pixelColor_t*>(malloc(cloneSize * sizeof(pixelColor_t)));
-    this->_strips[this->_masterClone]->getBuffer(cloneBuffer, cloneSize);
+    this->_masterClone->getBuffer(cloneBuffer, cloneSize);
+
+    if (cloneSize > 0)
+      for (int s=0; s<this->_nfixtures; s++)
+        this->_fixtures[s]->setBuffer(cloneBuffer, cloneSize); 
+    
+    free(cloneBuffer);
   }
 
-  for (int s=0; s<this->_nstrips; s++)  
-  {
-    // Clone from master strip
-    if (cloneSize > 0) this->_strips[s]->setBuffer(cloneBuffer, cloneSize); 
-
-    // Copy pixels
-    for (int c=0; c<_copyMax; c++) {
-      if (_copylist[c].destStrip == s) {
+  // COPY Fixtures
+  for (int c=0; c<_copyMax; c++) {
+    if (_copylist[c].srcFixture && _copylist[c].destFixture) 
+      if (_copylist[c].srcFixture->dirty())
+      {
         pixelColor_t* copyBuffer = NULL;
         int copySize = 0;
         copySize = _copylist[c].srcStop-_copylist[c].srcStart+1;
         copyBuffer = static_cast<pixelColor_t*>(malloc(copySize * sizeof(pixelColor_t)));
-        this->_strips[_copylist[c].srcStrip]->getBuffer(copyBuffer, copySize, _copylist[c].srcStart);
-        this->_strips[s]->setBuffer(copyBuffer, copySize, _copylist[c].destPos); 
+        _copylist[c].srcFixture->getBuffer(copyBuffer, copySize, _copylist[c].srcStart);
+        _copylist[c].destFixture->setBuffer(copyBuffer, copySize, _copylist[c].destPos); 
         free(copyBuffer);
+        _copylist[c].destFixture;
       }
-    }  
+  }  
 
-    this->_strips[s]->show();
-  }
+  for (int s=0; s<this->_nfixtures; s++)  this->_fixtures[s]->show();
 
-  if (cloneBuffer) free(cloneBuffer);
 }
 
 
@@ -139,21 +130,16 @@ void K32_light::blackout() {
 //
 
 // register new anim
-K32_anim* K32_light::anim( int stripN, String animName, K32_anim* anim, int size, int offset ) 
+K32_anim* K32_light::anim( K32_fixture* fix, String animName, K32_anim* anim, int size, int offset ) 
 {
 
-  if (stripN >= this->_nstrips) {
-    LOGF("ERROR: strip %i does not exist\n", stripN);
-    return anim;
-  }
-
-  if (this->_animcounter >= LEDS_ANIMS_SLOTS) {
+  if (this->_animcounter >= LIGHT_ANIMS_SLOTS) {
     LOG("ERROR: no more slot available to register new animation");
     return anim;
   }
   
   anim->name(animName);
-  anim->setup( this->strip(stripN), size, offset );
+  anim->setup( fix, size, offset );
 
   this->_anims[ this->_animcounter ] = anim;
   this->_animcounter++;
@@ -171,7 +157,7 @@ K32_anim* K32_light::anim( String animName)
       return this->_anims[k];
     }
   LOGINL("ANIM: not found "); LOG(animName);
-  return new K32_anim();
+  return nullptr;
 
 }
 
@@ -183,7 +169,7 @@ void K32_light::stop() {
 // Set FPS
 void K32_light::fps(int f) {
   if (f >= 0) _fps = f;
-  else _fps = LEDS_SHOW_FPS;
+  else _fps = LIGHT_SHOW_FPS;
 }
 
 
@@ -213,9 +199,9 @@ void K32_light::command(Orderz* order)
       if (strcmp(order->action, "all") == 0) 
         this->all( red, green, blue, white );
       else if (strcmp(order->action, "strip") == 0) 
-        this->strip(order->getData(0)->toInt())->all( red, green, blue, white );
+        this->fixture(order->getData(0)->toInt())->all( red, green, blue, white );
       else if (strcmp(order->action, "pixel") == 0) 
-        this->strip(order->getData(0)->toInt())->pix( order->getData(1)->toInt(), red, green, blue, white );
+        this->fixture(order->getData(0)->toInt())->pix( order->getData(1)->toInt(), red, green, blue, white );
 
       this->show();
   }
@@ -339,7 +325,7 @@ void K32_light::command(Orderz* order)
  */
 
 
-int K32_light::_nstrips = 0;
+int K32_light::_nfixtures = 0;
 
 // thread function
 void K32_light::refresh( void * parameter ) 

@@ -7,6 +7,7 @@
 #define K32_dmx_h
 
 #include <LXESP32DMX.h>
+#include "_libfast/pixel.h"
 #include "esp_task_wdt.h"
 
 enum DmxDirection { DMX_IN, DMX_OUT };
@@ -28,6 +29,7 @@ class K32_dmx {
           pinMode(DMX_PIN[1], OUTPUT);
           ESP32DMX.startOutput(DMX_PIN[1]);
           outputOK = true;
+          LOG("DMX: output STARTED");
         }
         else LOG("DMX: invalid OUTPUT pin, DMXout disabled !");
       }
@@ -70,8 +72,26 @@ class K32_dmx {
       return this;
     }
 
+    // SET multiple values (RGB array)
+    K32_dmx* setMultiple(pixelColor_t* _buffer, int pixCount, int offsetAdr = 1) 
+    {
+      if (outputOK) {
+      // LOGF3("DMX: setMultiple %d %d %d\n",values[0], size, offsetAdr);
+        xSemaphoreTake(ESP32DMX.lxDataLock, portMAX_DELAY);
+        for (int i = 0; i < pixCount; i++) {
+          ESP32DMX.setSlot(offsetAdr+i*3,   _buffer[i].r);
+          ESP32DMX.setSlot(offsetAdr+i*3+1, _buffer[i].g);
+          ESP32DMX.setSlot(offsetAdr+i*3+2, _buffer[i].b);
+        }
+        // LOGF4("DMX set: %d - %d %d %d \n", offsetAdr, _buffer[0].r, _buffer[0].g, _buffer[0].b);
+        xSemaphoreGive(ESP32DMX.lxDataLock);
+      }
+      return this;
+    }
+
 
   private:
+
     bool outputOK = false;
     bool inputOK = false;
 };

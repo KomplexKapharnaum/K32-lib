@@ -38,6 +38,8 @@
 #ifndef ESP32_DIGITAL_LED_LIB_H
 #define ESP32_DIGITAL_LED_LIB_H
 
+#include "_libfast/pixel.h"
+
 #ifdef __cplusplus
 extern "C"
 {
@@ -46,36 +48,6 @@ extern "C"
 #include <stdint.h>
 
 #define DEBUG_ESP32_DIGITAL_LED_LIB 0
-
-  extern uint8_t gamma8(uint8_t value);
-  
-  typedef union { 
-    struct __attribute__((packed))
-    {
-      uint8_t r, g, b, w;
-    };
-    uint32_t num;
-  } pixelColor_t;
-
-  inline pixelColor_t pixelFromRGB(uint8_t r, uint8_t g, uint8_t b)
-  {
-    pixelColor_t v;
-    v.r = gamma8(r);
-    v.g = gamma8(g);
-    v.b = gamma8(b);
-    v.w = 0;
-    return v;
-  }
-
-  inline pixelColor_t pixelFromRGBW(uint8_t r, uint8_t g, uint8_t b, uint8_t w)
-  {
-    pixelColor_t v;
-    v.r = gamma8(r);
-    v.g = gamma8(g);
-    v.b = gamma8(b);
-    v.w = gamma8(w);
-    return v;
-  }
 
   typedef struct
   {

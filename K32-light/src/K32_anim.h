@@ -9,7 +9,7 @@
 #define ANIM_DATA_SLOTS  32
 #define ANIM_MOD_SLOTS  16
 
-#include "K32_ledstrip.h"
+#include "fixtures/K32_fixture.h"
 #include "K32_modulator.h"
 
 
@@ -41,7 +41,8 @@ class K32_anim {
       vQueueDelete(this->wait_lock);
     }
 
-    K32_anim* setup(K32_ledstrip* strip, int size = 0, int offset = 0) {
+    K32_anim* setup(K32_fixture* strip, int size = 0, int offset = 0) {
+      
       this->_strip = strip;
       this->_size = (size) ? size : strip->size();
       this->_offset = offset;
@@ -372,8 +373,8 @@ class K32_anim {
         xSemaphoreGive(that->bufferInUse);                                          // allow push & pushdata to modify data
         yield();      
 
-        if (triggerDraw) timeout = pdMS_TO_TICKS( 1000/LEDS_ANIMATE_FPS );          // adapt FPS if an image has been drawn (optimized strobe)
-        else timeout = pdMS_TO_TICKS( 500/LEDS_ANIMATE_FPS );
+        if (triggerDraw) timeout = pdMS_TO_TICKS( 1000/LIGHT_ANIMATE_FPS );          // adapt FPS if an image has been drawn (optimized strobe)
+        else timeout = pdMS_TO_TICKS( 500/LIGHT_ANIMATE_FPS );
 
         triggerDraw = (xSemaphoreTake(that->newData, timeout) == pdTRUE);
 
@@ -421,7 +422,7 @@ class K32_anim {
     bool _loop = true;
 
     // output
-    K32_ledstrip* _strip = NULL;
+    K32_fixture* _strip = NULL;
     uint8_t _master = 255;
     int _size = 0;
     int _offset = 0; 
