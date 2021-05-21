@@ -8,6 +8,7 @@
 
 #include <class/K32_plugin.h>
 #include <K32_wifi.h>
+#include <hardware/K32_stm32.h>
 
 #include <mqtt_client.h>
 
@@ -33,7 +34,7 @@ struct mqttsub
 
 class K32_mqtt : K32_plugin {
   public:
-    K32_mqtt(K32* k32, K32_wifi* wifi);  // TODO: remove wifi dependancy (use intercom)
+    K32_mqtt(K32* k32, K32_wifi* wifi, K32_stm32* stm32);  // TODO: remove wifi dependancy (use intercom)
     void start(mqttconf conf);
     void stop();
     void broker(const char *_broker);
@@ -68,6 +69,7 @@ class K32_mqtt : K32_plugin {
     TaskHandle_t xHandle3 = NULL;
 
     K32_wifi *wifi;
+    K32_stm32 *stm32;
 };
 
 #endif

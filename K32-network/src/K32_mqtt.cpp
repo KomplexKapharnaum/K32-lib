@@ -110,7 +110,7 @@ esp_err_t K32_mqtt::mqtt_event(esp_mqtt_event_handle_t event)
 }
 
 
-K32_mqtt::K32_mqtt(K32* k32, K32_wifi* wifi) : K32_plugin("mqtt", k32), wifi(wifi)
+K32_mqtt::K32_mqtt(K32* k32, K32_wifi* wifi, K32_stm32* stm32) : K32_plugin("mqtt", k32), wifi(wifi), stm32(stm32)
 {
   lock = xSemaphoreCreateMutex();
   connected = false;
@@ -268,8 +268,8 @@ void K32_mqtt::beacon(void *parameter)
       status += String(true)+"|"+"|";
 
       // energy 
-      // if (that->k32->system->stm32) status += String(that->k32->system->stm32->battery())+"|"+"|";
-      // else status += String(0)+"|"+"|";
+      if (that->stm32) status += String(that->stm32->battery())+"|"+"|";
+      else status += String(0)+"|"+"|";
 
       // audio 
       // if (that->intercom->audio) {
