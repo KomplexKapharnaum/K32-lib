@@ -6,7 +6,7 @@
 #ifndef K32_artnet_h
 #define K32_artnet_h
 
-#include <Artnet.h>         // https://github.com/hideakitai/ArtNet
+#include <ArtnetWiFi.h>         // https://github.com/hideakitai/ArtNet
 #include <class/K32_plugin.h>
 
 struct artnetconf

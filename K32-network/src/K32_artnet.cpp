@@ -67,7 +67,7 @@ void K32_artnet::check(void *parameter)
   TickType_t xFrequency = pdMS_TO_TICKS(2);
 
   that->artnet->begin();
-  that->artnet->subscribe(conf.universe, that->_onArtnet);
+  that->artnet->subscribe15bit(conf.universe, that->_onArtnet);
 
   that->emit("artnet/started");
   while (true)
