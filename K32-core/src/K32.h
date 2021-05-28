@@ -45,7 +45,10 @@ public:
         // Save NODE_ID in flash
         #ifdef K32_SET_NODEID
             system->id(K32_SET_NODEID);
-            system->channel(15);
+        #endif
+
+        #ifdef K32_SET_CHANNEL
+            system->channel(K32_SET_CHANNEL);
         #endif
 
         LOGINL("Node id: ");
