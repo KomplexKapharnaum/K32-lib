@@ -14,6 +14,8 @@ K32_artnet::K32_artnet(K32* k32, artnetconf conf) : K32_plugin("artnet", k32)
 {
   this->conf = conf;
   this->artnet = new ArtnetWiFiReceiver();
+  this->artnet->shortname(conf.shortName);
+  this->artnet->longname(conf.longName);
   this->start();
 }
 
@@ -66,8 +68,9 @@ void K32_artnet::check(void *parameter)
   K32_artnet *that = (K32_artnet *)parameter;
   TickType_t xFrequency = pdMS_TO_TICKS(2);
 
-  that->artnet->begin();
-  that->artnet->subscribe15bit(conf.universe, that->_onArtnet);
+  that->artnet->begin(0, conf.universe/16);
+  that->artnet->subscribe(conf.universe-(conf.universe/16)*16, that->_onArtnet);
+  LOGF2("ARTNET: subscribing to subnet=%d universe=%d\n", conf.universe/16, conf.universe-(conf.universe/16)*16);
 
   that->emit("artnet/started");
   while (true)

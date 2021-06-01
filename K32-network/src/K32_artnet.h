@@ -14,6 +14,8 @@ struct artnetconf
   int universe;
   int address;
   int framesize;
+  String shortName;
+  String longName;
 };
 
 

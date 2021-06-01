@@ -7,7 +7,7 @@
 #define K32_pwm_h
 
 #define PWM_MAXCHANNELS 16
-#define PWM_FREQUENCY 60000 //40000
+#define PWM_FREQUENCY 60000 //40000 60000 table lumi
 #define PWM_RESOLUTION 16 //8
 
 #include "class/K32_plugin.h"
