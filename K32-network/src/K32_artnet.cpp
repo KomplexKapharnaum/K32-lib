@@ -86,7 +86,7 @@ void K32_artnet::check(void *parameter)
 void K32_artnet::_onArtnet(const uint8_t* data, const uint16_t length)
 {
   // Callback Frame
-  if (K32_artnet::frameCallback) 
+  if (K32_artnet::frameCallback && length-(K32_artnet::conf.address-1) > 0) 
   {
     K32_artnet::frameCallback( 
       &data[ K32_artnet::conf.address-1], 
@@ -95,6 +95,6 @@ void K32_artnet::_onArtnet(const uint8_t* data, const uint16_t length)
   }
 
   // Callback Full
-  if (K32_artnet::fullCallback) K32_artnet::fullCallback(data, length);
+  if (K32_artnet::fullCallback && length > 0) K32_artnet::fullCallback(data, length);
 }
 
