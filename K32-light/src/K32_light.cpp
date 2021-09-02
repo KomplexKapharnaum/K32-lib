@@ -232,8 +232,8 @@ void K32_light::command(Orderz* order)
 
       this->anim("manu")->master( masterValue );
       this->anim("manu")->push();
-      this->anim("dmxthru")->master( masterValue );
-      this->anim("dmxthru")->push();
+      // this->anim("dmxthru")->master( masterValue );// to do if dmxthru
+      // this->anim("dmxthru")->push();// to do if dmxthru
   }
 
   // MEM (Manu)
@@ -308,24 +308,24 @@ void K32_light::command(Orderz* order)
         if (strcmp(order->subaction, "faster") == 0)
         { 
         this->anim("manu")->mod(k)->faster();
-        this->anim("dmxthru")->mod(k)->faster();
+        // this->anim("dmxthru")->mod(k)->faster();// to do if dmxthru
         }
         else if (strcmp(order->subaction, "slower") == 0)
         {
           this->anim("manu")->mod(k)->slower();
-          this->anim("dmxthru")->mod(k)->slower();
+          // this->anim("dmxthru")->mod(k)->slower();// to do if dmxthru
         } 
 
         else if (strcmp(order->subaction, "bigger") == 0) 
         {
           this->anim("manu")->mod(k)->bigger();
-          this->anim("dmxthru")->mod(k)->bigger();
+          // this->anim("dmxthru")->mod(k)->bigger();// to do if dmxthru
         }
 
         else if (strcmp(order->subaction, "smaller") == 0) 
          {
           this->anim("manu")->mod(k)->smaller();
-          this->anim("dmxthru")->mod(k)->smaller();
+          // this->anim("dmxthru")->mod(k)->smaller();// to do if dmxthru
          }
       }
   }
