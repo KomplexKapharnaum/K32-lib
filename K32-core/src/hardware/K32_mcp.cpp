@@ -25,7 +25,7 @@ K32_mcp::K32_mcp(const int MCP_PIN[2])
 
   /* Init I2C and Buttons pins */
   Wire.begin(MCP_PIN[0], MCP_PIN[1]); // i2c pins
-  this->mcp.begin();                  // i2c addr
+  this->mcp.begin_I2C();                  // i2c addr
 
   // Start read button state task
   xTaskCreate(this->read_btn_state, // function
@@ -42,8 +42,8 @@ void K32_mcp::input(uint8_t pin) {
   this->_lock();
   this->io[pin].state = HIGH;
   this->io[pin].mode = MCPIO_INPUT;  
-  this->mcp.pinMode(pin, INPUT);
-  this->mcp.pullUp(pin, HIGH);
+  this->mcp.pinMode(pin, INPUT_PULLUP);
+  // this->mcp.pullUp(pin, HIGH);
   this->_unlock();
 }
 

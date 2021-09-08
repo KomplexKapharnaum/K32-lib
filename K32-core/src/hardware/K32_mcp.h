@@ -12,7 +12,7 @@ Released under GPL v3.0
 
 #include "utils/K32_log.h"
 #include "Wire.h"
-#include "Adafruit_MCP23017.h"
+#include "Adafruit_MCP23X17.h"
 
 enum iomode { MCPIO_DISABLE, MCPIO_INPUT, MCPIO_OUTPUT };
 enum ioflag { MCPIO_NOT, MCPIO_PRESS, MCPIO_PRESS_LONG, MCPIO_RELEASE_LONG, MCPIO_RELEASE_SHORT };
@@ -46,7 +46,7 @@ private:
   void _lock();
   void _unlock();
 
-  Adafruit_MCP23017 mcp;
+  Adafruit_MCP23X17 mcp;
 
   static void read_btn_state(void *parameter);
 
