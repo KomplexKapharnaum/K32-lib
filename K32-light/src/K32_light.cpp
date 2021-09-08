@@ -265,6 +265,9 @@ void K32_light::command(Orderz* order)
       for(int k=0; k<order->count(); k++) {
         int v = order->getData(k)->toInt(); 
         if (v >= 0) this->anim("manu")->set(k, v);
+        Serial.print(k);
+       Serial.print(" = ");
+       Serial.println(v);
       }
       this->anim("manu")->push();
   }
