@@ -11,6 +11,8 @@
 #include "freertos/ringbuf.h"
 #include <EventEmitter.h>
 
+#define ORDERZ_MAX_ARGS 32
+
 enum argType { INT, STR };
 class argX
 { 
@@ -81,13 +83,17 @@ class Orderz
     }
 
     void addData(int value) {
-      data[dataCount] = new argX(value);
-      dataCount++;
+      if (dataCount < ORDERZ_MAX_ARGS) {
+        data[dataCount] = new argX(value);
+        dataCount++;
+      }
     }
 
     void addData(const char* value) {
-      data[dataCount] = new argX(value);
-      dataCount++;
+      if (dataCount < ORDERZ_MAX_ARGS) {
+        data[dataCount] = new argX(value);
+        dataCount++;
+      }
     }
 
     int count() {
@@ -95,11 +101,15 @@ class Orderz
     }
 
     argX* getData(int index) {
-      return data[index];
+      if (index < dataCount) return data[index];
+      else return new argX("");
     }
 
     void clear() {
-      for (int k=0; k<dataCount; k++) delete(data[k]);
+      for (int k=0; k<dataCount; k++) {
+        // LOGF("--Intercom: Order deleting arg %d \n", k);
+        delete(data[k]);
+      }
       dataCount = 0;
       workable = false;
     }
@@ -122,7 +132,7 @@ class Orderz
 
     bool workable = false;
     int dataCount = 0;
-    argX* data[16];
+    argX* data[ORDERZ_MAX_ARGS];
     
     void splitString(const char *data, const char *separator, int index, char *result)
     {
