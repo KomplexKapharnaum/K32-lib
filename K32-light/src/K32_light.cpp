@@ -263,13 +263,34 @@ void K32_light::command(Orderz* order)
       LOG("DISPATCH: leds/frame");
 
       for(int k=0; k<order->count(); k++) {
-        int v = order->getData(k)->toInt(); 
-        if (v >= 0) this->anim("manu")->set(k, v);
-        Serial.print(k);
-       Serial.print(" = ");
-       Serial.println(v);
-      }
-      this->anim("manu")->push();
+        int v = order->getData(k)->toInt();
+
+        if (v >= 0) this->anim("manu")->set(k, v);           // normal
+      //   Serial.print(k);                                  // normal
+      //  Serial.print(" = ");                               // normal
+      //  Serial.println(v);                                 // normal
+      }                                                      // normal    
+      this->anim("manu")->push();                            // normal
+
+
+      //   if (this->anim("dmxthru"))                           // dmx_par
+      //    if (v >= 0) this->anim("dmxthru")->set(k, v);       // dmx par
+      //   else                                                 // dmx par
+      //    if (v >= 0) this->anim("manu")->set(k, v);          // dmx par
+      // //   Serial.print(k);                                  // dmx par
+      // //  Serial.print(" = ");                               // dmx par
+      // //  Serial.println(v);                                 // dmx par
+      // }                                                      // dmx par
+      //  if (this->anim("dmxthru"))                            // dmx par
+      //  {                                                     // dmx par
+      //    LOG("DMX THRU");                                    // dmx par
+      //    this->anim("dmxthru")->push();                      // dmx par
+      //  }                                                     // dmx par
+      //  else                                                  // dmx par
+      //  {                                                     // dmx par
+      //    LOG("manu ");                                       // dmx par
+      //    this->anim("manu")->push();                         // dmx par
+      //  }                                                     // dmx par
   }
 
   // STOP
