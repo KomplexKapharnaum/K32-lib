@@ -269,7 +269,7 @@ void K32_light::command(Orderz* order)
       //   Serial.print(k);                                  // normal
       //  Serial.print(" = ");                               // normal
       //  Serial.println(v);                                 // normal
-      }                                                      // normal    
+      }                                                      // normal
       this->anim("manu")->push();                            // normal
 
 
