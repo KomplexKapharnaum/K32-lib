@@ -16,7 +16,7 @@
 
 class K32_fixture {
   public:
-    K32_fixture(int size);
+    K32_fixture(int size=0);
 
     int size();
     
@@ -34,6 +34,7 @@ class K32_fixture {
 
     void getBuffer(pixelColor_t* buffer, int size, int offset=0);
     void setBuffer(pixelColor_t* buffer, int size, int offset=0);
+    void setBuffer(const uint8_t *data, int length, int offset=0);
 
     virtual void show();
 

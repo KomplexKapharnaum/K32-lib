@@ -112,8 +112,20 @@ void K32_fixture::getBuffer(pixelColor_t* buffer, int _size, int offset) {
 
 void K32_fixture::setBuffer(pixelColor_t* buffer, int _size, int offset) {
   xSemaphoreTake(this->buffer_lock, portMAX_DELAY);
-  for(int k= 0; (k<this->size() && k<_size); k++) 
+  for(int k= 0; ( (k+offset) < this->size() && k<_size); k++) 
     this->_buffer[k+offset] = buffer[k];
+  this->_dirty = true;
+  xSemaphoreGive(this->buffer_lock);
+}
+
+void K32_fixture::setBuffer(const uint8_t *data, int length, int offset) {
+  xSemaphoreTake(this->buffer_lock, portMAX_DELAY);
+  for(int k= 0; ( (k+offset) < this->size() && k < (length+1)/4 ); k++) {
+    if (k*4 < length)       this->_buffer[k+offset].r = data[k*4];
+    if ((k*4+1) < length)   this->_buffer[k+offset].g = data[k*4+1];
+    if ((k*4+2) < length)   this->_buffer[k+offset].b = data[k*4+2];
+    if ((k*4+3) < length)   this->_buffer[k+offset].w = data[k*4+3];
+  }
   this->_dirty = true;
   xSemaphoreGive(this->buffer_lock);
 }
