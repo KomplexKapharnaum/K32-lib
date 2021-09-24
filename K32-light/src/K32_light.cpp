@@ -266,9 +266,8 @@ void K32_light::command(Orderz* order)
         int v = order->getData(k)->toInt();
 
         if (v >= 0) this->anim("manu")->set(k, v);           // normal
-      //   Serial.print(k);                                  // normal
-      //  Serial.print(" = ");                               // normal
-      //  Serial.println(v);                                 // normal
+      //  LOGF("k->%d ", k);                                 // normal
+      //  LOGF("=%d ", v);                                   // normal
       }                                                      // normal
       this->anim("manu")->push();                            // normal
 
@@ -277,9 +276,8 @@ void K32_light::command(Orderz* order)
       //    if (v >= 0) this->anim("dmxthru")->set(k, v);       // dmx par
       //   else                                                 // dmx par
       //    if (v >= 0) this->anim("manu")->set(k, v);          // dmx par
-      // //   Serial.print(k);                                  // dmx par
-      // //  Serial.print(" = ");                               // dmx par
-      // //  Serial.println(v);                                 // dmx par
+      // //  LOGF("k->%d ", k);                                 // dmx par
+      // //  LOGF("=%d ", v);                                   // dmx par
       // }                                                      // dmx par
       //  if (this->anim("dmxthru"))                            // dmx par
       //  {                                                     // dmx par
@@ -336,27 +334,27 @@ void K32_light::command(Orderz* order)
         { 
         this->anim("manu")->mod(k)->faster();
         if (this->anim("dmxthru"))
-        this->anim("dmxthru")->mod(k)->faster();// to do if dmxthru
+        this->anim("dmxthru")->mod(k)->faster();
         }
         else if (strcmp(order->subaction, "slower") == 0)
         {
           this->anim("manu")->mod(k)->slower();
           if (this->anim("dmxthru"))
-          this->anim("dmxthru")->mod(k)->slower();// to do if dmxthru
+          this->anim("dmxthru")->mod(k)->slower();
         } 
 
         else if (strcmp(order->subaction, "bigger") == 0) 
         {
           this->anim("manu")->mod(k)->bigger();
           if (this->anim("dmxthru"))
-          this->anim("dmxthru")->mod(k)->bigger();// to do if dmxthru
+          this->anim("dmxthru")->mod(k)->bigger();
         }
 
         else if (strcmp(order->subaction, "smaller") == 0) 
          {
           this->anim("manu")->mod(k)->smaller();
           if (this->anim("dmxthru"))
-          this->anim("dmxthru")->mod(k)->smaller();// to do if dmxthru
+          this->anim("dmxthru")->mod(k)->smaller();
          }
       }
   }
