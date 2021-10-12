@@ -23,13 +23,13 @@ K32_power::K32_power(K32_stm32 *stm32, batteryType type, bool autoGauge)
   this->battType = type;
   
   this->autoGauge = autoGauge;
-  this->setAdaptiveGauge(autoGauge);
+  this->enableAdaptativeGauge(autoGauge);
 
   this->_fakeExternalCurrent = 0;
   this->currentPin = -1;
 
   // Calib button
-  if (this->_mcp)
+  if (this->_mcp && this->_mcp->ok)
     this->_mcp->input(CALIB_BUTTON);
 
   // Set Current offset
@@ -162,24 +162,23 @@ void K32_power::calibIres()
   }
 }
 
-void K32_power::setAdaptiveGauge(bool adaptiveOn)
+void K32_power::enableAdaptativeGauge()
 {
-  this->adaptiveGaugeOn = adaptiveOn;
+  LOG("POWER : Switch on adaptive gauge");
+  this->adaptiveGaugeOn = true;
+  this->firstKick = true;
+  return;
+}
 
-  // Set ON
-  if (adaptiveOn) {
-    LOG("POWER : Switch on adaptive gauge");
-    this->firstKick = true;
-    return;
-  }
-
-  // Set OFF  
+void K32_power::disableAdaptativeGauge(int fake_current)
+{
   LOG("POWER : Switch off adaptive gauge");
+  this->adaptiveGaugeOn = false;
+  this->_current = fake_current;
 
   // OFF -> set FAKE CURRENT
-  this->_current = this->_fakeExternalCurrent;
   this->firstKick = true;
-  this->updateCustom();
+  this->setCustomGauge();
 }
 
 
@@ -200,7 +199,7 @@ void K32_power::_unlock()
 }
 
 
-void K32_power::updateCustom()
+void K32_power::setCustomGauge()
 {
     if (!this->_stm32) return;
 
@@ -315,7 +314,7 @@ void K32_power::task(void *parameter)
   while (true)
   { 
     /* Check CALIB button */
-    if (that->_mcp) 
+    if (that->_mcp && that->_mcp->ok) 
     {
       ioflag calibBtn = that->_mcp->flag(CALIB_BUTTON);
 
@@ -349,7 +348,7 @@ void K32_power::task(void *parameter)
     that->_unlock();
     
     /* Update Adaptative profile */ 
-    if(that->adaptiveGaugeOn) that->updateCustom(); 
+    if(that->adaptiveGaugeOn) that->setCustomGauge(); 
     
     vTaskDelay(xFrequency);  
   }

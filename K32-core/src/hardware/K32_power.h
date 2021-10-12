@@ -56,9 +56,8 @@ class K32_power
         
     void setExternalCurrentSensor(sensorType sensor, const int pin, int fakeExternalCurrent=0);        // Set current sensor type and pin
     
-    void setAdaptiveGauge(bool adaptiveOn);                                 // Function to activate adaptive gauge visualisation depending on current.
-                                                                            // Set adaptiveOn to true to set adaptive gauge algo
-                                                                            // type between LIPO and LIFE
+    void enableAdaptativeGauge();                                   // Activate adaptive gauge based on current measurement
+    void disableAdaptativeGauge(int fake_current=0);                // Disale current measurement and adaptative gauge (use fake_current as reference value)
     
     void setMCPcalib(K32_mcp *mcp);
 
@@ -96,7 +95,7 @@ class K32_power
     // int profileIdx = 0; // Number of profile Idx available
     // int profileOn = -1; // Index of operating profile (-1 stands for default mode)
 
-    void updateCustom(); 
+    void setCustomGauge(); 
     int rawExtMeasure(int samples=CURRENT_AVG_SAMPLES);
     int extCurrent();
 

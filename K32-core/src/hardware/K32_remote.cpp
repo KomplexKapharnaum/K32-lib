@@ -26,7 +26,7 @@ K32_remote::K32_remote(K32* k32, K32_mcp *mcp) : K32_plugin("remote", k32)
   this->_state = REMOTE_AUTO;
   this->_old_state = REMOTE_AUTO;
 
-  if (this->mcp)
+  if (this->mcp && this->mcp->ok)
     for (int i = 0; i < NB_BTN; i++)
       this->mcp->input(i);
 
@@ -201,11 +201,13 @@ int K32_remote::getSendMacro()
 
 void K32_remote::command(Orderz* order) 
 {
+  // remote/stop
   if (strcmp(order->action, "stop") == 0 || strcmp(order->action, "off") == 0 || strcmp(order->action, "blackout") == 0)
   {
       this->stmBlackout();
   }
 
+  // remote/macro i
   else if (strcmp(order->action, "macro") == 0)
   {
       this->stmSetMacro( order->getData(0)->toInt() );
@@ -249,7 +251,7 @@ void K32_remote::task(void *parameter)
     // read and count flags
     for (int i = 0; i < NB_BTN; i++) 
     {
-      if (that->mcp) flags[i] = that->mcp->flag(i);          // read flag but don't consume yet
+      if (that->mcp && that->mcp->ok) flags[i] = that->mcp->flag(i);                             // read flag but don't consume yet
       else flags[i] = MCPIO_NOT;                                         
 
       if (flags[i] == MCPIO_PRESS || flags[i] == MCPIO_PRESS_LONG) countPressed++;               // count pressed button
@@ -270,7 +272,7 @@ void K32_remote::task(void *parameter)
 
           for (int i = 0; i < NB_BTN; i++) 
           {
-            if (that->mcp) that->mcp->consume(i);                                         // Stable state -> consume values
+            if (that->mcp && that->mcp->ok) that->mcp->consume(i);                               // Stable state -> consume values
             if (flags[i] > actionFlag) actionFlag = flags[i];
             if (flags[i] != MCPIO_NOT) actionCode = actionCode*10+i+1;  
           }
