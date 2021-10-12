@@ -18,8 +18,11 @@ class K32_ledstrip : public K32_fixture
   public:
     K32_ledstrip(int chan, int pin, int type, int size) : K32_fixture(size)
     {
-      this->_strand = digitalLeds_addStrand(
-        {.rmtChannel = chan, .gpioNum = pin, .ledType = type, .brightLimit = 255, .numPixels = this->size(), .pixels = nullptr, ._stateVars = nullptr});
+      this->enable = (pin>0);
+
+      if (this->enable)
+        this->_strand = digitalLeds_addStrand(
+          {.rmtChannel = chan, .gpioNum = pin, .ledType = type, .brightLimit = 255, .numPixels = this->size(), .pixels = nullptr, ._stateVars = nullptr});
     }
 
 
@@ -35,14 +38,17 @@ class K32_ledstrip : public K32_fixture
         // LOG(this->_buffer[0].r);
         // LOG();
         
-        memcpy(&this->_strand->pixels, &this->_buffer, sizeof(this->_buffer));
-        // for(int i=0; i < this->size(); i++) this->_strand->pixels[i] = this->_buffer[i];
+        if (this->enable) 
+          memcpy(&this->_strand->pixels, &this->_buffer, sizeof(this->_buffer));
+
         this->_dirty = false;
         // LOG("LIGHT: show _dirty");
 
-        // LOGINL("show strand // ");
-        // for(int i=0; i < this->size(); i++) LOGF(" %i", this->_strand->pixels[i].r);
-        // LOG();
+        // if (this->enable) {
+        //   LOGINL("show strand // ");
+        //   for(int i=0; i < this->size(); i++) LOGF(" %i", this->_strand->pixels[i].r);
+        //   LOG();
+        // }
 
         xSemaphoreGive(this->draw_lock);
       }
@@ -56,16 +62,19 @@ class K32_ledstrip : public K32_fixture
     // PUSH strand TO RMT
     void draw() 
     {
-      // LOGINL("draw strand // ");
-      // for(int i=0; i < this->size(); i++) LOGF(" %i", this->_strand->pixels[i].r);
-      // LOG();
-      digitalLeds_updatePixels(this->_strand);           // PUSH LEDS TO RMT
-      delay(1);
+      if (this->enable) {
+        // LOGINL("draw strand // ");
+        // for(int i=0; i < this->size(); i++) LOGF(" %i", this->_strand->pixels[i].r);
+        // LOG();
+        digitalLeds_updatePixels(this->_strand);           // PUSH LEDS TO RMT
+        delay(1);
+      }
     }
 
   private:
 
     strand_t* _strand;
+    bool enable = false;
 
 };
 
