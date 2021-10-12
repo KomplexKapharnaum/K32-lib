@@ -17,13 +17,19 @@ K32_power::K32_power(K32_stm32 *stm32, batteryType type, bool autoGauge)
 {
   this->_stm32 = stm32;
 
-  LOG("POWER : init");
+  if (!this->_stm32) {
+    LOG("POWER: no stm32 available.. disabled");
+    return;
+  }
+
+  LOG("POWER: init");
 
   this->lock = xSemaphoreCreateMutex();
   this->battType = type;
   
   this->autoGauge = autoGauge;
-  this->enableAdaptativeGauge(autoGauge);
+  if (autoGauge) this->enableAdaptativeGauge();
+  else this->disableAdaptativeGauge();
 
   this->_fakeExternalCurrent = 0;
   this->currentPin = -1;
@@ -40,15 +46,13 @@ K32_power::K32_power(K32_stm32 *stm32, batteryType type, bool autoGauge)
   power_prefs.end(); 
 
   // Start main task
-  if (this->_stm32)
+  
     xTaskCreate(this->task,
                 "power_task",
                 5000,
                 (void *)this,
                 0, // priority
-                &t_handle); 
-  
-  else LOG("POWER: disabled since no stm32 available");
+                &t_handle);
 };
 
 

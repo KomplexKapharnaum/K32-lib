@@ -23,8 +23,9 @@ K32_mcp::K32_mcp(const int MCP_PIN[2])
 
   /* Init I2C and Buttons pins */
   Wire.begin(MCP_PIN[0], MCP_PIN[1]);     // i2c pins
-  if(!this->mcp.begin_I2C(0x20){              // i2c addr
+  if(!this->mcp.begin_I2C(0x20)){              // i2c addr
     LOG("MCP: not found.. disabled");
+    return;
   }
 
   LOG("MCP: init");
