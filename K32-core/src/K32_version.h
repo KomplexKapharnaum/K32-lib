@@ -19,7 +19,7 @@
 //
 #define LED_N_STRIPS 2
 const int LEDS_PIN[MAX_HW+1][LED_N_STRIPS] = {
-  {21, 22},               // HW_REVISION 0
+  {-1, -1},               // HW_REVISION 0
   {21, 22},               // HW_REVISION 1
   {23, 22},               // HW_REVISION 2
   {27, 32},               // HW_REVISION 3: ATOM (26 & 32 pin out ph2.0 || 27 intern)
@@ -31,7 +31,7 @@ const int LEDS_PIN[MAX_HW+1][LED_N_STRIPS] = {
 //
 #define PWM_N_CHAN 4
 const int PWM_PIN[MAX_HW+1][PWM_N_CHAN] = {
-  {17, 16, -1, -1 },               // HW_REVISION 0
+  {-1, -1, -1, -1 },               // HW_REVISION 0
   {12, 13, -1, -1 },               // HW_REVISION 1
   {14, 12, 13, 15 },               // HW_REVISION 2
   {-1, -1, -1, -1 },               // HW_REVISION 3: ATOM
@@ -45,7 +45,7 @@ const int DMX_PIN[MAX_HW+1][3] = {
   {-1, -1, -1 },               // HW_REVISION 0
   {33, 32, 35 },               // HW_REVISION 1
   { 4, 16, 17 },               // HW_REVISION 2
-  {-1, -1, -1 },               // HW_REVISION 3: ATOM
+  {22, 19, 23 },               // HW_REVISION 3: ATOM
   {-1, -1, -1 }                // HW_REVISION 4: ATOM_LITE
 };
 
@@ -53,7 +53,7 @@ const int DMX_PIN[MAX_HW+1][3] = {
 // {I2C_SDA_PIN, I2C_SCL_PIN, I2S_LRCK_PIN, I2S_DATA_PIN, I2S_BCK_PIN}
 //
 const int AUDIO_PIN[MAX_HW+1][5] = {
-  {2, 4, 27, 26, 25},     // HW_REVISION 0
+  {-1, -1, -1, -1, -1},     // HW_REVISION 0
   {2, 4, 27, 26, 25},     // HW_REVISION 1
   {32, 33, 25, 26, 27},   // HW_REVISION 2
   {-1, -1, -1, -1, -1},   // HW_REVISION 3 : ATOM
