@@ -35,7 +35,7 @@ const int PWM_PIN[MAX_HW+1][PWM_N_CHAN] = {
   {12, 13, -1, -1 },               // HW_REVISION 1
   {14, 12, 13, 15 },               // HW_REVISION 2
   {-1, -1, -1, -1 },               // HW_REVISION 3: ATOM
-  {22, 19, 23, 33 }                // HW_REVISION 4: ATOM_LITE
+  {22, 19, -1, -1 }                // HW_REVISION 4: ATOM_LITE 22,19,23,33
 };
 
 // DMX PINS
