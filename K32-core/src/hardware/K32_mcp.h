@@ -39,6 +39,8 @@ public:
 
   void set(uint8_t pin, bool value);
 
+  bool ok = false;
+
 private:
   SemaphoreHandle_t lock;
   mcpio io[16];

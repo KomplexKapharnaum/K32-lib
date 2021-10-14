@@ -18,10 +18,8 @@
 class K32_node : public K32_fixture 
 {
   public:
-    K32_node(const int DMX_PIN[3], int addressStart) : K32_fixture(NODE_PATCHSIZE/4)
+    K32_node(const int DMX_PIN[3]) : K32_fixture(NODE_PATCHSIZE/4)
     {
-      // ADDR offset
-      _addressStart = max(1,addressStart);
       _dmxOut = new K32_dmx(DMX_PIN, DMX_OUT); // TODO make DMX device external (not in fixture so multiple fixture can use a single DMX out)
     }
 
@@ -43,7 +41,7 @@ class K32_node : public K32_fixture
           buffDMX[i*4+2]  = _buffer[i].b;
           buffDMX[i*4+3]  = _buffer[i].w;
         }   
-        this->_dmxOut->setMultiple(buffDMX, size()*4, _addressStart);
+        this->_dmxOut->setMultiple(buffDMX, size()*4);
         /////////////////////////////////////////////////////////////////////////////////
 
         this->_dirty = false;
@@ -56,7 +54,6 @@ class K32_node : public K32_fixture
 
   private:
     K32_dmx* _dmxOut = nullptr;
-    int _addressStart = 1;
 
 };
 

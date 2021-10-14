@@ -19,13 +19,17 @@
 
 K32_mcp::K32_mcp(const int MCP_PIN[2])
 {
-  LOG("MCP: init");
-
   this->lock = xSemaphoreCreateMutex();
 
   /* Init I2C and Buttons pins */
-  Wire.begin(MCP_PIN[0], MCP_PIN[1]); // i2c pins
-  this->mcp.begin_I2C();                  // i2c addr
+  Wire.begin(MCP_PIN[0], MCP_PIN[1]);     // i2c pins
+  if(!this->mcp.begin_I2C(0x20)){              // i2c addr
+    LOG("MCP: not found.. disabled");
+    return;
+  }
+
+  LOG("MCP: init");
+  this->ok = true;
 
   // Start read button state task
   xTaskCreate(this->read_btn_state, // function
