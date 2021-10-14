@@ -359,6 +359,51 @@ void K32_light::command(Orderz* order)
       }
   }
 
+  // maree
+  else if (strcmp(order->action, "maree") == 0)
+  {
+    if (strcmp(order->subaction, "go_p") == 0)
+    {
+
+    } 
+    else if (strcmp(order->action,"go_m")==0)
+    {
+
+    }
+    else if (strcmp(order->action,"niv_p")==0)
+    {
+      
+    }
+    else if (strcmp(order->action,"niv_m")==0)
+    {
+      
+    }
+    else if (strcmp(order->action,"niv_cp")==0)
+    {
+      
+    }
+    else if (strcmp(order->action,"niv_cm")==0)
+    {
+      
+    }
+    else if (strcmp(order->action,"temps")==0)
+    {
+      
+    }
+    else if (strcmp(order->action,"haute")==0)
+    {
+      
+    }
+    else if (strcmp(order->action,"basse")==0)
+    {
+      
+    }
+    else if (strcmp(order->action,"pixel")==0)
+    {
+      
+    }
+  }
+
   return;
 }
 
