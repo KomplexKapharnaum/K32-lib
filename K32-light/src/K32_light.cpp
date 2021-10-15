@@ -364,43 +364,43 @@ void K32_light::command(Orderz* order)
   {
     if (strcmp(order->subaction, "go_p") == 0)
     {
-
+      // haute();
     } 
     else if (strcmp(order->action,"go_m")==0)
     {
-
+      // basse();
     }
     else if (strcmp(order->action,"niv_p")==0)
     {
-      
+      // niveau_plus();
     }
     else if (strcmp(order->action,"niv_m")==0)
     {
-      
+      // niveau_moins();
     }
     else if (strcmp(order->action,"niv_cp")==0)
     {
-      
+      // niveau_ten_plus();
     }
     else if (strcmp(order->action,"niv_cm")==0)
     {
-      
+      // niveau_ten_moins();
     }
     else if (strcmp(order->action,"temps")==0)
     {
-      
+      // set_temps();
     }
     else if (strcmp(order->action,"haute")==0)
     {
-      
+      // set_haute();
     }
     else if (strcmp(order->action,"basse")==0)
     {
-      
+      // set_basse();
     }
     else if (strcmp(order->action,"pixel")==0)
     {
-      
+      // set_niveau();
     }
   }
 
