@@ -72,6 +72,19 @@ class K32_dmx {
       return this;
     }
 
+    // SET multiple values
+    K32_dmx* setMultiple(const uint8_t* values, int size, int offsetAdr = 1) 
+    {
+      if (outputOK) {
+      // LOGF3("DMX: setMultiple %d %d %d\n",values[0], size, offsetAdr);
+        xSemaphoreTake(ESP32DMX.lxDataLock, portMAX_DELAY);
+        for (int i = 0; i < size; i++)
+          ESP32DMX.setSlot(i+offsetAdr, values[i]);
+        xSemaphoreGive(ESP32DMX.lxDataLock);
+      }
+      return this;
+    }
+
   private:
 
     bool outputOK = false;

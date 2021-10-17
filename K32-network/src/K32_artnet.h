@@ -9,31 +9,29 @@
 #include <ArtnetWiFi.h>         // https://github.com/hideakitai/ArtNet
 #include <class/K32_plugin.h>
 
-struct artnetconf
+#define ARTNET_SUB_SLOTS 16
+
+typedef void (*cbPtrArtnet )(const uint8_t *data, int length);
+
+struct artnetsub
 {
-  int universe;
   int address;
   int framesize;
-  String shortName;
-  String longName;
+  cbPtrArtnet callback;
 };
-
 
 class K32_artnet : K32_plugin {
   public:
-    typedef void (*cbPtr)(const uint8_t *data, int length);
     
-    K32_artnet(K32* k32, artnetconf conf);
+    K32_artnet(K32* k32, String name, int universe);
     void start();
     void stop();
 
-    void onDmx( cbPtr callback );
-    void onFullDmx( cbPtr callback );
-
-
-    static artnetconf conf;    
-    static cbPtr frameCallback;
-    static cbPtr fullCallback;
+    void onDmx( artnetsub subscription );
+    void onFullDmx( cbPtrArtnet callback );
+    
+    static cbPtrArtnet fullCallback;
+    static artnetsub subscriptions[ARTNET_SUB_SLOTS];
     static int _lastSequence;
 
     void command(Orderz* order);
@@ -46,6 +44,8 @@ class K32_artnet : K32_plugin {
     static void _onArtnet(const uint8_t* data, const uint16_t length);
 
     TaskHandle_t xHandle = NULL;
+
+    int _universe = 0; // universe = _universe%16 // subnet = _universe/16
 
 };
 

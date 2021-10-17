@@ -6,12 +6,13 @@
 #ifndef K32_version_h
 #define K32_version_h
 
-#define MAX_HW 4          // Max value HW_REVISION
+#define MAX_HW 4             // Max value HW_REVISION
 
 // #define K32_VERSION 2.00  // inter modules communication refactoring (modular / lazy includes)
 // #define K32_VERSION 2.01  // add hw_3 ATOM
 // #define K32_VERSION 2.02  // change HW_REVISON and Platformio.ini
-#define K32_VERSION 2.03     // add hw_4 ATOM_LITE 2 data led output
+// #define K32_VERSION 2.03  // add hw_4 ATOM_LITE 2 data led output
+#define K32_VERSION 2.04     // Multiple DMX fixtures
 
 
 // LEDS PINS
@@ -41,6 +42,7 @@ const int PWM_PIN[MAX_HW+1][PWM_N_CHAN] = {
 // DMX PINS
 // {DMX_DIRECTION, DMX_OUTPUT, DMX_INPUT}
 //
+#define DMX_N_FIXTURES 16  // NBR OF FIXTURES ON DMX BUS
 const int DMX_PIN[MAX_HW+1][3] = {
   {-1, -1, -1 },               // HW_REVISION 0
   {33, 32, 35 },               // HW_REVISION 1

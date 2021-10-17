@@ -130,7 +130,7 @@ void K32_light::blackout() {
 //
 
 // register new anim
-K32_anim* K32_light::anim( K32_fixture* fix, String animName, K32_anim* anim, int size, int offset ) 
+K32_anim* K32_light::anim( String animName, K32_anim* anim, int size, int offset ) 
 {
 
   if (this->_animcounter >= LIGHT_ANIMS_SLOTS) {
@@ -139,7 +139,7 @@ K32_anim* K32_light::anim( K32_fixture* fix, String animName, K32_anim* anim, in
   }
   
   anim->name(animName);
-  anim->setup( fix, size, offset );
+  anim->setup( size, offset );
 
   this->_anims[ this->_animcounter ] = anim;
   this->_animcounter++;
@@ -232,10 +232,10 @@ void K32_light::command(Orderz* order)
 
       this->anim("manu")->master( masterValue );
       this->anim("manu")->push();
-      if (this->anim("dmxthru"))
+      if (this->anim("datathru"))
       {
-      this->anim("dmxthru")->master( masterValue );// to do if dmxthru
-      this->anim("dmxthru")->push();// to do if dmxthru
+      this->anim("datathru")->master( masterValue );// to do if dmxthru
+      this->anim("datathru")->push();// to do if dmxthru
       }
   }
 
@@ -272,17 +272,17 @@ void K32_light::command(Orderz* order)
       this->anim("manu")->push();                            // normal
 
 
-      //   if (this->anim("dmxthru"))                           // dmx_par
-      //    if (v >= 0) this->anim("dmxthru")->set(k, v);       // dmx par
+      //   if (this->anim("datathru"))                           // dmx_par
+      //    if (v >= 0) this->anim("datathru")->set(k, v);       // dmx par
       //   else                                                 // dmx par
       //    if (v >= 0) this->anim("manu")->set(k, v);          // dmx par
       // //  LOGF("k->%d ", k);                                 // dmx par
       // //  LOGF("=%d ", v);                                   // dmx par
       // }                                                      // dmx par
-      //  if (this->anim("dmxthru"))                            // dmx par
+      //  if (this->anim("datathru"))                            // dmx par
       //  {                                                     // dmx par
       //    LOG("DMX THRU");                                    // dmx par
-      //    this->anim("dmxthru")->push();                      // dmx par
+      //    this->anim("datathru")->push();                      // dmx par
       //  }                                                     // dmx par
       //  else                                                  // dmx par
       //  {                                                     // dmx par
@@ -333,28 +333,28 @@ void K32_light::command(Orderz* order)
         if (strcmp(order->subaction, "faster") == 0)
         { 
         this->anim("manu")->mod(k)->faster();
-        if (this->anim("dmxthru"))
-        this->anim("dmxthru")->mod(k)->faster();
+        if (this->anim("datathru"))
+        this->anim("datathru")->mod(k)->faster();
         }
         else if (strcmp(order->subaction, "slower") == 0)
         {
           this->anim("manu")->mod(k)->slower();
-          if (this->anim("dmxthru"))
-          this->anim("dmxthru")->mod(k)->slower();
+          if (this->anim("datathru"))
+          this->anim("datathru")->mod(k)->slower();
         } 
 
         else if (strcmp(order->subaction, "bigger") == 0) 
         {
           this->anim("manu")->mod(k)->bigger();
-          if (this->anim("dmxthru"))
-          this->anim("dmxthru")->mod(k)->bigger();
+          if (this->anim("datathru"))
+          this->anim("datathru")->mod(k)->bigger();
         }
 
         else if (strcmp(order->subaction, "smaller") == 0) 
          {
           this->anim("manu")->mod(k)->smaller();
-          if (this->anim("dmxthru"))
-          this->anim("dmxthru")->mod(k)->smaller();
+          if (this->anim("datathru"))
+          this->anim("datathru")->mod(k)->smaller();
          }
       }
   }

@@ -69,7 +69,7 @@ class K32_light : K32_plugin {
     //  ANIM
     //
     K32_anim* anim( String animName = "");
-    K32_anim* anim( K32_fixture* fix, String animName, K32_anim* anim, int size = 0, int offset = 0);
+    K32_anim* anim( String animName, K32_anim* anim, int size = 0, int offset = 0);
     void stop();
 
     // Set FPS

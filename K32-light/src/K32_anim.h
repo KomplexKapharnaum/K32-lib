@@ -6,8 +6,9 @@
 #ifndef K32_anim_h
 #define K32_anim_h
 
-#define ANIM_DATA_SLOTS  32
-#define ANIM_MOD_SLOTS  16
+#define ANIM_FIXTURES_SLOTS 16
+#define ANIM_DATA_SLOTS     32
+#define ANIM_MOD_SLOTS      16
 
 #include "fixtures/K32_fixture.h"
 #include "K32_modulator.h"
@@ -20,7 +21,6 @@ class K32_anim {
   public:
     K32_anim()
     {
-      this->_strip = NULL;
       memset(this->_data, 0, sizeof this->_data);
 
       for (int k=0; k<ANIM_MOD_SLOTS; k++)
@@ -41,11 +41,19 @@ class K32_anim {
       vQueueDelete(this->wait_lock);
     }
 
-    K32_anim* setup(K32_fixture* strip, int size = 0, int offset = 0) {
+    K32_anim* setup(int size = 0, int offset = 0) {
       
-      this->_strip = strip;
-      this->_size = (size) ? size : strip->size();
+      this->_size = size;
       this->_offset = offset;
+      return this;
+    }
+
+    K32_anim* attach(K32_fixture* fix) {
+      for (int k=0; k<ANIM_FIXTURES_SLOTS; k++) 
+        if (!this->_fixtures[k]) {
+          this->_fixtures[k] = fix;
+          break;
+        }
       return this;
     }
     
@@ -79,10 +87,6 @@ class K32_anim {
     // start animate thread
     K32_anim* play(int timeout = 0) 
     {
-      if (this->_strip == NULL) {
-        LOG("ERROR: animation, you need to call setup before play !");
-        return this;
-      }
       this->_stopAt = (timeout>0) ? millis() + timeout : 0;
 
       if (this->isPlaying()) return this;
@@ -247,7 +251,7 @@ class K32_anim {
     }
 
     // new data push (int[], size)
-    K32_anim* push(int* frame, int size) {
+    K32_anim* push(int* frame, int size=ANIM_DATA_SLOTS) {
       bool didChange = false;
       size = min(size, ANIM_DATA_SLOTS);
       xSemaphoreTake(this->bufferInUse, portMAX_DELAY);     // data can be modified only during anim waitData
@@ -310,9 +314,9 @@ class K32_anim {
 
     // pause is like delay, but allow strip refresh
     void pause(int ms) {
-      this->_strip->unlock();
+      for (int k=0; k<ANIM_FIXTURES_SLOTS; k++) if (this->_fixtures[k]) this->_fixtures[k]->unlock();
       delay(ms);
-      this->_strip->lock();
+      for (int k=0; k<ANIM_FIXTURES_SLOTS; k++) if (this->_fixtures[k]) this->_fixtures[k]->lock();
     }
 
     // DRAW ON STRIP
@@ -321,17 +325,23 @@ class K32_anim {
     // draw pix
     void pixel(int pix, CRGBW color)  {
       if (pix < this->_size)
-        this->_strip->pix( pix + this->_offset, color % this->_master);
+        for (int k=0; k<ANIM_FIXTURES_SLOTS; k++)
+          if (this->_fixtures[k])
+            this->_fixtures[k]->pix( pix + this->_offset, color % this->_master);
     }
 
     // draw multiple pix
     void pixel(int pixStart, int count, CRGBW color)  {
-      this->_strip->pix( pixStart + this->_offset, count, color % this->_master);
+      for (int k=0; k<ANIM_FIXTURES_SLOTS; k++)
+          if (this->_fixtures[k])
+            this->_fixtures[k]->pix( pixStart + this->_offset, count, color % this->_master);
     }
 
     // draw all
     void all(CRGBW color) {
-      this->_strip->pix( this->_offset, this->_size, color % this->_master);
+      for (int k=0; k<ANIM_FIXTURES_SLOTS; k++)
+          if (this->_fixtures[k])
+            this->_fixtures[k]->pix( this->_offset, this->_size, color % this->_master);
     }
 
     // clear
@@ -390,14 +400,13 @@ class K32_anim {
         xSemaphoreGive(that->bufferInUse);                                          // let data be push by others
         
         for (int k=0; k<ANIM_MOD_SLOTS; k++)
-          if (that->_modulators[k])       
-            triggerDraw = that->_modulators[k]->run(dataCopy) || triggerDraw;       // run modulators on data
+          if (that->_modulators[k]) triggerDraw = that->_modulators[k]->run(dataCopy) || triggerDraw;       // run modulators on data
 
         
         if (triggerDraw) {
-          that->_strip->lock();
+          for (int k=0; k<ANIM_FIXTURES_SLOTS; k++) if (that->_fixtures[k]) that->_fixtures[k]->lock();
           that->draw(dataCopy);                                      // Subclass draw hook
-          that->_strip->unlock();
+          for (int k=0; k<ANIM_FIXTURES_SLOTS; k++) if (that->_fixtures[k]) that->_fixtures[k]->unlock();
         }
 
       } 
@@ -422,7 +431,7 @@ class K32_anim {
     bool _loop = true;
 
     // output
-    K32_fixture* _strip = NULL;
+    K32_fixture* _fixtures[ANIM_FIXTURES_SLOTS] = {NULL};
     uint8_t _master = 255;
     int _size = 0;
     int _offset = 0; 

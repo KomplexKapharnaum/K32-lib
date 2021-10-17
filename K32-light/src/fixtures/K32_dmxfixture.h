@@ -1,29 +1,25 @@
 /*
-  K32_elp.h
-  Created by Thomas BOHL, may 2021.
+  K32_dmxfixture.h
+  Created by Thomas BOHL, october 2021.
   Released under GPL v3.0
 */
-#ifndef K32_elp_h
-#define K32_elp_h
-
-#define FIXTURE_MAXPIXEL 512
+#ifndef K32_dmxfixture_h
+#define K32_dmxfixture_h
 
 #include <Arduino.h>
 
 #include "K32_dmx.h"
 #include "K32_fixture.h"
-#include "_librmt/esp32_digital_led_lib.h"
 #include "_libfast/crgbw.h"
 
 
-class K32_elp : public K32_fixture 
+class K32_dmxfixture : public K32_fixture 
 {
   public:
-    K32_elp(const int DMX_PIN[3], int addressStart, int size) : K32_fixture(size)
+    K32_dmxfixture(K32_dmx* dmx, int addressStart, int channels) : K32_fixture(channels/4)
     {
-      // ADDR offset
-      _addressStart = max(1,addressStart);
-      _dmxOut = new K32_dmx(DMX_PIN, DMX_OUT); // TODO make DMX device external (not in fixture so multiple fixture can use a single DMX out)
+      _dmxOut = dmx;
+      _addressStart = addressStart;
     }
 
     // COPY Buffers to STRAND
@@ -37,13 +33,14 @@ class K32_elp : public K32_fixture
         // LOG(this->_buffer[0].r);
 
         /////////////////////////////////////////////////////////////////////////////////
-        int buffDMX[size()*3];
+        int buffDMX[size()*4];
         for (int i = 0; i < size(); i++) {
-          buffDMX[i*3]    = _buffer[i].r;
-          buffDMX[i*3+1]  = _buffer[i].g;
-          buffDMX[i*3+2]  = _buffer[i].b;
+          buffDMX[i*4]    = _buffer[i].r;
+          buffDMX[i*4+1]  = _buffer[i].g;
+          buffDMX[i*4+2]  = _buffer[i].b;
+          buffDMX[i*4+3]  = _buffer[i].w;
         }   
-        this->_dmxOut->setMultiple(buffDMX, size()*3, _addressStart);
+        this->_dmxOut->setMultiple(buffDMX, size()*4, _addressStart);
         /////////////////////////////////////////////////////////////////////////////////
 
         this->_dirty = false;
@@ -56,8 +53,7 @@ class K32_elp : public K32_fixture
 
   private:
     K32_dmx* _dmxOut = nullptr;
-    int _addressStart = 1;
-
+    int _addressStart;
 };
 
 #endif
