@@ -9,50 +9,58 @@
 
 #include <Arduino.h>
 
-#define MAX_PRESET 64
+#define PRESET_MAX 64
 
-typedef void (*cbPtrModulate )(K32_anim *anim);
 typedef const uint8_t mem_t[ANIM_DATA_SLOTS];
-typedef const uint8_t bank_t[MAX_PRESET][ANIM_DATA_SLOTS];
 
-
-template <size_t Size>
 class LPreset
 {
     public:
-        LPreset(mem_t m) {
-            for(int j=0; j<Size; j++) 
-                _mem[j] = m[j];
+        LPreset(mem_t m, size_t size) {
+            _size = size;
+            for(int j=0; j<_size; j++) _mem[j] = m[j];
         }
 
-        LPreset(const char* p) {
+        LPreset(const char* p, size_t size) {
+            _size = size;
             char value[16];
-            for (int i=0; i<Size; i++) {
+            for (int i=0; i<_size; i++) {
                 splitString(p, ",", i, value);
                 _mem[i] = atoi(deblank(value));
             }
         }
 
-        LPreset* onload(cbPtrModulate m8clbck) {
-            _m8clbck = m8clbck;
-        } 
-
-        void load(K32_anim *anim) {
-            // remove disposable modulators
-            //
-            anim->unmod();
-
-            // push new data
-            //
-            anim->push(_mem, Size);
-
-            if (_m8clbck) _m8clbck(anim);
+        // register new modulator
+        K32_modulator* mod(K32_modulator* modulator) 
+        { 
+            for (int k=0; k<ANIM_MOD_SLOTS; k++)
+                if(this->_modulators[k] == nullptr) {
+                    this->_modulators[k] = modulator;
+                    break;
+                }
+            
+            return modulator;
         }
 
+        K32_modulator** modulators() {
+            return _modulators;
+        }
+
+        uint8_t* mem() {
+            return _mem;
+        }
+
+        size_t size() {
+            return _size;
+        }
+
+
     private:
-        int _size = Size;
-        uint8_t _mem[Size];
-        cbPtrModulate _m8clbck = nullptr;
+        size_t _size;
+        uint8_t _mem[ANIM_DATA_SLOTS];
+
+        // Modulator
+        K32_modulator* _modulators[ANIM_MOD_SLOTS] = {nullptr};
 
         void splitString(const char *data, const char *separator, int index, char *result)
         {
@@ -83,46 +91,67 @@ class LPreset
 };
 
 
-template <size_t Size>
 class LBank
 {
     public:
-        LBank() {
-            _nowifi = new LPreset<Size>(mem_t {});
+        LBank(size_t presetsize) {
+            _presetsize = presetsize;
+            _nowifi = new LPreset(mem_t {}, _presetsize);
         }
 
         void name(String n) { _name = n; }
         String name() { return _name; }
 
-        LPreset<Size>* add(mem_t mem) 
+        LPreset* add(mem_t p) 
         {   
-            _bank[_length] = new LPreset<Size>(mem);
-            _length++;
-            return _bank[_length-1];
+            _bank[_size] = new LPreset(p, _presetsize);
+            mem = _bank[_size];
+            _size++;
+            return mem;
         }
 
-        LPreset<Size>* add(const char* p) 
+        LPreset* add(const char* p) 
         {
-            _bank[_length] = new LPreset<Size>(p);
-            _length++;
-            return _bank[_length-1];
+            _bank[_size] = new LPreset(p, _presetsize);
+            mem = _bank[_size];
+            _size++;
+            return mem;
         }
 
-        LPreset<Size>* nowifi(mem_t m) 
+        LPreset* nowifi(mem_t m) 
         {
             if (_nowifi) delete _nowifi;
-            _nowifi = new LPreset<Size>(m);
+            _nowifi = new LPreset(m, _presetsize);
             return _nowifi;
         }
+
+        LPreset* get(int N) 
+        {   
+            if (N<0) N += this->_size;
+            
+            if (N>=0 && N<_size && _bank[N]!=nullptr) {
+                mem = _bank[N];
+                return _bank[N];
+            }
+
+            mem = nullptr;
+            return nullptr;
+        }
+
+        size_t size() {
+            return _size;
+        }
+
+        LPreset* mem = nullptr;  // !!! point to last added/loaded preset   
 
 
     private:
         String _name;
-        int _size = Size;
-        int _length = 0;
+        int _presetsize = 0;
+        int _size = 0;
 
-        LPreset<Size>*  _bank[MAX_PRESET];
-        LPreset<Size>*  _nowifi;
+        LPreset*  _bank[PRESET_MAX] = {nullptr};
+        LPreset*  _nowifi = nullptr;
 };
 
 

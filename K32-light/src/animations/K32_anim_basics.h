@@ -10,13 +10,28 @@
 // NOTE: to be available, add #include to this file in K32_light.h !
 //
 
+class Anim_datathru  : public K32_anim
+{
+
+public:
+    // Loop
+    void draw(int data[ANIM_DATA_SLOTS])
+    {
+        int pixCount = min(ANIM_DATA_SLOTS/4, size());
+
+        // Group 4 consecutive data to one RGBW pixel
+        for (int k=0; k<pixCount; k++) 
+            this->pixel(k, CRGBW(data[k*4], data[k*4+1], data[k*4+2], data[k*4+3]) );
+
+        // Pixel to DMX will be handled by the fixture
+    }
+};
+
 
 //
 // TEST
 //
-
-
-class K32_anim_test : public K32_anim {
+class Anim_test_strip : public K32_anim {
   public:
     
     // Setup
@@ -58,23 +73,31 @@ class K32_anim_test : public K32_anim {
 };
 
 
-//
-// FULLCOLOR
-//
-class K32_anim_color : public K32_anim {
+class Anim_test_pwm : public K32_anim {
   public:
-
+    
     // Setup
-    void init() {}
+    void init() {
+      this->loop(false);
+    }
 
     // Loop
-    void draw(int data[ANIM_DATA_SLOTS])
+    void draw (int data[ANIM_DATA_SLOTS])
     {
-      CRGBW color {data[0], data[1], data[2], data[3]};
-      this->all( color );
+      int stepMS = data[0];
+
+      this->all( CRGBW(255, 0, 255, 0) );
+      this->pause(stepMS);
+
+      this->all( CRGBW(0, 255, 0, 255) );
+      this->pause(stepMS);
+
+      this->all( CRGBW(127, 127, 127, 127) );
+      this->pause(stepMS);
+  
+      this->clear();
     };
 };
-
 
 
 

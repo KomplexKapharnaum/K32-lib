@@ -12,6 +12,7 @@
 
 #include "fixtures/K32_fixture.h"
 #include "K32_modulator.h"
+#include "K32_presets.h"
 
 
 //
@@ -48,7 +49,9 @@ class K32_anim {
       return this;
     }
 
-    K32_anim* attach(K32_fixture* fix) {
+    // Attach fixtures to Animation
+    K32_anim* drawTo(K32_fixture* fix) {
+      if (!fix) return this;
       for (int k=0; k<ANIM_FIXTURES_SLOTS; k++) 
         if (!this->_fixtures[k]) {
           this->_fixtures[k] = fix;
@@ -56,6 +59,46 @@ class K32_anim {
         }
       return this;
     }
+
+    // Attach Array of fixtures to Animation
+    K32_anim* drawTo(K32_fixture** fix, int count) {
+      for (int k=0; k<count; k++) this->drawTo(fix[k]);
+      return this;
+    }
+
+    // Set internal presets bank
+    K32_anim* bank(LBank* bank) {
+      _bank = bank;
+      return this;
+    }
+
+    // Get internal presets bank
+    LBank* bank() {
+      return _bank;
+    }
+
+    // Load mem from bank
+    K32_anim* mem(int N) 
+    {
+      if (!_bank) return this;
+
+      LPreset* preset = _bank->get(N);
+      if (!preset) return this;
+
+      // remove disposable modulators
+      this->unmod();
+
+      // push new data
+      this->push(preset->mem(), preset->size());
+
+      // apply mem modulators
+      K32_modulator** mods = preset->modulators();
+      for (int k=0; k<ANIM_MOD_SLOTS; k++)
+        if( mods[k] ) this->mod( mods[k] );
+
+      return this;
+    }
+
     
     // ANIM CONTROLS
     //
@@ -126,6 +169,8 @@ class K32_anim {
     // register new modulator
     K32_modulator* mod(K32_modulator* modulator, bool playNow = true) 
     { 
+      if (!modulator) return NULL;
+
       int i = -1;
       for (int k=0; k<ANIM_MOD_SLOTS; k++)
         if(this->_modulators[k] == NULL) {
@@ -340,8 +385,10 @@ class K32_anim {
     // draw all
     void all(CRGBW color) {
       for (int k=0; k<ANIM_FIXTURES_SLOTS; k++)
-          if (this->_fixtures[k])
+          if (this->_fixtures[k]) {
             this->_fixtures[k]->pix( this->_offset, this->_size, color % this->_master);
+            // LOGF2("TEST:draw r=%d  on fixture %d\n", (color % this->_master).r, k);
+          }
     }
 
     // clear
@@ -448,6 +495,9 @@ class K32_anim {
 
     // Modulator
     K32_modulator* _modulators[ANIM_MOD_SLOTS];
+
+    // Prestes Bank
+    LBank* _bank = NULL;
 };
 
 

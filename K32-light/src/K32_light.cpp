@@ -18,19 +18,26 @@ K32_light::K32_light(K32* k32) : K32_plugin("leds", k32)
                   4,                      // priority
                   NULL );                 // handler
 
-  pwm = new K32_pwm(k32);
 }
 
-K32_fixture* K32_light::addFixture(K32_fixture* fix)
+K32_light* K32_light::addFixture(K32_fixture* fix)
 {
+  if (!fix) return this;
   if (this->_nfixtures >= LIGHT_MAXFIXTURES) {
     LOG("LIGHT: no more fixture can be attached..");
-    return fix;
+    return this;
   }
   this->_fixtures[this->_nfixtures] = fix;
   this->_nfixtures += 1;
 
-  return fix;
+  return this;
+}
+
+
+K32_light* K32_light::addFixtures(K32_fixture* fixs[], int count)
+{
+  for (int k=0; k<count; k++) this->addFixture(fixs[k]);
+  return this;
 }
 
 // link every strip to masterStrip
@@ -143,7 +150,7 @@ K32_anim* K32_light::anim( String animName, K32_anim* anim, int size, int offset
 
   this->_anims[ this->_animcounter ] = anim;
   this->_animcounter++;
-  // LOGINL("ANIM: register "); LOG(anim->name());
+  // LOGF2("ANIM: register %s size %d\n", anim->name(), size);
 
   return anim;
 }
@@ -209,7 +216,7 @@ void K32_light::command(Orderz* order)
   // MASTER
   else if (strcmp(order->action, "master") == 0)
   {
-      int masterValue = this->anim("manu")->master();
+      int masterValue = this->anim("mem-strip")->master();
 
       if (strcmp(order->subaction, "less") == 0)       masterValue -= 2;
       else if (strcmp(order->subaction, "more") == 0)  masterValue += 2;
@@ -217,25 +224,25 @@ void K32_light::command(Orderz* order)
       else if (strcmp(order->subaction, "tenmore") == 0)  masterValue += 10;
       else if (strcmp(order->subaction, "tenless") == 0)  masterValue -= 10;
       else if (strcmp(order->subaction, "fadeout") == 0) {
-      if (!this->anim("manu")->hasmod("fadeout"))
-          this->anim("manu")->mod(new K32_mod_fadeout)->name("fadeout")->at(0)->period(6000)->play();
+      if (!this->anim("mem-strip")->hasmod("fadeout"))
+          this->anim("mem-strip")->mod(new K32_mod_fadeout)->name("fadeout")->at(0)->period(6000)->play();
       else
-          this->anim("manu")->mod("fadeout")->play();
+          this->anim("mem-strip")->mod("fadeout")->play();
       }
       else if (strcmp(order->subaction, "fadein") == 0) {
-      if (!this->anim("manu")->hasmod("fadein"))
-          this->anim("manu")->mod(new K32_mod_fadein)->name("fadein")->at(0)->period(6000)->play();
+      if (!this->anim("mem-strip")->hasmod("fadein"))
+          this->anim("mem-strip")->mod(new K32_mod_fadein)->name("fadein")->at(0)->period(6000)->play();
       else
-          this->anim("manu")->mod("fadein")->play();
+          this->anim("mem-strip")->mod("fadein")->play();
       }
       else if (order->count() > 0) masterValue = order->getData(0)->toInt();
 
-      this->anim("manu")->master( masterValue );
-      this->anim("manu")->push();
-      if (this->anim("datathru"))
+      this->anim("mem-strip")->master( masterValue );
+      this->anim("mem-strip")->push();
+      if (this->anim("artnet-dmxfix"))
       {
-      this->anim("datathru")->master( masterValue );// to do if dmxthru
-      this->anim("datathru")->push();// to do if dmxthru
+      this->anim("artnet-dmxfix")->master( masterValue );// to do if dmxthru
+      this->anim("artnet-dmxfix")->push();// to do if dmxthru
       }
   }
 
@@ -246,7 +253,7 @@ void K32_light::command(Orderz* order)
 
       if (order->count() > 1) {
         int masterValue = order->getData(1)->toInt();
-        this->anim("manu")->master( order->getData(1)->toInt() );
+        this->anim("mem-strip")->master( order->getData(1)->toInt() );
       }
 
       // reset order
@@ -265,29 +272,29 @@ void K32_light::command(Orderz* order)
       for(int k=0; k<order->count(); k++) {
         int v = order->getData(k)->toInt();
 
-        if (v >= 0) this->anim("manu")->set(k, v);           // normal
+        if (v >= 0) this->anim("mem-strip")->set(k, v);           // normal
       //  LOGF("k->%d ", k);                                 // normal
       //  LOGF("=%d ", v);                                   // normal
       }                                                      // normal
-      this->anim("manu")->push();                            // normal
+      this->anim("mem-strip")->push();                            // normal
 
 
-      //   if (this->anim("datathru"))                           // dmx_par
-      //    if (v >= 0) this->anim("datathru")->set(k, v);       // dmx par
+      //   if (this->anim("artnet-dmxfix"))                           // dmx_par
+      //    if (v >= 0) this->anim("artnet-dmxfix")->set(k, v);       // dmx par
       //   else                                                 // dmx par
-      //    if (v >= 0) this->anim("manu")->set(k, v);          // dmx par
+      //    if (v >= 0) this->anim("mem-strip")->set(k, v);          // dmx par
       // //  LOGF("k->%d ", k);                                 // dmx par
       // //  LOGF("=%d ", v);                                   // dmx par
       // }                                                      // dmx par
-      //  if (this->anim("datathru"))                            // dmx par
+      //  if (this->anim("artnet-dmxfix"))                            // dmx par
       //  {                                                     // dmx par
       //    LOG("DMX THRU");                                    // dmx par
-      //    this->anim("datathru")->push();                      // dmx par
+      //    this->anim("artnet-dmxfix")->push();                      // dmx par
       //  }                                                     // dmx par
       //  else                                                  // dmx par
       //  {                                                     // dmx par
       //    LOG("manu ");                                       // dmx par
-      //    this->anim("manu")->push();                         // dmx par
+      //    this->anim("mem-strip")->push();                         // dmx par
       //  }                                                     // dmx par
   }
 
@@ -306,7 +313,7 @@ void K32_light::command(Orderz* order)
 
       // select mod by name
       if (strcmp(order->action, "mod") == 0 && order->count() >= 1) {
-        startmod = this->anim("manu")->modindex( String(order->getData(0)->toStr()) );
+        startmod = this->anim("mem-strip")->modindex( String(order->getData(0)->toStr()) );
         stopmod = startmod+1;
       }
 
@@ -327,34 +334,34 @@ void K32_light::command(Orderz* order)
 
       // apply to mod selection
       for(int k=startmod; k<stopmod; k++) {
-        if (!this->anim("manu")->hasmod(k)) 
+        if (!this->anim("mem-strip")->hasmod(k)) 
           continue;
         
         if (strcmp(order->subaction, "faster") == 0)
         { 
-        this->anim("manu")->mod(k)->faster();
-        if (this->anim("datathru"))
-        this->anim("datathru")->mod(k)->faster();
+        this->anim("mem-strip")->mod(k)->faster();
+        if (this->anim("artnet-dmxfix"))
+        this->anim("artnet-dmxfix")->mod(k)->faster();
         }
         else if (strcmp(order->subaction, "slower") == 0)
         {
-          this->anim("manu")->mod(k)->slower();
-          if (this->anim("datathru"))
-          this->anim("datathru")->mod(k)->slower();
+          this->anim("mem-strip")->mod(k)->slower();
+          if (this->anim("artnet-dmxfix"))
+          this->anim("artnet-dmxfix")->mod(k)->slower();
         } 
 
         else if (strcmp(order->subaction, "bigger") == 0) 
         {
-          this->anim("manu")->mod(k)->bigger();
-          if (this->anim("datathru"))
-          this->anim("datathru")->mod(k)->bigger();
+          this->anim("mem-strip")->mod(k)->bigger();
+          if (this->anim("artnet-dmxfix"))
+          this->anim("artnet-dmxfix")->mod(k)->bigger();
         }
 
         else if (strcmp(order->subaction, "smaller") == 0) 
          {
-          this->anim("manu")->mod(k)->smaller();
-          if (this->anim("datathru"))
-          this->anim("datathru")->mod(k)->smaller();
+          this->anim("mem-strip")->mod(k)->smaller();
+          if (this->anim("artnet-dmxfix"))
+          this->anim("artnet-dmxfix")->mod(k)->smaller();
          }
       }
   }

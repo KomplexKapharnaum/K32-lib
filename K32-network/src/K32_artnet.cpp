@@ -10,7 +10,7 @@
  *   PUBLIC
  */
 
-K32_artnet::K32_artnet(K32* k32, String name, int universe) : K32_plugin("artnet", k32)
+K32_artnet::K32_artnet(K32* k32, String name, int universe) : K32_plugin("artnet-strip", k32)
 {
   for (int k=0; k<ARTNET_SUB_SLOTS; k++)
     this->subscriptions[k] = {0, 0, nullptr};

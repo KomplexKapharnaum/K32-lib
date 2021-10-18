@@ -14,7 +14,6 @@
 
 
 #include <class/K32_plugin.h>
-#include <hardware/K32_pwm.h>
 #include "fixtures/K32_fixture.h"
 #include "K32_anim.h"
 
@@ -48,7 +47,8 @@ class K32_light : K32_plugin {
     
     // STRIPS
     //
-    K32_fixture* addFixture(K32_fixture* fix);
+    K32_light* addFixture(K32_fixture* fix);
+    K32_light* addFixtures(K32_fixture** fix, int count);
     void cloneFixturesFrom(K32_fixture* masterFixture);
     void copyFixture(stripcopy copy);
 
@@ -76,8 +76,6 @@ class K32_light : K32_plugin {
     void fps(int f = -1);
     
     void command(Orderz* order);
-
-    K32_pwm* pwm = nullptr;
 
   private:
     

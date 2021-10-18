@@ -450,7 +450,7 @@ public:
                 this->light->execute(order);
 
             // REMOTE
-            else if (strcmp(order->engine, "remote") == 0 && this->remote)  
+            else if (strcmp(order->engine, "remote-strip") == 0 && this->remote)  
                 this->remote->execute(order);
 
             // K32

@@ -79,7 +79,8 @@ K32_fixture* K32_fixture::all(int red, int green, int blue, int white) {
 }
 
 K32_fixture* K32_fixture::pix(int pixelStart, int count, pixelColor_t color) {
-    
+
+  // LOGF4("DRAW:start=%d, count=%d, red=%d // size=%d\n", pixelStart, count, color.r, this->size());  
   xSemaphoreTake(this->buffer_lock, portMAX_DELAY);
   for(int i = pixelStart; i<pixelStart+count; i++)
     if (i < this->size()) this->_buffer[i] = color;
