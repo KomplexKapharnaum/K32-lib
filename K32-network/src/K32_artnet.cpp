@@ -10,7 +10,7 @@
  *   PUBLIC
  */
 
-K32_artnet::K32_artnet(K32* k32, String name, int universe) : K32_plugin("artnet-strip", k32)
+K32_artnet::K32_artnet(K32* k32, K32_wifi* wifi, String name, int universe) : K32_plugin("artnet-strip", k32), wifi(wifi)
 {
   for (int k=0; k<ARTNET_SUB_SLOTS; k++)
     this->subscriptions[k] = {0, 0, nullptr};
@@ -73,6 +73,8 @@ void K32_artnet::check(void *parameter)
 {
   K32_artnet *that = (K32_artnet *)parameter;
   TickType_t xFrequency = pdMS_TO_TICKS(2);
+
+  while(!that->wifi->isConnected()) delay( 300 ); // TODO: use module events wifi/connected
 
   that->artnet->begin(0, that->_universe/16);
   that->artnet->subscribe(that->_universe-(that->_universe/16)*16, that->_onArtnet);

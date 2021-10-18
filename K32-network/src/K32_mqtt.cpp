@@ -204,7 +204,7 @@ void K32_mqtt::check(void *parameter)
   TickType_t xFrequency = pdMS_TO_TICKS(2000);
 
   // Wait for WIFI to first connect
-  while(!that->wifi->isConnected()) delay( 300 );
+  while(!that->wifi->isConnected()) delay( 300 ); // TODO: use module events wifi/connected
 
   esp_mqtt_client_start(that->mqttClient);
   that->emit("mqtt/started");

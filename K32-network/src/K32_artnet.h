@@ -8,6 +8,7 @@
 
 #include <ArtnetWiFi.h>         // https://github.com/hideakitai/ArtNet
 #include <class/K32_plugin.h>
+#include <K32_wifi.h>
 
 #define ARTNET_SUB_SLOTS 16
 
@@ -23,7 +24,7 @@ struct artnetsub
 class K32_artnet : K32_plugin {
   public:
     
-    K32_artnet(K32* k32, String name, int universe);
+    K32_artnet(K32* k32, K32_wifi* wifi, String name, int universe);
     void start();
     void stop();
 
@@ -38,6 +39,7 @@ class K32_artnet : K32_plugin {
     
   private:
 
+    K32_wifi *wifi;
     ArtnetWiFiReceiver* artnet;
 
     static void check(void * parameter);

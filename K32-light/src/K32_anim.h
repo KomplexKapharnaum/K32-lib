@@ -426,6 +426,7 @@ class K32_anim {
       do 
       {
         that->frameCount++;
+        // LOGF2("DRAW %s %d\n", that->_name.c_str(), that->_stopAt);
 
         xSemaphoreGive(that->bufferInUse);                                          // allow push & pushdata to modify data
         yield();      
@@ -433,14 +434,14 @@ class K32_anim {
         if (triggerDraw) timeout = pdMS_TO_TICKS( 1000/LIGHT_ANIMATE_FPS );          // adapt FPS if an image has been drawn (optimized strobe)
         else timeout = pdMS_TO_TICKS( 500/LIGHT_ANIMATE_FPS );
 
-        triggerDraw = (xSemaphoreTake(that->newData, timeout) == pdTRUE);
-
+        triggerDraw = (xSemaphoreTake(that->newData, timeout) == pdTRUE);           // wait for newdata or timeout
+        
+        if (that->_stopAt && (millis() >= that->_stopAt)) break;                    // check if we should stop now
 
         xSemaphoreTake(that->bufferInUse, portMAX_DELAY);                           // lock buffer to prevent external change
 
         if (triggerDraw) that->_firstDataReceived = true;                           // Data has been set at least one time since anim creation
         else if (!that->_firstDataReceived) continue;                               // Data has never been set -> we can't draw ! 
-        if (that->_stopAt && millis() >= that->_stopAt) break;                      // check if we should stop now
 
         memcpy(dataCopy, that->_data, ANIM_DATA_SLOTS*sizeof(int));                 // copy buffer
 
