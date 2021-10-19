@@ -381,6 +381,50 @@ void K32_light::command(Orderz* order)
       }
   }
 
+  // maree
+  else if (strcmp(order->action, "maree") == 0)
+  {
+    if (strcmp(order->subaction, "go_p") == 0)
+    {
+      int duration  = order->getData(0)->toInt();
+      int high      = order->getData(1)->toInt();
+      int low       = order->getData(2)->toInt();
+      int position  = order->getData(3)->toInt();
+
+
+      // haute();
+      this->anim("maree")->push(high)
+              ->unmod()
+              ->mod(new K32_mod_fadein)
+                ->absolute()
+                ->at(0)
+                ->mini(position)
+                ->maxi(high)
+                ->period(duration*1000)
+                ->play();
+
+    } 
+    else if (strcmp(order->subaction,"go_m")==0)
+    {
+      int duration  = order->getData(0)->toInt();
+      int high      = order->getData(1)->toInt();
+      int low       = order->getData(2)->toInt();
+      int position  = order->getData(3)->toInt();
+
+
+      // basse();
+      this->anim("maree")->push(low)
+              ->unmod()
+              ->mod(new K32_mod_fadeout)
+                ->absolute()
+                ->at(0)
+                ->mini(low)
+                ->maxi(position)
+                ->period(duration*1000)
+                ->play();
+    }
+  }
+
   return;
 }
 
