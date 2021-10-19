@@ -8,6 +8,8 @@
 
 #define MOD_PARAMS_SLOTS 8
 
+enum ModMode {RELATIVE, ABSOLUTE}; 
+
 #include "K32_anim.h"
 
 /*
@@ -40,6 +42,17 @@ public:
   String name() { return this->_name; }
   K32_modulator*  name(String n) { 
     this->_name = n; 
+    return this;
+  }
+
+  // mode : absolute/relative
+  K32_modulator* absolute(){
+    this->_mode = ABSOLUTE;
+    return this;
+  }
+
+  K32_modulator* relative(){
+    this->_mode = RELATIVE;
     return this;
   }
 
@@ -91,14 +104,25 @@ public:
       int val = this->value();
       xSemaphoreGive(this->paramInUse);
 
-      // CLAMP modulator value to 0->255
-      val = min(255, val);
-      val = max(0, val);
+      // RELATIVE
+      if (_mode == RELATIVE)
+      {
+        // CLAMP modulator value to 0->255
+        val = min(255, val);
+        val = max(0, val);
 
-      // Apply modulation to dataslots, value of 255 will not do anything
-      if (val < 255) {
+        // Apply modulation to dataslots, value of 255 will not do anything
+        if (val < 255) {
+          for (int s=0; s<ANIM_DATA_SLOTS; s++)
+            if (this->dataslot[s]) animData[s] = scale16by8(animData[s], (uint8_t)val);
+        }
+      }
+      // ABSOLUTE
+      else if (_mode == ABSOLUTE) 
+      {
+        // Apply absolute value to dataslots
         for (int s=0; s<ANIM_DATA_SLOTS; s++)
-          if (this->dataslot[s]) animData[s] = scale16by8(animData[s], (uint8_t)val);
+            if (this->dataslot[s]) animData[s] = val;
       }
 
       // Did animator produced a different result than last call ?
@@ -198,7 +222,7 @@ protected:
   unsigned long freezeTime = 0;
   unsigned long triggerTime = 0;
   bool _fresh = false; 
-  
+  ModMode _mode = RELATIVE;
 
 private:
 
