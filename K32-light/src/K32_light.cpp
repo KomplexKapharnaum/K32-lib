@@ -423,6 +423,15 @@ void K32_light::command(Orderz* order)
                 ->period(duration*1000)
                 ->play();
     }
+    else if (strcmp(order->subaction,"pixel")==0)
+    {
+      int position  = order->getData(0)->toInt();
+
+
+      // pixel();
+      this->anim("maree")->push(position)
+                ->play();
+    }
   }
 
   return;
