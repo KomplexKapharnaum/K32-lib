@@ -31,7 +31,7 @@ K32_remote::K32_remote(K32* k32, K32_mcp *mcp) : K32_plugin("remote-strip", k32)
       this->mcp->input(i);
 
   // load LampGrad
-  this->_lamp_grad = k32->system->preferences.getUInt("lamp_grad", 127);
+  this->_lamp_grad = k32->system->prefs.getUInt("lamp_grad", 127);
 
   // Start main task
   xTaskCreate(this->task,    // function
@@ -66,7 +66,7 @@ void K32_remote::_semaunlock()
 
 ////////////////////////////////////////////////////////////////////////////////////////
 
-void K32_remote::setMacroMax(uint8_t macroMax)
+K32_remote* K32_remote::setMacroMax(uint8_t macroMax)
 {
   this->_semalock();
   this->_macroMax = macroMax;
@@ -74,28 +74,31 @@ void K32_remote::setMacroMax(uint8_t macroMax)
   // this->_activeMacro = this->_macroMax-1;
   // this->_previewMacro = this->_macroMax-1;
   this->_semaunlock();
+  return this;
 }
 
-void K32_remote::setState(remoteState state)
+K32_remote* K32_remote::setState(remoteState state)
 {
   this->_semalock();
   
   // Exit from REMOTE_MANU_LAMP: save grad !
   if (this->_state == REMOTE_MANU_LAMP) {
-    k32->system->preferences.putUInt("lamp_grad", this->_lamp_grad);
+    k32->system->prefs.putUInt("lamp_grad", this->_lamp_grad);
     this->_lamp = -1;
   }
 
   this->_state = state;
   this->_semaunlock();
+  return this;
 }
 
-void K32_remote::stmBlackout() 
+K32_remote* K32_remote::stmBlackout() 
 {
   this->stmSetMacro(this->_macroMax - 1);
+  return this;
 }
 
-void K32_remote::stmSetMacro(uint8_t macro)
+K32_remote* K32_remote::stmSetMacro(uint8_t macro)
 {
   this->_semalock();
   this->_activeMacro = macro % this->_macroMax;
@@ -105,9 +108,10 @@ void K32_remote::stmSetMacro(uint8_t macro)
 
   this->_send_active_macro = true;
   this->_semaunlock();
+  return this;
 }
 
-void K32_remote::stmNext()
+K32_remote* K32_remote::stmNext()
 {
   this->_semalock();
   this->_activeMacro = (this->_activeMacro + 1) % this->_macroMax;
@@ -123,18 +127,21 @@ void K32_remote::stmNext()
     this->setState(REMOTE_MANU_STM);
 
   this->_send_active_macro = true;
+  return this;
 }
 
-void K32_remote::lock() {
+K32_remote* K32_remote::lock() {
   this->_semalock();
   this->_key_lock = true;
   this->_semaunlock();  
+  return this;
 }
 
-void K32_remote::unlock() {
+K32_remote* K32_remote::unlock() {
   this->_semalock();
   this->_key_lock = false;
   this->_semaunlock();
+  return this;
 }
 
 
@@ -296,7 +303,7 @@ void K32_remote::task(void *parameter)
                   // Lamp: Save + Escape
                   if (that->_state == REMOTE_MANU_LAMP) 
                   {
-                    that->k32->system->preferences.putUInt("lamp_grad", that->_lamp_grad);
+                    that->k32->system->prefs.putUInt("lamp_grad", that->_lamp_grad);
                     that->setState(that->_old_state);
                     #ifdef DEBUG_lib_btn
                     LOGF("REMOTE: 1/4 Escape STATE =  %d\n", that->_state);
@@ -491,7 +498,7 @@ void K32_remote::task(void *parameter)
                   }
                   else if (that->_state == REMOTE_MANU_LAMP)
                   {
-                    that->k32->system->preferences.putUInt("lamp_grad", that->_lamp_grad);
+                    that->k32->system->prefs.putUInt("lamp_grad", that->_lamp_grad);
                     that->_state = REMOTE_MANU;
                     that->_lamp = -1;
                   }

@@ -54,24 +54,8 @@ LOG("        _\\///________\\///____\\/////////_____\\///////////////__");
         // TIMER 
         timer = new K32_timer();
 
-        // Save NODE_ID in flash
-        #ifdef K32_SET_NODEID
-            system->id(K32_SET_NODEID);
-        #endif
-
-        #ifdef K32_SET_CHANNEL
-            system->channel(K32_SET_CHANNEL);
-        #endif
-
         LOGINL("NODE id: ");
         LOG(system->id());
-
-        // Save HW_REVISION in flash
-        #ifdef K32_SET_HWREVISION
-            system->hw(K32_SET_HWREVISION);
-        #elif HW_REVISION
-            system->hw(HW_REVISION);
-        #endif
 
         LOGINL("HW rev: ");
         LOG(system->hw());

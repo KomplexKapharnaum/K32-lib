@@ -191,7 +191,7 @@ bool K32_mqtt::isConnected() {
 }
 
 void K32_mqtt::command(Orderz* order) {
-  // TODO: orderz MQTT
+  // TODO: orderz MQTT (subscribes)
 }
 
 // /*

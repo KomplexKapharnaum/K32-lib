@@ -24,9 +24,23 @@ struct artnetsub
 class K32_artnet : K32_plugin {
   public:
     
-    K32_artnet(K32* k32, K32_wifi* wifi, String name, int universe);
+    K32_artnet(K32* k32, K32_wifi* wifi, String name);
+
+    // Must be called after new K32_artnet
+    void loadprefs() {
+      #ifdef ARTNET_SET_UNIVERSE
+          this->universe(ARTNET_SET_UNIVERSE);
+          _universe = ARTNET_SET_UNIVERSE;
+      #else
+          _universe = k32->system->prefs.getUInt("LULU_uni", 0);
+      #endif
+    }
+
     void start();
     void stop();
+
+    int universe();
+    void universe(int uni);
 
     void onDmx( artnetsub subscription );
     void onFullDmx( cbPtrArtnet callback );

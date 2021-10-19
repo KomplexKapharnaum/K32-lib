@@ -91,7 +91,7 @@ int K32_power::energy()
   this->_lock();
   e = this->_energy;
   this->_unlock();
-  return e; // TODO !
+  return e; 
 }
 
 void K32_power::reset()

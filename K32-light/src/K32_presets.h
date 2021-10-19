@@ -142,6 +142,10 @@ class LBank
             return _size;
         }
 
+        size_t preset_size() {
+            return _presetsize;
+        }
+
         LPreset* mem = nullptr;  // !!! point to last added/loaded preset   
 
 

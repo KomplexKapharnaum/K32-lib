@@ -10,16 +10,26 @@
  *   PUBLIC
  */
 
-K32_artnet::K32_artnet(K32* k32, K32_wifi* wifi, String name, int universe) : K32_plugin("artnet-strip", k32), wifi(wifi)
+K32_artnet::K32_artnet(K32* k32, K32_wifi* wifi, String name) : K32_plugin("artnet-strip", k32), wifi(wifi)
 {
   for (int k=0; k<ARTNET_SUB_SLOTS; k++)
     this->subscriptions[k] = {0, 0, nullptr};
 
-  this->_universe = universe;
   this->artnet = new ArtnetWiFiReceiver();
   this->artnet->shortname(name);
   this->artnet->longname(name);
-  this->start();
+}
+
+int K32_artnet::universe() {
+    return _universe;
+}
+
+void K32_artnet::universe(int uni) {
+    int old = k32->system->prefs.getUInt("LULU_uni", 0);
+    if (uni != old) {
+      k32->system->prefs.putUInt("LULU_uni", uni);
+      _universe = k32->system->prefs.getUInt("LULU_uni", 0);
+    }
 }
 
 

@@ -32,15 +32,15 @@ public:
   K32_remote(K32* k32, K32_mcp *mcp);
   void stop();
 
-  void setState(remoteState state);
-  void setMacroMax(uint8_t macroMax);
+  K32_remote* setState(remoteState state);
+  K32_remote* setMacroMax(uint8_t macroMax);
 
-  void stmBlackout();
-  void stmSetMacro(uint8_t macro);
-  void stmNext();
+  K32_remote* stmBlackout();
+  K32_remote* stmSetMacro(uint8_t macro);
+  K32_remote* stmNext();
 
-  void lock();
-  void unlock();
+  K32_remote* lock();
+  K32_remote* unlock();
   bool isLocked();
 
   remoteState getState();
