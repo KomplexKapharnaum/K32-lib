@@ -32,6 +32,8 @@ public:
 
     for (int s=0; s<ANIM_DATA_SLOTS; s++) 
       this->dataslot[s] = false;
+
+    
   }
 
   virtual ~K32_modulator() {
@@ -43,6 +45,18 @@ public:
   K32_modulator*  name(String n) { 
     this->_name = n; 
     return this;
+  }
+
+  K32_modulator* hold() {
+    usage++;
+  }
+
+  K32_modulator* unhold() {
+    usage--;
+  }
+
+  boolean onHold() {
+    return usage > 0;
   }
 
   // mode : absolute/relative
@@ -232,6 +246,8 @@ private:
 
   bool dataslot[ANIM_DATA_SLOTS];
   int _lastProducedValue = 0;
+
+  int usage = 0;
 };
 
 

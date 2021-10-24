@@ -10,13 +10,14 @@
 
 #include "K32_dmx.h"
 #include "K32_fixture.h"
+#include <math.h> 
 #include "_libfast/crgbw.h"
 
 
 class K32_dmxfixture : public K32_fixture 
 {
   public:
-    K32_dmxfixture(K32_dmx* dmx, int addressStart, int channels) : K32_fixture(channels/4)
+    K32_dmxfixture(K32_dmx* dmx, int addressStart, int channels) : K32_fixture( ceil(channels/4.0) )
     {
       _dmxOut = dmx;
       _addressStart = addressStart;

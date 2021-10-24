@@ -268,8 +268,10 @@ class K32_anim {
           if (all || this->_modulators[k]->name() == "?")
           {
             // LOGF("ANIM: %s unmoded !\n", this->_modulators[k]->name());
-            this->_modulators[k]->stop();
-            delete this->_modulators[k];
+            if (!this->_modulators[k]->onHold()) {
+              this->_modulators[k]->stop();
+              delete this->_modulators[k];
+            }
             this->_modulators[k] = NULL;
           }
       // LOGF("ANIM: %s unmoded !\n", this->name());

@@ -36,6 +36,7 @@ class LPreset
             for (int k=0; k<ANIM_MOD_SLOTS; k++)
                 if(this->_modulators[k] == nullptr) {
                     this->_modulators[k] = modulator;
+                    modulator->hold();
                     break;
                 }
             
