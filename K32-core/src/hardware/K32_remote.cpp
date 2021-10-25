@@ -26,6 +26,8 @@ K32_remote::K32_remote(K32* k32, K32_mcp *mcp) : K32_plugin("remote-strip", k32)
   this->_state = REMOTE_AUTO;
   this->_old_state = REMOTE_AUTO;
 
+  this->_key_lock = true;
+
   if (this->mcp && this->mcp->ok)
     for (int i = 0; i < NB_BTN; i++)
       this->mcp->input(i);
@@ -71,14 +73,14 @@ K32_remote* K32_remote::setMacroMax(uint8_t macroMax)
   this->_semalock();
   this->_macroMax = macroMax;
   if (_macroMax<1) _macroMax = 1;
-  // this->_activeMacro = this->_macroMax-1;
-  // this->_previewMacro = this->_macroMax-1;
   this->_semaunlock();
   return this;
 }
 
 K32_remote* K32_remote::setState(remoteState state)
 {
+  if (this->_state == state) return this;
+
   this->_semalock();
   
   // Exit from REMOTE_MANU_LAMP: save grad !
@@ -89,8 +91,14 @@ K32_remote* K32_remote::setState(remoteState state)
 
   this->_state = state;
   this->_semaunlock();
+
+  Orderz* newOrder = new Orderz("remote/state");
+  newOrder->addData(this->_state);
+  this->emit( newOrder );
+
   return this;
 }
+
 
 K32_remote* K32_remote::stmBlackout() 
 {
@@ -100,33 +108,23 @@ K32_remote* K32_remote::stmBlackout()
 
 K32_remote* K32_remote::stmSetMacro(uint8_t macro)
 {
-  this->_semalock();
-  this->_activeMacro = macro % this->_macroMax;
-  this->_previewMacro = this->_activeMacro;
+  this->changeMacro(macro);
+  this->changePreviewMacro(this->_activeMacro);
+  this->setState(REMOTE_MANU_STM);
 
-  this->_state = REMOTE_MANU_STM;
-
-  this->_send_active_macro = true;
-  this->_semaunlock();
   return this;
 }
 
 K32_remote* K32_remote::stmNext()
 {
-  this->_semalock();
-  this->_activeMacro = (this->_activeMacro + 1) % this->_macroMax;
-  this->_previewMacro = this->_activeMacro;
-  this->_semaunlock();
+  this->stmSetMacro( this->_activeMacro + 1 );
 
   // Last macro -> back to AUTO LOCK
   if (this->_activeMacro == this->_macroMax - 1) {
     this->setState(REMOTE_AUTO);
     this->lock();
   }
-  else
-    this->setState(REMOTE_MANU_STM);
 
-  this->_send_active_macro = true;
   return this;
 }
 
@@ -134,6 +132,9 @@ K32_remote* K32_remote::lock() {
   this->_semalock();
   this->_key_lock = true;
   this->_semaunlock();  
+
+  this->emit( "remote/lock" );
+
   return this;
 }
 
@@ -141,6 +142,9 @@ K32_remote* K32_remote::unlock() {
   this->_semalock();
   this->_key_lock = false;
   this->_semaunlock();
+
+  this->emit( "remote/unlock" );
+
   return this;
 }
 
@@ -197,15 +201,6 @@ int K32_remote::getLampGrad()
   return data;
 }
 
-int K32_remote::getSendMacro()
-{
-  this->_semalock();
-  int data = this->_send_active_macro;
-  this->_send_active_macro = false;
-  this->_semaunlock();
-  return data;
-}
-
 void K32_remote::command(Orderz* order) 
 {
   // remote/stop
@@ -238,6 +233,36 @@ void K32_remote::command(Orderz* order)
 ////////////////////////////////////////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////////////////////////////////////////
+
+
+K32_remote* K32_remote::changeMacro(uint8_t macro)
+{
+  this->_semalock();
+  this->_activeMacro = macro % this->_macroMax;
+  this->_semaunlock();
+
+  Orderz* newOrder = new Orderz("remote/macro");
+  newOrder->addData(this->_activeMacro);
+  this->emit( newOrder );
+
+  return this;
+}
+
+K32_remote* K32_remote::changePreviewMacro(uint8_t macro)
+{
+  this->_semalock();
+  this->_previewMacro = macro % this->_macroMax;
+  this->_semaunlock();
+
+  Orderz* newOrder = new Orderz("remote/preview");
+  newOrder->addData(this->_previewMacro);
+  this->emit( newOrder );
+
+  return this;
+}
+
+
+
 
 void K32_remote::task(void *parameter)
 {
@@ -411,13 +436,8 @@ void K32_remote::task(void *parameter)
                 }
 
                 // Button 1 LONG : BLACKOUT
-                else 
-                {
-                  that->_activeMacro = that->_macroMax - 1;
-                  that->_previewMacro = that->_macroMax - 1;
-                  that->_send_active_macro = true;
-                  that->setState(REMOTE_MANU);
-                }
+                else  that->stmBlackout() ;
+                
                 break;
               
               case 2: 
@@ -493,8 +513,7 @@ void K32_remote::task(void *parameter)
                 {
                   if (that->_state == REMOTE_MANU)
                   {
-                    that->_activeMacro = that->_previewMacro;
-                    that->_send_active_macro = true;
+                    that->changeMacro(that->_previewMacro);
                   }
                   else if (that->_state == REMOTE_MANU_LAMP)
                   {
@@ -510,7 +529,7 @@ void K32_remote::task(void *parameter)
                 // Button 4 LONG : GO Force
                 else
                 {
-                  that->_activeMacro = that->_previewMacro;
+                  that->changeMacro(that->_previewMacro);
                   that->setState(REMOTE_MANU);
                   that->lock();
                 } 

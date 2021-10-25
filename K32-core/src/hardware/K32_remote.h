@@ -48,7 +48,6 @@ public:
   int getPreviewMacro();
   int getLamp();
   int getLampGrad();
-  int getSendMacro();
 
   void command(Orderz* order);
 
@@ -64,7 +63,6 @@ private:
   int _lamp = -1;
   int _lamp_grad;
   bool _key_lock = true;
-  bool _send_active_macro = false;
 
   void _semalock();
   void _semaunlock();
@@ -75,6 +73,8 @@ private:
 
   TaskHandle_t xHandle = NULL;
 
+  K32_remote* changeMacro(uint8_t macro);
+  K32_remote* changePreviewMacro(uint8_t macro);
 };
 
 #endif

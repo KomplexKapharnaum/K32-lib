@@ -90,7 +90,8 @@ int K32_stm32::voltage() {
   return this->get(K32_stm32_api::GET_BATTERY_VOLTAGE);
 };
 
-bool K32_stm32::clicked() {
+bool K32_stm32::clicked() 
+{
   xSemaphoreTake(this->lock, portMAX_DELAY);
   bool click = this->_btn_click;
   this->_btn_click = false;
@@ -169,10 +170,12 @@ void K32_stm32::task( void * parameter ) {
       if (event == K32_stm32_api::BUTTON_CLICK_EVENT) {
          that->_btn_click = true;
          LOG("BTN clicked");
+         that->emit("stm32/btn-click");
       }
       else if (event == K32_stm32_api::BUTTON_DOUBLE_CLICK_EVENT) {
          that->_btn_dblclick = true;
          LOG("BTN dblclicked");
+         that->emit("stm32/btn-dblclick");
       }
     }
 
