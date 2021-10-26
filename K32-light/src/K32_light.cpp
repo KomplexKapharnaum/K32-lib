@@ -420,7 +420,7 @@ void K32_light::command(Orderz* order)
                 ->at(0)
                 ->mini(low)
                 ->maxi(position)
-                ->period(duration*1000)
+                ->period(duration*60000)
                 ->play();
     }
     else if (strcmp(order->subaction,"pixel")==0)
