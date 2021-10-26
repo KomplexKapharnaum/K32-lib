@@ -439,6 +439,10 @@ void K32_light::command(Orderz* order)
       this->anim("maree")->push(position)
                 ->play();
     }
+    else if (strcmp(order->subaction,"stop")==0)
+    {
+      this->anim("maree")->stop();
+    }
   }
 
   return;
