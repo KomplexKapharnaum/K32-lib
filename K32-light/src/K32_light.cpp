@@ -400,7 +400,7 @@ void K32_light::command(Orderz* order)
                 ->at(0)
                 ->mini(position)
                 ->maxi(high)
-                ->period(duration*1000)
+                ->period(duration*60000)
                 ->play();
 
     } 
