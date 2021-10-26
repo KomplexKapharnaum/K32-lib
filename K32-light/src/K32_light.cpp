@@ -390,6 +390,9 @@ void K32_light::command(Orderz* order)
       int high      = order->getData(1)->toInt();
       int low       = order->getData(2)->toInt();
       int position  = order->getData(3)->toInt();
+      high = map( high, 300, 0, 0, 300);
+      low = map( low, 300, 0, 0, 300);
+      position = map( position, 300, 0, 0, 300);
 
 
       // haute();
@@ -410,6 +413,9 @@ void K32_light::command(Orderz* order)
       int high      = order->getData(1)->toInt();
       int low       = order->getData(2)->toInt();
       int position  = order->getData(3)->toInt();
+      high = map( high, 300, 0, 0, 300);
+      low = map( low, 300, 0, 0, 300);
+      position = map( position, 300, 0, 0, 300);
 
 
       // basse();
@@ -426,6 +432,7 @@ void K32_light::command(Orderz* order)
     else if (strcmp(order->subaction,"pixel")==0)
     {
       int position  = order->getData(0)->toInt();
+      position = map( position, 300, 0, 0, 300);
 
 
       // pixel();
