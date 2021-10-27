@@ -267,6 +267,7 @@ void K32_light::command(Orderz* order)
   {
       LOGF("LIGHT: leds/mem %i\n",  order->getData(0)->toInt());
 
+      // Master
       if (order->count() > 1) {
         int masterValue = order->getData(1)->toInt();
         
@@ -276,7 +277,7 @@ void K32_light::command(Orderz* order)
             this->_anims[k]->master( order->getData(1)->toInt() );
       }
 
-      // reset order
+      // Macro
       if (order->count() > 0) {
         int mem = order->getData(0)->toInt();
         order->set("remote/macro")->addData(mem);

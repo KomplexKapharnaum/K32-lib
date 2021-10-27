@@ -441,7 +441,7 @@ class K32_anim {
 
     // input data
     int _data[ANIM_DATA_SLOTS];
-    
+
     bool _remote = false;
 
     // THREAD: draw frame on new data

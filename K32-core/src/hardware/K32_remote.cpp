@@ -16,7 +16,7 @@
 
 ////////////////////////////////////////////////////////////////////////////////////////
 
-K32_remote::K32_remote(K32* k32, K32_mcp *mcp) : K32_plugin("remote-strip", k32)
+K32_remote::K32_remote(K32* k32, K32_mcp *mcp) : K32_plugin("remote", k32)
 {
   this->mcp = mcp;
   LOG("REMOTE: init");
