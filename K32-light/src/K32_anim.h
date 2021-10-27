@@ -7,8 +7,10 @@
 #define K32_anim_h
 
 #define ANIM_FIXTURES_SLOTS 16
-#define ANIM_DATA_SLOTS     32
 #define ANIM_MOD_SLOTS      16
+#define ANIM_DATA_SLOTS     32
+
+#define ANIM_ROUTE         ANIM_DATA_SLOTS-1
 
 #include "fixtures/K32_fixture.h"
 #include "K32_modulator.h"
@@ -26,6 +28,9 @@ class K32_anim {
 
       for (int k=0; k<ANIM_MOD_SLOTS; k++)
         this->_modulators[k] = NULL;
+
+      for (int k=0; k<ANIM_DATA_SLOTS; k++)
+        this->_data[k] = 0;
 
       this->newData = xSemaphoreCreateBinary();
       this->bufferInUse = xSemaphoreCreateBinary();
@@ -75,6 +80,17 @@ class K32_anim {
     // Get internal presets bank
     LBank* bank() {
       return _bank;
+    }
+
+    // Select route 
+    K32_anim* route(int r) {
+      _data[ANIM_ROUTE] = r;
+      return this;
+    }
+
+    // Get route 
+    int route() {
+      return _data[ANIM_ROUTE];
     }
 
     // Load mem from bank
@@ -370,27 +386,32 @@ class K32_anim {
     //
 
     // draw pix
-    void pixel(int pix, CRGBW color)  {
-      if (pix < this->_size)
-        for (int k=0; k<ANIM_FIXTURES_SLOTS; k++)
-          if (this->_fixtures[k])
-            this->_fixtures[k]->pix( pix + this->_offset, color % this->_master);
+    void pixel(int pix, CRGBW color, bool background = false)  {
+      this->pixel(pix, 1, color, background);
     }
 
     // draw multiple pix
-    void pixel(int pixStart, int count, CRGBW color)  {
-      for (int k=0; k<ANIM_FIXTURES_SLOTS; k++)
-          if (this->_fixtures[k])
-            this->_fixtures[k]->pix( pixStart + this->_offset, count, color % this->_master);
+    void pixel(int pixStart, int count, CRGBW color, bool background = false)  {
+      bool sel = false;
+      for (int k=0; k<ANIM_FIXTURES_SLOTS; k++) 
+      {
+        if (this->_fixtures[k] == NULL) continue;
+        bool sel = (route() == 0);
+        sel = sel || (!background && route() == k+1);
+        sel = sel || (background && route() != k+1);
+
+        if (sel)
+          this->_fixtures[k]->pix( pixStart + this->_offset, count, color % this->_master);
+      }
     }
 
     // draw all
     void all(CRGBW color) {
       for (int k=0; k<ANIM_FIXTURES_SLOTS; k++)
-          if (this->_fixtures[k]) {
-            this->_fixtures[k]->pix( this->_offset, this->_size, color % this->_master);
-            // LOGF2("TEST:draw r=%d  on fixture %d\n", (color % this->_master).r, k);
-          }
+        if (this->_fixtures[k]) {
+          this->_fixtures[k]->pix( this->_offset, this->_size, color % this->_master);
+          // LOGF2("TEST:draw r=%d  on fixture %d\n", (color % this->_master).r, k);
+        }
     }
 
     // clear
@@ -455,6 +476,7 @@ class K32_anim {
         
         if (triggerDraw) {
           for (int k=0; k<ANIM_FIXTURES_SLOTS; k++) if (that->_fixtures[k]) that->_fixtures[k]->lock();
+          that->route(dataCopy[ANIM_ROUTE]);
           that->draw(dataCopy);                                      // Subclass draw hook
           for (int k=0; k<ANIM_FIXTURES_SLOTS; k++) if (that->_fixtures[k]) that->_fixtures[k]->unlock();
         }

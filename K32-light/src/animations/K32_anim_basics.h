@@ -19,6 +19,8 @@ public:
     {
         int pixCount = min(ANIM_DATA_SLOTS/4, size());
 
+        this->clear();
+
         // Group 4 consecutive data to one RGBW pixel
         for (int k=0; k<pixCount; k++) 
             this->pixel(k, CRGBW(data[k*4], data[k*4+1], data[k*4+2], data[k*4+3]) );

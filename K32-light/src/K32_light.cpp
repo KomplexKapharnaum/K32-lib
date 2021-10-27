@@ -238,26 +238,27 @@ void K32_light::command(Orderz* order)
       else if (strcmp(order->subaction, "full") == 0)  masterValue = 255;
       else if (strcmp(order->subaction, "tenmore") == 0)  masterValue += 10;
       else if (strcmp(order->subaction, "tenless") == 0)  masterValue -= 10;
-      else if (strcmp(order->subaction, "fadeout") == 0) {
-      if (!this->anim("mem-strip")->hasmod("fadeout"))
-          this->anim("mem-strip")->mod(new K32_mod_fadeout)->name("fadeout")->at(0)->period(6000)->play();
-      else
-          this->anim("mem-strip")->mod("fadeout")->play();
+      else if (strcmp(order->subaction, "fadeout") == 0) 
+      {
+        if (!this->anim("mem-strip")->hasmod("fadeout"))
+            this->anim("mem-strip")->mod(new K32_mod_fadeout)->name("fadeout")->at(0)->period(6000)->play();
+        else
+            this->anim("mem-strip")->mod("fadeout")->play();
       }
-      else if (strcmp(order->subaction, "fadein") == 0) {
-      if (!this->anim("mem-strip")->hasmod("fadein"))
-          this->anim("mem-strip")->mod(new K32_mod_fadein)->name("fadein")->at(0)->period(6000)->play();
-      else
-          this->anim("mem-strip")->mod("fadein")->play();
+      else if (strcmp(order->subaction, "fadein") == 0) 
+      {
+        if (!this->anim("mem-strip")->hasmod("fadein"))
+            this->anim("mem-strip")->mod(new K32_mod_fadein)->name("fadein")->at(0)->period(6000)->play();
+        else
+            this->anim("mem-strip")->mod("fadein")->play();
       }
       else if (order->count() > 0) masterValue = order->getData(0)->toInt();
 
-      this->anim("mem-strip")->master( masterValue );
-      this->anim("mem-strip")->push();
+      this->anim("mem-strip")->master( masterValue )->push();
       if (this->anim("artnet-dmxfix"))
       {
-      this->anim("artnet-dmxfix")->master( masterValue );// to do if dmxthru
-      this->anim("artnet-dmxfix")->push();// to do if dmxthru
+        this->anim("artnet-dmxfix")->master( masterValue );// to do if dmxthru
+        this->anim("artnet-dmxfix")->push();// to do if dmxthru
       }
   }
 
