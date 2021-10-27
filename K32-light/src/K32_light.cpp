@@ -441,7 +441,8 @@ void K32_light::command(Orderz* order)
     }
     else if (strcmp(order->subaction,"stop")==0)
     {
-      this->anim("maree")->stop();
+      this->anim("maree")->unmod()
+               ->stop();
     }
   }
 
