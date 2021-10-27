@@ -294,6 +294,19 @@ class K32_anim {
       return this;
     }
 
+    // enable remote control (mqtt / osc / remote ...)
+    K32_anim* remote(bool enable=true)
+    {
+      this->_remote = enable;
+      return this;
+    }
+
+    // enable remote control status
+    bool isRemote()
+    {
+      return this->_remote;
+    }
+
 
     // ANIM MASTER
     //
@@ -422,13 +435,14 @@ class K32_anim {
     unsigned long startTime = 0;
     uint32_t frameCount = 0;
 
-
   // PRIVATE
   //
   private:
 
     // input data
     int _data[ANIM_DATA_SLOTS];
+    
+    bool _remote = false;
 
     // THREAD: draw frame on new data
     static void animate( void * parameter ) 
@@ -476,7 +490,7 @@ class K32_anim {
         
         if (triggerDraw) {
           for (int k=0; k<ANIM_FIXTURES_SLOTS; k++) if (that->_fixtures[k]) that->_fixtures[k]->lock();
-          that->route(dataCopy[ANIM_ROUTE]);
+          that->route(dataCopy[ANIM_ROUTE]);                         // Fixture selection
           that->draw(dataCopy);                                      // Subclass draw hook
           for (int k=0; k<ANIM_FIXTURES_SLOTS; k++) if (that->_fixtures[k]) that->_fixtures[k]->unlock();
         }

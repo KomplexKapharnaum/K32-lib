@@ -231,34 +231,34 @@ void K32_light::command(Orderz* order)
   // MASTER
   else if (strcmp(order->action, "master") == 0)
   {
-      int masterValue = this->anim("mem-strip")->master();
+    // apply to all "remote" anim
+    for (int k=0; k<this->_animcounter; k++)
+      if (this->_anims[k]->isRemote())
+      {      
+        int masterValue = this->_anims[k]->master();
 
-      if (strcmp(order->subaction, "less") == 0)       masterValue -= 2;
-      else if (strcmp(order->subaction, "more") == 0)  masterValue += 2;
-      else if (strcmp(order->subaction, "full") == 0)  masterValue = 255;
-      else if (strcmp(order->subaction, "tenmore") == 0)  masterValue += 10;
-      else if (strcmp(order->subaction, "tenless") == 0)  masterValue -= 10;
-      else if (strcmp(order->subaction, "fadeout") == 0) 
-      {
-        if (!this->anim("mem-strip")->hasmod("fadeout"))
-            this->anim("mem-strip")->mod(new K32_mod_fadeout)->name("fadeout")->at(0)->period(6000)->play();
-        else
-            this->anim("mem-strip")->mod("fadeout")->play();
-      }
-      else if (strcmp(order->subaction, "fadein") == 0) 
-      {
-        if (!this->anim("mem-strip")->hasmod("fadein"))
-            this->anim("mem-strip")->mod(new K32_mod_fadein)->name("fadein")->at(0)->period(6000)->play();
-        else
-            this->anim("mem-strip")->mod("fadein")->play();
-      }
-      else if (order->count() > 0) masterValue = order->getData(0)->toInt();
+        if (strcmp(order->subaction, "less") == 0)       masterValue -= 2;
+        else if (strcmp(order->subaction, "more") == 0)  masterValue += 2;
+        else if (strcmp(order->subaction, "full") == 0)  masterValue = 255;
+        else if (strcmp(order->subaction, "tenmore") == 0)  masterValue += 10;
+        else if (strcmp(order->subaction, "tenless") == 0)  masterValue -= 10;
+        else if (strcmp(order->subaction, "fadeout") == 0) 
+        {
+          if (!this->_anims[k]->hasmod("fadeout"))
+              this->_anims[k]->mod(new K32_mod_fadeout)->name("fadeout")->at(0)->period(6000)->play();
+          else
+              this->_anims[k]->mod("fadeout")->play();
+        }
+        else if (strcmp(order->subaction, "fadein") == 0) 
+        {
+          if (!this->_anims[k]->hasmod("fadein"))
+              this->_anims[k]->mod(new K32_mod_fadein)->name("fadein")->at(0)->period(6000)->play();
+          else
+              this->_anims[k]->mod("fadein")->play();
+        }
+        else if (order->count() > 0) masterValue = order->getData(0)->toInt();
 
-      this->anim("mem-strip")->master( masterValue )->push();
-      if (this->anim("artnet-dmxfix"))
-      {
-        this->anim("artnet-dmxfix")->master( masterValue );// to do if dmxthru
-        this->anim("artnet-dmxfix")->push();// to do if dmxthru
+        this->_anims[k]->master( masterValue )->push();
       }
   }
 
@@ -269,7 +269,11 @@ void K32_light::command(Orderz* order)
 
       if (order->count() > 1) {
         int masterValue = order->getData(1)->toInt();
-        this->anim("mem-strip")->master( order->getData(1)->toInt() );
+        
+        // apply to all "remote" anim
+        for (int k=0; k<this->_animcounter; k++)
+          if (this->_anims[k]->isRemote())
+            this->_anims[k]->master( order->getData(1)->toInt() );
       }
 
       // reset order
@@ -285,33 +289,17 @@ void K32_light::command(Orderz* order)
   {
       LOG("DISPATCH: leds/frame");
 
-      for(int k=0; k<order->count(); k++) {
-        int v = order->getData(k)->toInt();
+      // apply to all "remote" anim
+      for (int k=0; k<this->_animcounter; k++)
+        if (this->_anims[k]->isRemote()) {
 
-        if (v >= 0) this->anim("mem-strip")->set(k, v);           // normal
-      //  LOGF("k->%d ", k);                                 // normal
-      //  LOGF("=%d ", v);                                   // normal
-      }                                                      // normal
-      this->anim("mem-strip")->push();                            // normal
-
-
-      //   if (this->anim("artnet-dmxfix"))                           // dmx_par
-      //    if (v >= 0) this->anim("artnet-dmxfix")->set(k, v);       // dmx par
-      //   else                                                 // dmx par
-      //    if (v >= 0) this->anim("mem-strip")->set(k, v);          // dmx par
-      // //  LOGF("k->%d ", k);                                 // dmx par
-      // //  LOGF("=%d ", v);                                   // dmx par
-      // }                                                      // dmx par
-      //  if (this->anim("artnet-dmxfix"))                            // dmx par
-      //  {                                                     // dmx par
-      //    LOG("DMX THRU");                                    // dmx par
-      //    this->anim("artnet-dmxfix")->push();                      // dmx par
-      //  }                                                     // dmx par
-      //  else                                                  // dmx par
-      //  {                                                     // dmx par
-      //    LOG("manu ");                                       // dmx par
-      //    this->anim("mem-strip")->push();                         // dmx par
-      //  }                                                     // dmx par
+          // Push data if >= 0 (ignore -1)
+          for(int k=0; k<order->count(); k++) {
+            int v = order->getData(k)->toInt();
+            if (v >= 0) this->_anims[k]->set(k, v);
+          }
+          this->_anims[k]->push();
+        }
   }
 
   // STOP
@@ -324,61 +312,54 @@ void K32_light::command(Orderz* order)
   // MODULATORS (Manu)
   else if (strcmp(order->action, "mod") == 0 || strcmp(order->action, "modi") == 0 || strcmp(order->action, "modall") == 0) 
   { 
-      int startmod = -1;
-      int stopmod = -1;
+    // apply to all "remote" anim
+    for (int k=0; k<this->_animcounter; k++)
+      if (this->_anims[k]->isRemote()) 
+      {
+        int startmod = -1;
+        int stopmod = -1;
 
-      // select mod by name
-      if (strcmp(order->action, "mod") == 0 && order->count() >= 1) {
-        startmod = this->anim("mem-strip")->modindex( String(order->getData(0)->toStr()) );
-        stopmod = startmod+1;
-      }
-
-      // select mod by index
-      else if (strcmp(order->action, "modi") == 0  && order->count() >= 1)  {
-        startmod = order->getData(0)->toInt();
-        stopmod = startmod+1;
-      }
-
-      // select all mod 
-      else if (strcmp(order->action, "modall") == 0) {
-        startmod = 0;
-        stopmod = ANIM_MOD_SLOTS;
-      }
-
-      // no mod found selected: exit
-      if (startmod < 0) return;
-
-      // apply to mod selection
-      for(int k=startmod; k<stopmod; k++) {
-        if (!this->anim("mem-strip")->hasmod(k)) 
-          continue;
-        
-        if (strcmp(order->subaction, "faster") == 0)
-        { 
-        this->anim("mem-strip")->mod(k)->faster();
-        if (this->anim("artnet-dmxfix"))
-        this->anim("artnet-dmxfix")->mod(k)->faster();
-        }
-        else if (strcmp(order->subaction, "slower") == 0)
-        {
-          this->anim("mem-strip")->mod(k)->slower();
-          if (this->anim("artnet-dmxfix"))
-          this->anim("artnet-dmxfix")->mod(k)->slower();
-        } 
-
-        else if (strcmp(order->subaction, "bigger") == 0) 
-        {
-          this->anim("mem-strip")->mod(k)->bigger();
-          if (this->anim("artnet-dmxfix"))
-          this->anim("artnet-dmxfix")->mod(k)->bigger();
+        // select mod by name
+        if (strcmp(order->action, "mod") == 0 && order->count() >= 1) {
+          startmod = this->_anims[k]->modindex( String(order->getData(0)->toStr()) );
+          stopmod = startmod+1;
         }
 
-        else if (strcmp(order->subaction, "smaller") == 0) 
-         {
-          this->anim("mem-strip")->mod(k)->smaller();
-          if (this->anim("artnet-dmxfix"))
-          this->anim("artnet-dmxfix")->mod(k)->smaller();
-         }
+        // select mod by index
+        else if (strcmp(order->action, "modi") == 0  && order->count() >= 1)  {
+          startmod = order->getData(0)->toInt();
+          stopmod = startmod+1;
+        }
+
+        // select all mod 
+        else if (strcmp(order->action, "modall") == 0) {
+          startmod = 0;
+          stopmod = ANIM_MOD_SLOTS;
+        }
+
+        // no mod found selected: exit
+        if (startmod < 0) return;
+
+        // apply to mod selection
+        for(int k=startmod; k<stopmod; k++) {
+          if (!this->_anims[k]->hasmod(k)) 
+            continue;
+          
+          if (strcmp(order->subaction, "faster") == 0) 
+            this->_anims[k]->mod(k)->faster();
+
+          else if (strcmp(order->subaction, "slower") == 0) 
+            this->_anims[k]->mod(k)->slower();
+ 
+
+          else if (strcmp(order->subaction, "bigger") == 0)  
+            this->_anims[k]->mod(k)->bigger();
+
+          else if (strcmp(order->subaction, "smaller") == 0)  
+            this->_anims[k]->mod(k)->smaller();
+
+        }
+
       }
   }
 
