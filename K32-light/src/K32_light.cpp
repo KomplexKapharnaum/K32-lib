@@ -342,22 +342,22 @@ void K32_light::command(Orderz* order)
         if (startmod < 0) return;
 
         // apply to mod selection
-        for(int k=startmod; k<stopmod; k++) {
-          if (!this->_anims[k]->hasmod(k)) 
+        for(int j=startmod; j<stopmod; j++) {
+          if (!this->_anims[k]->hasmod(j)) 
             continue;
           
           if (strcmp(order->subaction, "faster") == 0) 
-            this->_anims[k]->mod(k)->faster();
+            this->_anims[k]->mod(j)->faster();
 
           else if (strcmp(order->subaction, "slower") == 0) 
-            this->_anims[k]->mod(k)->slower();
+            this->_anims[k]->mod(j)->slower();
  
 
           else if (strcmp(order->subaction, "bigger") == 0)  
-            this->_anims[k]->mod(k)->bigger();
+            this->_anims[k]->mod(j)->bigger();
 
           else if (strcmp(order->subaction, "smaller") == 0)  
-            this->_anims[k]->mod(k)->smaller();
+            this->_anims[k]->mod(j)->smaller();
 
         }
 
