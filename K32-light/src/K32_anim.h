@@ -413,8 +413,10 @@ class K32_anim {
       {
         if (this->_fixtures[k] == NULL) continue;
         bool sel = (route() == 0);
-        sel = sel || (!background && route() == k+1);
-        sel = sel || (background && route() != k+1);
+
+        sel = sel || (route() >= 0  && route() <= 8 && route() == k+1);   // select solo 1->8
+        sel = sel || (route() == 9  && k%2 == 0 );                        // select impaires 
+        sel = sel || (route() == 10 && k%2 == 1 );                        // select paires 
 
         if (sel)
           this->_fixtures[k]->pix( pixStart + this->_offset, count, color % this->_master);
