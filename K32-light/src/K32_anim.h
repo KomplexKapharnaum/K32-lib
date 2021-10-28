@@ -104,6 +104,9 @@ class K32_anim {
       // remove disposable modulators
       this->unmod();
 
+      // apply mem route
+      this->set( ANIM_ROUTE, preset->route() );
+
       // push new data
       this->push(preset->mem(), preset->size());
 

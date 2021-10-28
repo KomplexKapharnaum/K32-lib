@@ -43,6 +43,20 @@ class LPreset
             return modulator;
         }
 
+        LPreset* route(int r) 
+        { 
+            this->_route = r;
+            return this;
+        }
+
+        int route() 
+        { 
+            return this->_route;
+        }
+
+        // Register base route
+
+
         K32_modulator** modulators() {
             return _modulators;
         }
@@ -58,6 +72,8 @@ class LPreset
 
     private:
         size_t _size;
+        int _route = 0;
+        
         uint8_t _mem[ANIM_DATA_SLOTS];
 
         // Modulator
