@@ -291,15 +291,15 @@ void K32_light::command(Orderz* order)
       LOG("DISPATCH: leds/frame");
 
       // apply to all "remote" anim
-      for (int k=0; k<this->_animcounter; k++)
-        if (this->_anims[k]->isRemote()) {
+      for (int i=0; i<this->_animcounter; i++)
+        if (this->_anims[i]->isRemote()) {
 
           // Push data if >= 0 (ignore -1)
           for(int k=0; k<order->count(); k++) {
             int v = order->getData(k)->toInt();
-            if (v >= 0) this->_anims[k]->set(k, v);
+            if (v >= 0) this->_anims[i]->set(k, v);
           }
-          this->_anims[k]->push();
+          this->_anims[i]->push();
         }
   }
 
