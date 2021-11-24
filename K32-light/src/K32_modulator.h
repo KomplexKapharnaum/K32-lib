@@ -72,7 +72,7 @@ public:
 
   K32_modulator* at(int slot)
   {
-    if (slot > 0  && slot < ANIM_DATA_SLOTS) this->dataslot[slot] = true;
+    if (slot >= 0  && slot < ANIM_DATA_SLOTS) this->dataslot[slot] = true;
     return this;
   }
 
