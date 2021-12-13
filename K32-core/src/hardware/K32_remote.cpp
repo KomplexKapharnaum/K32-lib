@@ -148,6 +148,15 @@ K32_remote* K32_remote::unlock() {
   return this;
 }
 
+// void K32_light::command(Orderz* order)  // FIX
+// {
+//   if (strcmp(order->action, "setmacro") == 0 )
+//   {
+
+//   }
+
+// }
+
 
 ////////////////////////////////////////////////////////////////////////////////////////
 
