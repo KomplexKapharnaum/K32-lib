@@ -42,8 +42,8 @@ class K32_artnet : K32_plugin {
     int universe();
     void universe(int uni);
 
-    void onDmx( artnetsub subscription );
-    void onFullDmx( cbPtrArtnet callback );
+    static void onDmx( artnetsub subscription );
+    static void onFullDmx( cbPtrArtnet callback );
     
     static cbPtrArtnet fullCallback;
     static artnetsub subscriptions[ARTNET_SUB_SLOTS];
