@@ -113,7 +113,7 @@ class K32_anim {
       // apply mem modulators
       K32_modulator** mods = preset->modulators();
       for (int k=0; k<ANIM_MOD_SLOTS; k++)
-        if( mods[k] ) this->mod( mods[k] );
+        if( mods[k] ) this->mod( mods[k] )->trigger() ;
 
       return this;
     }

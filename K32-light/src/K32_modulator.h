@@ -236,7 +236,7 @@ protected:
   unsigned long freezeTime = 0;
   unsigned long triggerTime = 0;
   bool _fresh = false; 
-  ModMode _mode = RELATIVE;
+  ModMode _mode = ABSOLUTE;
 
 private:
 
