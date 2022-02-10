@@ -35,8 +35,8 @@ esp_err_t K32_mqtt::mqtt_event(esp_mqtt_event_handle_t event)
           esp_mqtt_client_subscribe(client, ("k32/e" + myID + "/#").c_str(), 1);
           LOG("MQTT: subscribed to " + ("k32/e" + myID + "/#"));
 
-          esp_mqtt_client_subscribe(client, ("k32/l" + myID + "/#").c_str(), 1);
-          LOG("MQTT: subscribed to " + ("k32/l" + myID + "/#"));
+          esp_mqtt_client_subscribe(client, ("k32/l" + luluID + "/#").c_str(), 1);
+          LOG("MQTT: subscribed to " + ("k32/l" + luluID + "/#"));
 
           esp_mqtt_client_subscribe(client, "k32/all/#", 1);
           LOG("MQTT: subscribed to k32/all/#");
