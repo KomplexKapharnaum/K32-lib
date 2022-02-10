@@ -27,12 +27,16 @@ esp_err_t K32_mqtt::mqtt_event(esp_mqtt_event_handle_t event)
 
           String myChan = String(that->k32->system->channel()); 
           String myID = String(that->k32->system->id());
+          String luluID = String(that->light->id());
 
           esp_mqtt_client_subscribe(client, ("k32/c" + myChan + "/#").c_str(), 1);
           LOG("MQTT: subscribed to " + ("k32/c" + myChan + "/#"));
 
           esp_mqtt_client_subscribe(client, ("k32/e" + myID + "/#").c_str(), 1);
           LOG("MQTT: subscribed to " + ("k32/e" + myID + "/#"));
+
+          esp_mqtt_client_subscribe(client, ("k32/l" + myID + "/#").c_str(), 1);
+          LOG("MQTT: subscribed to " + ("k32/l" + myID + "/#"));
 
           esp_mqtt_client_subscribe(client, "k32/all/#", 1);
           LOG("MQTT: subscribed to k32/all/#");
@@ -110,7 +114,7 @@ esp_err_t K32_mqtt::mqtt_event(esp_mqtt_event_handle_t event)
 }
 
 
-K32_mqtt::K32_mqtt(K32* k32, K32_wifi* wifi, K32_stm32* stm32) : K32_plugin("mqtt", k32), wifi(wifi), stm32(stm32)
+K32_mqtt::K32_mqtt(K32* k32, K32_wifi* wifi, K32_stm32* stm32, K32_light* light) : K32_plugin("mqtt", k32), wifi(wifi), stm32(stm32), light(light)
 {
   lock = xSemaphoreCreateMutex();
   connected = false;
