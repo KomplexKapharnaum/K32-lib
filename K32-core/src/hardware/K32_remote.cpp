@@ -246,6 +246,11 @@ void K32_remote::command(Orderz* order)
 
 K32_remote* K32_remote::changeMacro(uint8_t macro)
 {
+  if (this->_macroMax == 0) {
+    this->_activeMacro = 0;
+    return this;  // Max macro not set
+  }
+
   this->_semalock();
   this->_activeMacro = macro % this->_macroMax;
   this->_semaunlock();
@@ -259,6 +264,11 @@ K32_remote* K32_remote::changeMacro(uint8_t macro)
 
 K32_remote* K32_remote::changePreviewMacro(uint8_t macro)
 {
+  if (this->_macroMax == 0) {
+    this->_previewMacro = 0;
+    return this;  // Max macro not set
+  }
+
   this->_semalock();
   this->_previewMacro = macro % this->_macroMax;
   this->_semaunlock();
