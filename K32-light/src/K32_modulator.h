@@ -259,7 +259,7 @@ class K32_modulator_periodic : public K32_modulator {
     // Time is shifted with phase (0->360°) * period()
     virtual int time() 
     {
-      return K32_modulator::time() - ((this->_phase % 360) * this->_period) / 360;
+      return K32_modulator::time()- this->triggerTime - ((this->_phase % 360) * this->_period) / 360;
     }
 
 };
