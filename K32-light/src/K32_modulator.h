@@ -10,6 +10,8 @@
 
 enum ModMode {RELATIVE, ABSOLUTE}; 
 
+typedef void (*cbPtrMod )(int value);
+
 #include "K32_anim.h"
 
 /*
@@ -106,6 +108,12 @@ public:
     return this;
   }
 
+  K32_modulator* event( cbPtrMod callback )
+  {
+    this->_event = callback;
+    return this;
+  }
+
   // Execute modulation function
   bool run(int *animData)
   { 
@@ -142,6 +150,11 @@ public:
       // Did animator produced a different result than last call ?
       didChange = (this->_lastProducedValue != val);
       this->_lastProducedValue = val;
+
+      // custom event callback 
+      if (didChange && this->_event != nullptr) {
+        this->_event(val);
+      }
 
     }
     return didChange;
@@ -237,6 +250,8 @@ protected:
   unsigned long triggerTime = 0;
   bool _fresh = false; 
   ModMode _mode = ABSOLUTE;
+
+  cbPtrMod _event = nullptr;
 
 private:
 

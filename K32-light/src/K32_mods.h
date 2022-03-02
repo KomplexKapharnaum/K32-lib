@@ -140,6 +140,27 @@ class K32_mod_multipulse : public K32_modulator_periodic {
 
 };
 
+//
+// TICKER
+//
+class K32_mod_tick : public K32_modulator_periodic {
+  public:  
+
+    // internal attribute
+    int lastPeriod = -1;
+
+    int value()
+    {
+      int newPeriod = periodCount();
+      if (newPeriod != lastPeriod) {
+        lastPeriod = newPeriod;
+        return maxi();
+      }
+      return mini();
+    };
+  
+};
+
 
 //
 // RANDOM
