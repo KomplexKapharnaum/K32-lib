@@ -38,7 +38,9 @@ class K32_pwmfixture : public K32_fixture
           this->_pwmOut->set(i*4+1, _buffer[i].g);
           this->_pwmOut->set(i*4+2, _buffer[i].b);
           this->_pwmOut->set(i*4+3, _buffer[i].w);
+          // LOGF4("PWM set %d %d %d %d ", _buffer[i].r,  _buffer[i].g,  _buffer[i].b,  _buffer[i].w );
         }   
+        // LOG();
         /////////////////////////////////////////////////////////////////////////////////
 
         this->_dirty = false;
