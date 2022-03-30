@@ -43,9 +43,13 @@ class K32_module {
       else LOG("ERROR: module ot linked to intercom");
     }
 
-    void emit(const char* command) {
-      if (intercom != nullptr) intercom->queue(new Orderz(command, false));
+    void emit(const char* event) {
+      if (intercom != nullptr) intercom->queue(new Orderz(event, false));
       else LOG("ERROR: module ot linked to intercom");
+    }
+
+    void emit(String event) {
+      this->emit(event.c_str());
     }
 
     void cmd(Orderz* order) {
