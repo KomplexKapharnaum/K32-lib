@@ -10,6 +10,7 @@
 #include "K32_wifi.h"
 
 #define BTNS_SLOTS 16
+#define DEBOUNCE_COUNT 4
 
 class K32_buttons : K32_plugin 
 {
@@ -28,6 +29,7 @@ class K32_buttons : K32_plugin
     int  watchPins[BTNS_SLOTS];
     String  watchNames[BTNS_SLOTS];
     bool watchValues[BTNS_SLOTS];
+    int watchDirty[BTNS_SLOTS];  // Debounce
 };
 
 #endif

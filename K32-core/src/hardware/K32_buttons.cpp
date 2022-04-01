@@ -38,6 +38,7 @@ void K32_buttons::add(int pin, String name)
         {
             pinMode(pin, INPUT_PULLUP);
             this->watchValues[k] = HIGH;
+            this->watchDirty[k] = 0;
             this->watchNames[k]= name;
             this->watchPins[k] = pin;
             break;
@@ -69,8 +70,22 @@ void K32_buttons::watch( void * parameter ) {
         {
             if (that->watchPins[k]>0) {
                 bool value = digitalRead(that->watchPins[k]);
-                if (value != that->watchValues[k]) {
-                    if (value == LOW) that->emit( "btn/"+that->watchNames[k] );
+                if (value == LOW) 
+                {
+                    if (that->watchDirty[k] > DEBOUNCE_COUNT) 
+                    {
+                        if (that->watchValues[k] != value) 
+                        {
+                            that->emit( "btn/"+that->watchNames[k] );
+                            that->watchValues[k] = value;
+                            that->watchDirty[k] = 0;
+                        }
+                    }
+                    else that->watchDirty[k] += 1;
+                }
+                else 
+                {
+                    that->watchDirty[k] = 0;
                     that->watchValues[k] = value;
                 }
             }
