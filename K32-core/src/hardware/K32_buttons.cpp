@@ -70,24 +70,22 @@ void K32_buttons::watch( void * parameter ) {
         {
             if (that->watchPins[k]>0) {
                 bool value = digitalRead(that->watchPins[k]);
-                if (value == LOW) 
+                if (that->watchValues[k] != value) 
                 {
                     if (that->watchDirty[k] > DEBOUNCE_COUNT) 
                     {
-                        if (that->watchValues[k] != value) 
-                        {
-                            that->emit( "btn/"+that->watchNames[k] );
+                            if (value == LOW) {
+                                that->emit( "btn/"+that->watchNames[k] );
+                                that->emit( "btn/"+that->watchNames[k]+"-on" );
+                            }
+                            else that->emit( "btn/"+that->watchNames[k]+"-off" );
+
                             that->watchValues[k] = value;
                             that->watchDirty[k] = 0;
-                        }
                     }
                     else that->watchDirty[k] += 1;
                 }
-                else 
-                {
-                    that->watchDirty[k] = 0;
-                    that->watchValues[k] = value;
-                }
+                else that->watchDirty[k] = 0;
             }
         }
 
