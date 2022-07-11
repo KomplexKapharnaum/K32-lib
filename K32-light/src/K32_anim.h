@@ -121,6 +121,7 @@ class K32_anim {
     // Load mem nowifi
     K32_anim* nowifi() 
     {
+      if (!_bank) return this;
       LPreset* preset = _bank->get_nowifi();
       if (!preset) return this;
 

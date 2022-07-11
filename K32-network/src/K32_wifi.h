@@ -18,6 +18,8 @@ struct wificonf
   const char *ip;
 };
 
+typedef void (*cbPtrWifi )();
+
 
 class K32_wifi : K32_plugin {
   public:
@@ -53,8 +55,8 @@ class K32_wifi : K32_plugin {
 
     String nameDevice;
 
-    void onConnect( void (*callback)(void) );
-    void onDisconnect( void (*callback)(void) );
+    static void onConnect( cbPtrWifi callback );
+    static void onDisconnect( cbPtrWifi callback );
 
   private:
     SemaphoreHandle_t lock;
@@ -80,8 +82,8 @@ class K32_wifi : K32_plugin {
     String _ssid;
     String _password;
 
-    void (*conCallback)(void);
-    void (*disconCallback)(void);
+    static cbPtrWifi conCallback;
+    static cbPtrWifi disconCallback;
 
     void command( Orderz* order );
 };

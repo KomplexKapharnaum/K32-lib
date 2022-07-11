@@ -147,7 +147,6 @@ class LBank
         // Call nowifi
         LPreset* get_nowifi() 
         {   
-            if (_nowifi == nullptr) _nowifi = new LPreset(mem_t {0}, _presetsize);
             return _nowifi;
         }
 

@@ -55,9 +55,6 @@ K32_wifi::K32_wifi(K32* k32) : K32_plugin("wifi", k32)
   this->_ssid = "";
   this->_password = "";
 
-  this->conCallback = nullptr;
-  this->disconCallback = nullptr;
-
   // LOOP task
   xTaskCreatePinnedToCore(this->task,   // function
               "wifi_task",  // task name
@@ -67,6 +64,9 @@ K32_wifi::K32_wifi(K32* k32) : K32_plugin("wifi", k32)
               NULL,              // handler
               0);                // core
 };
+
+cbPtrWifi K32_wifi::conCallback{ nullptr };
+cbPtrWifi K32_wifi::disconCallback{ nullptr };
 
 void K32_wifi::setHostname(String name) {
   this->nameDevice = name;
@@ -247,12 +247,12 @@ IPAddress K32_wifi::broadcastIP()
   return b;
 }
 
-void K32_wifi::onConnect( void (*callback)(void) ) {
-  this->conCallback = callback;
+void K32_wifi::onConnect( cbPtrWifi callback ) {
+  conCallback = callback;
 }
 
-void K32_wifi::onDisconnect( void (*callback)(void) ) {
-  this->disconCallback = callback;
+void K32_wifi::onDisconnect( cbPtrWifi callback ) {
+  disconCallback = callback;
 }
 
 
