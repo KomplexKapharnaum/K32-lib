@@ -135,10 +135,19 @@ class LBank
             return mem;
         }
 
+        // Set mem nowifi
         LPreset* nowifi(mem_t m) 
         {
             if (_nowifi) delete _nowifi;
             _nowifi = new LPreset(m, _presetsize);
+            mem = _nowifi;
+            return _nowifi;
+        }
+
+        // Call nowifi
+        LPreset* get_nowifi() 
+        {   
+            if (_nowifi == nullptr) _nowifi = new LPreset(mem_t {0}, _presetsize);
             return _nowifi;
         }
 

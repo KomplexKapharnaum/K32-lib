@@ -118,6 +118,28 @@ class K32_anim {
       return this;
     }
 
+    // Load mem nowifi
+    K32_anim* nowifi() 
+    {
+      LPreset* preset = _bank->get_nowifi();
+      if (!preset) return this;
+
+      // remove disposable modulators
+      this->unmod();
+
+      // apply mem route
+      this->set( ANIM_ROUTE, preset->route() );
+
+      // push new data
+      this->push(preset->mem(), preset->size());
+
+      // apply mem modulators
+      K32_modulator** mods = preset->modulators();
+      for (int k=0; k<ANIM_MOD_SLOTS; k++)
+        if( mods[k] ) this->mod( mods[k] )->trigger() ;
+
+      return this;
+    }
     
     // ANIM CONTROLS
     //
