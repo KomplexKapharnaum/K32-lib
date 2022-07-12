@@ -435,7 +435,7 @@ class K32_anim {
       for (int k=0; k<ANIM_FIXTURES_SLOTS; k++) 
       {
         if (this->_fixtures[k] == NULL) continue;
-        bool sel = (route() == 0);
+        sel = (route() == 0);
 
         sel = sel || (route() >= 0  && route() <= 8 && route() == k+1);   // select solo 1->8
         sel = sel || (route() == 9  && k%2 == 0 );                        // select impaires 

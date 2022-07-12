@@ -51,10 +51,12 @@ public:
 
   K32_modulator* hold() {
     usage++;
+    return this;
   }
 
   K32_modulator* unhold() {
     usage--;
+    return this;
   }
 
   boolean onHold() {

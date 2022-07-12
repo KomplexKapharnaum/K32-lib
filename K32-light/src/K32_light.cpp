@@ -132,7 +132,6 @@ void K32_light::show()
         _copylist[c].srcFixture->getBuffer(copyBuffer, copySize, _copylist[c].srcStart);
         _copylist[c].destFixture->setBuffer(copyBuffer, copySize, _copylist[c].destPos); 
         free(copyBuffer);
-        _copylist[c].destFixture;
       }
   }  
 
@@ -274,7 +273,7 @@ void K32_light::command(Orderz* order)
         // apply to all "remote" anim
         for (int k=0; k<this->_animcounter; k++)
           if (this->_anims[k]->isRemote())
-            this->_anims[k]->master( order->getData(1)->toInt() );
+            this->_anims[k]->master( masterValue );
       }
 
       // Macro
@@ -371,7 +370,7 @@ void K32_light::command(Orderz* order)
     {
       int duration  = order->getData(0)->toInt();
       int high      = order->getData(1)->toInt();
-      int low       = order->getData(2)->toInt();
+      // int low       = order->getData(2)->toInt();
       int position  = order->getData(3)->toInt();
 
 
@@ -390,7 +389,7 @@ void K32_light::command(Orderz* order)
     else if (strcmp(order->subaction,"go_m")==0)
     {
       int duration  = order->getData(0)->toInt();
-      int high      = order->getData(1)->toInt();
+      // int high      = order->getData(1)->toInt();
       int low       = order->getData(2)->toInt();
       int position  = order->getData(3)->toInt();
 

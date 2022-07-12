@@ -17,7 +17,6 @@ esp_err_t K32_mqtt::mqtt_event(esp_mqtt_event_handle_t event)
 {
     K32_mqtt *that = (K32_mqtt *)event->user_context;
     esp_mqtt_client_handle_t client = event->client;
-    int msg_id;
 
     switch (event->event_id) {
         case MQTT_EVENT_CONNECTED:
@@ -49,7 +48,7 @@ esp_err_t K32_mqtt::mqtt_event(esp_mqtt_event_handle_t event)
           //   MDNS.addService("_mqttc", "_tcp", 1883);
           //   mdns_service_instance_name_set("_mqttc", "_tcp", ("MQTTc._"+k32->system->name()).c_str());
 
-          // msg_id = esp_mqtt_client_publish(client, "/topic/qos1", "data_3", 0, 1, 0);
+          // int msg_id = esp_mqtt_client_publish(client, "/topic/qos1", "data_3", 0, 1, 0);
           // LOGF("sent publish successful, msg_id=%d\n", msg_id);
           break;
         } 
