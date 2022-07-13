@@ -66,7 +66,7 @@ LOG("        _\\///________\\///____\\/////////_____\\///////////////__");
         // RUN Thread
         xTaskCreate( this->run,       // function
                   "run",              // name
-                  10000,              // stack memory
+                  5000,              // stack memory
                   (void*)this,        // args
                   5,                  // priority
                   NULL);

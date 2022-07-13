@@ -34,7 +34,7 @@ K32_mcp::K32_mcp(const int MCP_PIN[2])
   // Start read button state task
   xTaskCreate(this->read_btn_state, // function
               "read_btn_task",      // task name
-              5000,                 // stack memory
+              1000,                 // stack memory
               (void *)this,         // args
               0,                    // priority
               NULL);                // handler
