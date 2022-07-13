@@ -8,6 +8,7 @@
 #define K32_presets_h
 
 #include <Arduino.h>
+#include <stdarg.h>
 
 #define PRESET_MAX 64
 
@@ -113,11 +114,24 @@ class LBank
     public:
         LBank(size_t presetsize) {
             _presetsize = presetsize;
-            _nowifi = new LPreset(mem_t {}, _presetsize);
+            mem_t mem{};
+            _nowifi = new LPreset(mem, _presetsize);
         }
 
         void name(String n) { _name = n; }
         String name() { return _name; }
+
+        LPreset* add(int noOfElements, ...) 
+        {
+            va_list varList;
+            va_start( varList, noOfElements );
+            
+            uint8_t _m[ANIM_DATA_SLOTS] = {0};
+            
+            for(int j=0; j<min(noOfElements, _presetsize); j++) _m[j] = va_arg(varList, int);
+
+            return add(_m);
+        }
 
         LPreset* add(mem_t p) 
         {   
@@ -136,12 +150,24 @@ class LBank
         }
 
         // Set mem nowifi
-        LPreset* nowifi(mem_t m) 
+        LPreset* nowifi(mem_t _m) 
         {
             if (_nowifi) delete _nowifi;
-            _nowifi = new LPreset(m, _presetsize);
+            _nowifi = new LPreset(_m, _presetsize);
             mem = _nowifi;
             return _nowifi;
+        }
+
+        LPreset* nowifi(int noOfElements, ...) 
+        {
+            va_list varList;
+            va_start( varList, noOfElements );
+            
+            uint8_t _m[ANIM_DATA_SLOTS] = {0};
+
+            for(int j=0; j<min(noOfElements, _presetsize); j++) _m[j] = va_arg(varList, int);
+
+            return nowifi(_m);
         }
 
         // Call nowifi
