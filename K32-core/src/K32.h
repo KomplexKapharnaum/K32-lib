@@ -66,7 +66,7 @@ LOG("        _\\///________\\///____\\/////////_____\\///////////////__");
         // RUN Thread
         xTaskCreate( this->run,       // function
                   "run",              // name
-                  10000,              // stack memory
+                  5000,              // stack memory
                   (void*)this,        // args
                   5,                  // priority
                   NULL);
@@ -83,7 +83,7 @@ LOG("        _\\///________\\///____\\/////////_____\\///////////////__");
         for (int i=0; i<_moduleCount; i++)
             if (_modules[i]->name() == name) return _modules[i];
         LOG("K32: module "+name+" not found..");
-        return new K32_module("");
+        return NULL;
     }
 
     // EVENTS Register
@@ -122,7 +122,8 @@ LOG("        _\\///________\\///____\\/////////_____\\///////////////__");
             if (order->isCmd) {
                 LOGINL(" * ");
                 LOG(order->engine_action);
-                module(order->engine)->execute(order);
+                K32_module* mod = module(order->engine);
+                if (mod) mod->execute(order);
             }
             else {
                 LOGINL(" - ");

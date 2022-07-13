@@ -13,7 +13,7 @@ K32_light::K32_light(K32* k32) : K32_plugin("leds", k32)
 
   xTaskCreate( this->refresh,           // function
                   "modulate_task",            // task name
-                  10000,                   // stack memory
+                  5000,                   // stack memory
                   (void*)this,            // args
                   4,                      // priority
                   NULL );                 // handler

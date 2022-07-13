@@ -21,19 +21,19 @@ K32_bluetooth::K32_bluetooth(K32* k32, String nameDevice) : K32_plugin("bt", k32
   LOGF("BT: started (%s)\n", nameDevice);
 
   // STATE task
-  xTaskCreatePinnedToCore(this->state,   // function
+  xTaskCreate(this->state,   // function
               "bt_state",         // task name
-              2000,              // stack memory
+              1000,              // stack memory
               (void *)this,      // args
               1,                 // priority
-              NULL,              // handler
-              0);                // core
+              NULL              // handler
+              );               
 
 
   // // LISTEN server
   xTaskCreatePinnedToCore( this->server,          // function
                 "bt_server",          // server name
-                10000,               // stack memory
+                5000,               // stack memory
                 (void*)this,        // args
                 5,                  // priority
                 NULL,              // handler

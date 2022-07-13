@@ -176,14 +176,13 @@ class K32_anim {
 
       if (this->isPlaying()) return this;
 
-      xSemaphoreTake(this->wait_lock, portMAX_DELAY);
-      xSemaphoreTake(this->bufferInUse, portMAX_DELAY);
       xTaskCreate( this->animate,           // function
                     "anim_task",            // task name
-                    5000,                   // stack memory
+                    3000,                   // stack memory
                     (void*)this,            // args
                     3,                      // priority
                     &this->animateHandle ); // handler
+
       LOGF("ANIM: %s play \n", this->name().c_str() );
       
       return this;
@@ -480,6 +479,9 @@ class K32_anim {
 
       bool triggerDraw = false;
       int dataCopy[ANIM_DATA_SLOTS];
+
+      xSemaphoreTake(that->wait_lock, portMAX_DELAY);
+      xSemaphoreTake(that->bufferInUse, portMAX_DELAY);
 
       that->startTime = millis();
       that->frameCount = 0;
