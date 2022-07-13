@@ -176,8 +176,6 @@ class K32_anim {
 
       if (this->isPlaying()) return this;
 
-      LOGF("--- PLAY %s\n", this->_name.c_str());
-      
       xTaskCreate( this->animate,           // function
                     "anim_task",            // task name
                     3000,                   // stack memory
