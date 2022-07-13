@@ -37,7 +37,7 @@ void K32_artnet::start()
                           "artnet_check", // name
                           10000,           // stack memory
                           (void *)this,   // args
-                          10,              // priority
+                          5,              // priority
                           &xHandle       // handler
                           );             // core
 

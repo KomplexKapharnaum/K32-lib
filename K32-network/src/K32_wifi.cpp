@@ -308,7 +308,7 @@ void K32_wifi::task(void *parameter)
       K32_wifi::didDisconnect = false;
       that->engageConnection = -1 * KWIFI_CONNECTION_TIMEOUT;
 
-      // Callback
+      // Callback // TODO: NO NEED FOR CALBACK ! use EVents
       if (that->disconCallback != nullptr) that->disconCallback();
     }
 
@@ -361,7 +361,7 @@ void K32_wifi::task(void *parameter)
       K32_wifi::didConnect = false;
       K32_wifi::ok = true;
 
-      // Callback
+      // Callback // TODO: NO NEED FOR CALBACK ! use EVents
       if (that->conCallback != nullptr) that->conCallback();
     }
 
