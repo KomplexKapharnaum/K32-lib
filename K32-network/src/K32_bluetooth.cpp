@@ -214,13 +214,13 @@ void K32_bluetooth::dispatch(char* data, size_t length)
   memcpy( payload, &data[strlen(topic)+1], paySize );
   payload[paySize-1] = '\0';
 
-  // LOGINL("BT topic: ");
-  // LOG(topic);
-  // LOGINL("BT payload: ");
-  // LOG(payload);
+  LOGINL("BT topic: ");
+  LOG(topic);
+  LOGINL("BT payload: ");
+  LOG(payload);
 
   Orderz* newOrder = new Orderz(topic);
-  char* p = strtok(data, "§");
+  char* p = strtok(payload, "§");
   while(p != NULL) {
     newOrder->addData(p);
     p = strtok(NULL, "§");
