@@ -49,7 +49,7 @@ K32_power::K32_power(K32_stm32 *stm32, batteryType type, bool autoGauge)
   
     xTaskCreate(this->task,
                 "power_task",
-                1000,
+                2000,
                 (void *)this,
                 0, // priority
                 &t_handle);
