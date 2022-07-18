@@ -5,6 +5,8 @@
 */
 
 #include "K32_bluetooth.h"
+#include <esp_bt.h>
+
 
 /*
  *   PUBLIC
@@ -12,11 +14,14 @@
 
 K32_bluetooth::K32_bluetooth(K32* k32, String nameDevice) : K32_plugin("bt", k32)
 {
+  esp_bt_controller_mem_release(ESP_BT_MODE_BLE);
+
   this->lock = xSemaphoreCreateMutex();
 
   this->serial = new BluetoothSerial();
   this->serial->register_callback(this->event);
   this->serial->begin(nameDevice);
+
 
   LOGF("BT: started (%s)\n", nameDevice);
 

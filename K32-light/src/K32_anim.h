@@ -178,7 +178,7 @@ class K32_anim {
 
       xTaskCreate( this->animate,           // function
                     "anim_task",            // task name
-                    3000,                   // stack memory
+                    1800+10*this->_size,    // stack memory // OK = 1800 + 10x
                     (void*)this,            // args
                     3,                      // priority
                     &this->animateHandle ); // handler
@@ -186,6 +186,10 @@ class K32_anim {
       LOGF("ANIM: %s play \n", this->name().c_str() );
       
       return this;
+    }
+
+    void printWM() {
+      LOGF2("WM %s: %d\n", this->name(), uxTaskGetStackHighWaterMark( this->animateHandle ));
     }
 
     // stop animation
@@ -492,6 +496,8 @@ class K32_anim {
 
       do 
       {
+        // LOGF2("WM anim: %s %d\n", that->name(), uxTaskGetStackHighWaterMark( NULL ));
+
         that->frameCount++;
         // LOGF2("DRAW %s %d\n", that->_name.c_str(), that->_stopAt);
 

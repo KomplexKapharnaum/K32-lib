@@ -66,7 +66,7 @@ LOG("        _\\///________\\///____\\/////////_____\\///////////////__");
         // RUN Thread
         xTaskCreate( this->run,       // function
                   "run",              // name
-                  5000,              // stack memory
+                  2500,              // stack memory
                   (void*)this,        // args
                   5,                  // priority
                   NULL);
@@ -146,6 +146,7 @@ LOG("        _\\///________\\///____\\/////////_____\\///////////////__");
             that->dispatch(nextOrder);
             // LOG("K32: order dispatched");
             delete(nextOrder);
+            // LOGF("WM k32 run: %d\n", uxTaskGetStackHighWaterMark( NULL ));
         }
         vTaskDelete(NULL);
     }
