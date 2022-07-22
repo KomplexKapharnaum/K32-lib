@@ -50,7 +50,7 @@ String K32_oscmsg::getStr(int position) {
  *   PUBLIC
  */
 
-K32_osc::K32_osc(K32* k32, K32_wifi* wifi) : K32_plugin("osc", k32), wifi(wifi) {}
+K32_osc::K32_osc(K32* k32, K32_wifi* wifi, K32_stm32* stm32) : K32_plugin("osc", k32), wifi(wifi), stm32(stm32) {}
 
 
 void K32_osc::start(oscconf conf)
@@ -68,7 +68,7 @@ void K32_osc::start(oscconf conf)
     // LOOP server
     xTaskCreate( this->server,          // function
                   "osc_server",         // server name
-                  10000,               // stack memory
+                  8000,               // stack memory
                   (void*)this,        // args
                   5,                  // priority
                   &xHandle1           // handler
@@ -130,21 +130,25 @@ OSCMessage K32_osc::statusMsg() {
     // identity
     msg.add(k32->system->id());
     msg.add(k32->system->channel());
-    msg.add(K32_VERSION);
 
     // wifi 
-    // byte mac[6];
-    // WiFi.macAddress(mac);
-    // char shortmac[16];
-    // sprintf(shortmac, "%02X:%02X:%02X", mac[3], mac[4], mac[5]);
-    // msg.add(shortmac);
-    // msg.add(WiFi.localIP().toString().c_str());
-    // msg.add(WiFi.RSSI());
-    // (this->linkedIP) ? msg.add(true) : msg.add(false);
+    byte mac[6];
+    WiFi.macAddress(mac);
+    char shortmac[16];
+    sprintf(shortmac, "%02X:%02X:%02X", mac[3], mac[4], mac[5]);
+    msg.add(shortmac);
+    msg.add(WiFi.localIP().toString().c_str());
+    msg.add(WiFi.RSSI());
     
-    // energy 
-    // if (intercom->system->stm32) msg.add(intercom->system->stm32->battery());
-    // else msg.add(0);
+    (this->linkedIP) ? msg.add(1) : msg.add(0);
+    
+    // battery %
+    if (stm32) msg.add(stm32->battery());
+    else msg.add(0);
+
+    // voltage 
+    if (stm32) msg.add(stm32->voltage());
+    else msg.add(0);
 
     // audio 
     // if (intercom->audio) {
@@ -165,8 +169,6 @@ OSCMessage K32_osc::statusMsg() {
     // filesync 
     // msg.add(sync_size());
     // msg.add(sync_getStatus().c_str());
-    msg.add(0);   // SYNC count files
-    msg.add("");  // SYNC erro
     
     return msg;
 }

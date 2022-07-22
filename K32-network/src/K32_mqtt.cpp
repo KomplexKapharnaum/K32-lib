@@ -254,25 +254,28 @@ void K32_mqtt::beacon(void *parameter)
       status="";
 
       // identity
-      status += String(that->k32->system->id())+"|";
-      status += String(that->k32->system->channel())+"|"+"|";
-      status += String(K32_VERSION)+"|"+"|";
+      status += String(that->k32->system->id())+"§";
+      status += String(that->k32->system->channel())+"§";
 
       // wifi 
       byte mac[6];
       WiFi.macAddress(mac);
       char shortmac[16];
       sprintf(shortmac, "%02X:%02X:%02X", mac[3], mac[4], mac[5]);
-      status += String(shortmac)+"|"+"|";
-      status += String(WiFi.localIP().toString().c_str())+"|"+"|";
-      status += String(WiFi.RSSI())+"|"+"|";
+      status += String(shortmac)+"§";
+      status += String(WiFi.localIP().toString().c_str())+"§";
+      status += String(WiFi.RSSI())+"§";
 
-      // (this->linkedIP) ? status += String(true) : status += String(false);
-      status += String(true)+"|"+"|";
+      // linkedIP
+      status += "1§";
 
-      // energy 
-      if (that->stm32) status += String(that->stm32->battery())+"|"+"|";
-      else status += String(0)+"|"+"|";
+      // battery %
+      if (that->stm32) status += String(that->stm32->battery())+"§";
+      else status += "0§";
+
+      // voltage 
+      if (that->stm32) status += String(that->stm32->voltage())+"§";
+      else status += "0§";
 
       // audio 
       // if (that->intercom->audio) {
@@ -293,8 +296,6 @@ void K32_mqtt::beacon(void *parameter)
       // filesync 
       // status += String(sync_size());
       // status += String(sync_getStatus().c_str());
-      status += String(0)+"|";   // SYNC count files
-      status += String("");  // SYNC erro
 
       that->publish("k32/monitor/status", status.c_str(), 0, true); 
     }

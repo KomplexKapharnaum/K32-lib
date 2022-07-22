@@ -7,7 +7,8 @@
 #define K32_osc_h
 
 #include <K32_system.h>
-#include "K32_wifi.h"
+#include <K32_wifi.h>
+#include <hardware/K32_stm32.h>
 
 #include <WiFi.h>
 #include <WiFiUdp.h>
@@ -25,7 +26,7 @@ struct oscconf
 
 class K32_osc : K32_plugin {
   public:
-    K32_osc(K32* k32, K32_wifi* wifi); // TODO: remove wifi dependancy (use intercom)
+    K32_osc(K32* k32, K32_wifi* wifi, K32_stm32* stm32); // TODO: remove wifi dependancy (use intercom)
 
     void start(oscconf conf);
     void stop();
@@ -52,9 +53,9 @@ class K32_osc : K32_plugin {
 
     oscconf conf;
 
-    K32_intercom *intercom;
     K32_system *system;
     K32_wifi *wifi;
+    K32_stm32 *stm32;
 
     TaskHandle_t xHandle1 = NULL;
     TaskHandle_t xHandle2 = NULL;
