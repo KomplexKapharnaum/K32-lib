@@ -34,7 +34,7 @@ K32_mcp::K32_mcp(const int MCP_PIN[2])
   // Start read button state task
   xTaskCreate(this->read_btn_state, // function
               "read_btn_task",      // task name
-              1000,                 // stack memory
+              1500,                 // stack memory
               (void *)this,         // args
               0,                    // priority
               NULL);                // handler
@@ -44,9 +44,9 @@ K32_mcp::K32_mcp(const int MCP_PIN[2])
 void K32_mcp::input(uint8_t pin) {
   if (pin>=16) return;
   this->_lock();
-  this->io[pin].state = HIGH;
-  this->io[pin].mode = MCPIO_INPUT;  
   this->mcp.pinMode(pin, INPUT_PULLUP);
+  this->io[pin].mode = MCPIO_INPUT;  
+  this->io[pin].state = this->mcp.digitalRead(pin);
   // this->mcp.pullUp(pin, HIGH);
   this->_unlock();
 }
@@ -62,6 +62,7 @@ void K32_mcp::output(uint8_t pin) {
 
 bool K32_mcp::state(uint8_t pin) {
   if (pin>=16) return true;
+  if (this->io[pin].mode == MCPIO_DISABLE) this->input(pin);
   this->_lock();
   bool state = this->io[pin].state;
   this->_unlock();
