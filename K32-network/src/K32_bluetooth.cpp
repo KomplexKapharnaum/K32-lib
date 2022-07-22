@@ -28,7 +28,7 @@ K32_bluetooth::K32_bluetooth(K32* k32, String nameDevice) : K32_plugin("bt", k32
   // STATE task
   xTaskCreate(this->state,   // function
               "bt_state",         // task name
-              1000,              // stack memory
+              1500,              // stack memory
               (void *)this,      // args
               1,                 // priority
               NULL              // handler

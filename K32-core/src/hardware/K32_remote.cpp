@@ -38,7 +38,7 @@ K32_remote::K32_remote(K32* k32, K32_mcp *mcp) : K32_plugin("remote", k32)
   // Start main task
   xTaskCreate(this->task,    // function
               "remote_task", // task name
-              1000,          // stack memory
+              1500,          // stack memory
               (void *)this,  // args
               0,             // priority
               &xHandle);         // handler

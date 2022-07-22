@@ -35,7 +35,7 @@ void K32_artnet::start()
   // LOOP client
   xTaskCreate(this->check,    // function
                           "artnet_check", // name
-                          10000,           // stack memory
+                          7000,           // stack memory
                           (void *)this,   // args
                           5,              // priority
                           &xHandle       // handler

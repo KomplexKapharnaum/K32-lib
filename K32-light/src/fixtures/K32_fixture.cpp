@@ -23,7 +23,7 @@ K32_fixture::K32_fixture(int size) {
   // LOOP task
   xTaskCreate(this->task,       // function
               "leds_show_task", // task name
-              1000,             // stack memory
+              1500,             // stack memory
               (void *)this,     // args
               4,                // priority
               NULL);            // handler

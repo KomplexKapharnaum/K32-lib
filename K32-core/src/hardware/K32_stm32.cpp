@@ -21,7 +21,7 @@ void K32_stm32::listen() {
   this->running = true;
   xTaskCreate( this->task,
                 "stm32_task",
-                1000,
+                1500,
                 (void*)this,
                 0,              // priority
                 NULL);
@@ -54,7 +54,7 @@ void K32_stm32::blink(uint8_t *values, int duration_ms)
   this->_blink_duration = duration_ms;
   xTaskCreate( this->blink_task,
                 "blink_task",
-                1000,
+                1500,
                 (void*)this,
                 0,              // priority
                 NULL);

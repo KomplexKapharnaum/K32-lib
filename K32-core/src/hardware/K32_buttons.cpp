@@ -22,7 +22,7 @@ K32_buttons::K32_buttons(K32* k32) : K32_plugin("btns", k32) {
 
     xTaskCreate( this->watch,          // function
                   "btns_watch",         // server name
-                  1000,              // stack memory
+                  1500,              // stack memory
                   (void*)this,        // args
                   0,                  // priority
                   NULL              // handler
