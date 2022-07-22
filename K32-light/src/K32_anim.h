@@ -399,6 +399,16 @@ class K32_anim {
     K32_anim* push(int d0, int d1, int d2, int d3, int d4, int d5) { int frame[6] = {d0, d1, d2, d3, d4, d5}; return this->push(frame, 6); }
     K32_anim* push(int d0, int d1, int d2, int d3, int d4, int d5, int d6) { int frame[7] = {d0, d1, d2, d3, d4, d5, d6}; return this->push(frame, 7); }
     K32_anim* push(int d0, int d1, int d2, int d3, int d4, int d5, int d6, int d7) { int frame[8] = {d0, d1, d2, d3, d4, d5, d6, d7}; return this->push(frame, 8); }
+    K32_anim* push(int d0, int d1, int d2, int d3, int d4, int d5, int d6, int d7, int d8) { int frame[9] = {d0, d1, d2, d3, d4, d5, d6, d7, d8}; return this->push(frame, 9); }
+    K32_anim* push(int d0, int d1, int d2, int d3, int d4, int d5, int d6, int d7, int d8, int d9) { int frame[10] = {d0, d1, d2, d3, d4, d5, d6, d7, d8, d9}; return this->push(frame, 10); }
+    K32_anim* push(int d0, int d1, int d2, int d3, int d4, int d5, int d6, int d7, int d8, int d9, int d10) { int frame[11] = {d0, d1, d2, d3, d4, d5, d6, d7, d8, d9, d10}; return this->push(frame, 11); }
+    K32_anim* push(int d0, int d1, int d2, int d3, int d4, int d5, int d6, int d7, int d8, int d9, int d10, int d11) { int frame[12] = {d0, d1, d2, d3, d4, d5, d6, d7, d8, d9, d10, d11}; return this->push(frame, 12); }
+    K32_anim* push(int d0, int d1, int d2, int d3, int d4, int d5, int d6, int d7, int d8, int d9, int d10, int d11, int d12) { int frame[13] = {d0, d1, d2, d3, d4, d5, d6, d7, d8, d9, d10, d11, d12}; return this->push(frame, 13); }
+    K32_anim* push(int d0, int d1, int d2, int d3, int d4, int d5, int d6, int d7, int d8, int d9, int d10, int d11, int d12, int d13) { int frame[14] = {d0, d1, d2, d3, d4, d5, d6, d7, d8, d9, d10, d11, d12, d13}; return this->push(frame, 14); }
+    K32_anim* push(int d0, int d1, int d2, int d3, int d4, int d5, int d6, int d7, int d8, int d9, int d10, int d11, int d12, int d13, int d14) { int frame[15] = {d0, d1, d2, d3, d4, d5, d6, d7, d8, d9, d10, d11, d12, d13, d14}; return this->push(frame, 15); }
+    K32_anim* push(int d0, int d1, int d2, int d3, int d4, int d5, int d6, int d7, int d8, int d9, int d10, int d11, int d12, int d13, int d14, int d15) { int frame[16] = {d0, d1, d2, d3, d4, d5, d6, d7, d8, d9, d10, d11, d12, d13, d14, d15}; return this->push(frame, 16); }
+    K32_anim* push(int d0, int d1, int d2, int d3, int d4, int d5, int d6, int d7, int d8, int d9, int d10, int d11, int d12, int d13, int d14, int d15, int d16) { int frame[17] = {d0, d1, d2, d3, d4, d5, d6, d7, d8, d9, d10, d11, d12, d13, d14, d15, d16}; return this->push(frame, 17); }
+    K32_anim* push(int d0, int d1, int d2, int d3, int d4, int d5, int d6, int d7, int d8, int d9, int d10, int d11, int d12, int d13, int d14, int d15, int d16, int d17) { int frame[18] = {d0, d1, d2, d3, d4, d5, d6, d7, d8, d9, d10, d11, d12, d13, d14, d15, d16, d17}; return this->push(frame, 18); }
 
 
 

@@ -158,16 +158,16 @@ class LBank
             return _nowifi;
         }
 
-        LPreset* nowifi(int noOfElements, ...) 
+        LPreset* nowifi(...) 
         {
             va_list varList;
-            va_start( varList, noOfElements );
+            va_start( varList, _presetsize );
             
             uint8_t _m[ANIM_DATA_SLOTS] = {0};
+            
+            for(int j=0; j<_presetsize; j++) _m[j] = va_arg(varList, int);
 
-            for(int j=0; j<min(noOfElements, _presetsize); j++) _m[j] = va_arg(varList, int);
-
-            return nowifi(_m);
+            return nowifi(_m); 
         }
 
         // Call nowifi
