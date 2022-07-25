@@ -13,6 +13,7 @@ Released under GPL v3.0
 #include "utils/K32_log.h"
 #include "Wire.h"
 #include "Adafruit_MCP23X17.h"
+#include <class/K32_plugin.h>
 
 enum iomode { MCPIO_DISABLE, MCPIO_INPUT, MCPIO_OUTPUT };
 enum ioflag { MCPIO_NOT, MCPIO_PRESS, MCPIO_PRESS_LONG, MCPIO_RELEASE_LONG, MCPIO_RELEASE_SHORT };
@@ -25,10 +26,10 @@ struct mcpio
   unsigned long lastPushTime = 0;
 };
 
-class K32_mcp
+class K32_mcp : K32_plugin
 {
 public:
-  K32_mcp(const int MCP_PIN[2]);
+  K32_mcp( K32* k32);
 
   void input(uint8_t pin);
   void output(uint8_t pin);

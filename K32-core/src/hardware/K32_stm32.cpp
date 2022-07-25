@@ -25,6 +25,9 @@ void K32_stm32::listen() {
                 (void*)this,
                 0,              // priority
                 NULL);
+  
+  uint8_t l[6] = {255,255,255,255,255,255};
+  this->blink(l, 200);
 }
 
 void K32_stm32::listen(bool btn, bool battery) {

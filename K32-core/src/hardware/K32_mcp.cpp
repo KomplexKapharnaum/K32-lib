@@ -17,12 +17,12 @@
 
 ////////////////////////////////////////////////////////////////////////////////////////
 
-K32_mcp::K32_mcp(const int MCP_PIN[2])
+K32_mcp::K32_mcp(K32* k32) : K32_plugin("mcp", k32)
 {
   this->lock = xSemaphoreCreateMutex();
 
   /* Init I2C and Buttons pins */
-  Wire.begin(MCP_PIN[0], MCP_PIN[1]);     // i2c pins
+  Wire.begin(MCP_PIN[k32->system->hw()][0], MCP_PIN[k32->system->hw()][1]);     // i2c pins
   if(!this->mcp.begin_I2C(0x20)){              // i2c addr
     LOG("MCP: not found.. disabled");
     return;
@@ -47,6 +47,7 @@ void K32_mcp::input(uint8_t pin) {
   this->mcp.pinMode(pin, INPUT_PULLUP);
   this->io[pin].mode = MCPIO_INPUT;  
   this->io[pin].state = this->mcp.digitalRead(pin);
+  if (this->io[pin].state == LOW) this->io[pin].flag = MCPIO_PRESS_LONG;
   // this->mcp.pullUp(pin, HIGH);
   this->_unlock();
 }
@@ -161,6 +162,12 @@ void K32_mcp::read_btn_state(void *parameter)
                 that->_lock();
                 that->io[i].flag = MCPIO_PRESS;
                 that->_unlock();
+                
+                Orderz* newOrder = new Orderz("mcp/press");
+                newOrder->addData(i);
+                newOrder->addData("short");
+                that->emit( newOrder );
+
                 LOGF("MCP: PRESS %i\n", i);
               }
               
@@ -170,6 +177,12 @@ void K32_mcp::read_btn_state(void *parameter)
                 that->io[i].flag = MCPIO_PRESS_LONG;   // Long push
                 that->io[i].lastPushTime = 0;          // Reset counter
                 that->_unlock();
+                
+                Orderz* newOrder = new Orderz("mcp/press");
+                newOrder->addData(i);
+                newOrder->addData("long");
+                that->emit( newOrder );
+
                 LOGF("MCP: PRESS LONG %i\n", i);
               }
             }
@@ -190,11 +203,23 @@ void K32_mcp::read_btn_state(void *parameter)
             if (that->io[i].flag == MCPIO_PRESS) 
             {
                 that->io[i].flag = MCPIO_RELEASE_SHORT;
+
+                Orderz* newOrder = new Orderz( "mcp/release");
+                newOrder->addData(i);
+                newOrder->addData("short");
+                that->emit( newOrder );
+
                 LOGF("MCP: RELEASE SHORT %i\n", i);
             }
             else if (that->io[i].flag == MCPIO_PRESS_LONG)
             {
               that->io[i].flag = MCPIO_RELEASE_LONG;
+
+              Orderz* newOrder = new Orderz( "mcp/release" );
+              newOrder->addData(i);
+              newOrder->addData("long");
+              that->emit( newOrder );
+
               LOGF("MCP: RELEASE LONG %i\n", i);
             }
             that->_unlock();

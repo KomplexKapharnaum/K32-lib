@@ -51,6 +51,7 @@ void K32_artnet::stop()
 
 void K32_artnet::onDmx( artnetsub subscription ) 
 {
+  LOGF("ARTNET: address = %i\n", subscription.address);
   for (int k=0; k< ARTNET_SUB_SLOTS; k++)
     if (K32_artnet::subscriptions[k].address == 0) {
       K32_artnet::subscriptions[k] = subscription;

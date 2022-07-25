@@ -68,6 +68,10 @@ class Orderz
       set(command);
     }
 
+    Orderz(String command, bool isCmd = false) : isCmd(isCmd) {
+      set(command.c_str());
+    }
+
     Orderz* set(const char* command) {
       clear();
       splitString(command, "/", 0, engine);
