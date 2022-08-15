@@ -35,7 +35,7 @@ struct mqttsub
 
 class K32_mqtt : K32_plugin {
   public:
-    K32_mqtt(K32* k32, K32_wifi* wifi, K32_stm32* stm32, K32_light* light);  // TODO: remove wifi dependancy (use intercom)
+    K32_mqtt(K32* k32, K32_wifi* wifi, K32_stm32* stm32 = nullptr, K32_light* light = nullptr);  // TODO: remove wifi dependancy (use intercom)
     void start(mqttconf conf);
     void stop();
     void broker(const char *_broker);

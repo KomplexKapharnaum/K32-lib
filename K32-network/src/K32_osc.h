@@ -26,7 +26,7 @@ struct oscconf
 
 class K32_osc : K32_plugin {
   public:
-    K32_osc(K32* k32, K32_wifi* wifi, K32_stm32* stm32); // TODO: remove wifi dependancy (use intercom)
+    K32_osc(K32* k32, K32_wifi* wifi, K32_stm32* stm32 = nullptr); // TODO: remove wifi dependancy (use intercom)
 
     void start(oscconf conf);
     void stop();
