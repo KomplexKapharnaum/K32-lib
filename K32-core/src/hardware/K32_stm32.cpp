@@ -61,7 +61,6 @@ void K32_stm32::blink(uint8_t *values, int duration_ms)
                 (void*)this,
                 0,              // priority
                 NULL);
-  LOG ("STM: send BLINK");
 }
 
 void K32_stm32::custom(int Ulow, int U1, int U2, int U3, int U4, int U5, int Umax) {
@@ -72,19 +71,15 @@ void K32_stm32::custom(int Ulow, int U1, int U2, int U3, int U4, int U5, int Uma
   this->send(K32_stm32_api::SET_BATTERY_VOLTAGE_4, U4);
   this->send(K32_stm32_api::SET_BATTERY_VOLTAGE_5, U5);
   this->send(K32_stm32_api::SET_BATTERY_VOLTAGE_6, Umax);
-  LOG ("STM: send custom");
-
 };
 
 
 int K32_stm32::firmware() {
   return this->get(K32_stm32_api::GET_FW_VERSION);
-  LOG ("STM: get firmware");
 };
 
 int K32_stm32::current() {
   return this->get(K32_stm32_api::GET_LOAD_CURRENT);
-  LOG ("STM: get current");
 };
 
 int K32_stm32::battery() {
@@ -92,7 +87,6 @@ int K32_stm32::battery() {
   int battLevel = this->_battery;
   xSemaphoreGive(this->lock);
   return battLevel;
-  LOG ("STM: get battery");
 };
 
 int K32_stm32::voltage() {
