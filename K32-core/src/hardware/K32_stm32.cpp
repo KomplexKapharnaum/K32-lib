@@ -91,7 +91,6 @@ int K32_stm32::battery() {
 
 int K32_stm32::voltage() {
   return this->get(K32_stm32_api::GET_BATTERY_VOLTAGE);
-  LOG ("STM: get voltage");
 };
 
 bool K32_stm32::clicked() 
@@ -101,7 +100,6 @@ bool K32_stm32::clicked()
   this->_btn_click = false;
   xSemaphoreGive(this->lock);
   return click;
-  LOG ("STM: clicked");
 };
 
 
@@ -111,7 +109,6 @@ bool K32_stm32::dblclicked() {
   this->_btn_dblclick = false;
   xSemaphoreGive(this->lock);
   return click;
-  LOG ("STM: dblclicked");
 };
 
 
