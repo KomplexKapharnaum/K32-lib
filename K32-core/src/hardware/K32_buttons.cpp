@@ -72,6 +72,10 @@ void K32_buttons::watch( void * parameter ) {
                 bool value = digitalRead(that->watchPins[k]);
                 if (that->watchValues[k] != value) 
                 {
+                    // reset dirty
+                    if (that->watchDirty[k] < 0) that->watchDirty[k] = 0;
+
+                    // dirty for long enough
                     if (that->watchDirty[k] > DEBOUNCE_COUNT) 
                     {
                             if (value == LOW) {
@@ -83,7 +87,23 @@ void K32_buttons::watch( void * parameter ) {
                             that->watchValues[k] = value;
                             that->watchDirty[k] = 0;
                     }
+
+                    // otherwise increment dirty
                     else that->watchDirty[k] += 1;
+                }
+                else if (that->watchValues[k] == LOW) 
+                {
+                    // reset dirty
+                    if (that->watchDirty[k] > 0) that->watchDirty[k] = 0;
+
+                    // dirty for long enough
+                    if (that->watchDirty[k] < -1*LONGPRESS_COUNT) {
+                        that->emit( "btn/"+that->watchNames[k]+"-long" );
+                        that->watchDirty[k] = 0;
+                    }
+
+                    // otherwise decrement dirty
+                    else that->watchDirty[k] -= 1;
                 }
                 else that->watchDirty[k] = 0;
             }

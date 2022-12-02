@@ -11,6 +11,7 @@
 
 #define BTNS_SLOTS 16
 #define DEBOUNCE_COUNT 4
+#define LONGPRESS_COUNT 200
 
 class K32_buttons : K32_plugin 
 {
