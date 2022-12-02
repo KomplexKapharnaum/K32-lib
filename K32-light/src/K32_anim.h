@@ -355,6 +355,12 @@ class K32_anim {
       return this;
     }
 
+    // get data 
+    int get(int k) { 
+      if (k < ANIM_DATA_SLOTS) return this->_data[k]; 
+      return 0;
+    }
+
     // new data push (int[], size)
     K32_anim* push(int* frame, int size=ANIM_DATA_SLOTS) {
       bool didChange = false;
