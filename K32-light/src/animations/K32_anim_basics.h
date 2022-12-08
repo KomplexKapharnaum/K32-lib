@@ -115,11 +115,14 @@ class Anim_flash : public K32_anim {
     // Loop
     void draw (int data[ANIM_DATA_SLOTS])
     {
-      // int stepMS = data[1];
       int count = data[0];
       int onTime = data[1];
       int stepMS = data[2];
-      if (stepMS == 0) stepMS = onTime;
+
+      // DEFAULTS
+      if (count == 0) count = 1;
+      if (onTime == 0) onTime = 50;
+      if (stepMS == 0) stepMS = onTime*2;
 
       this->clear();
       
@@ -133,6 +136,7 @@ class Anim_flash : public K32_anim {
         this->pause(stepMS);
         counter++;
       }
+
     };
 };
 
