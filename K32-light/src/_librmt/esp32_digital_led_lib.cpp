@@ -267,55 +267,57 @@ int IRAM_ATTR digitalLeds_updatePixels(strand_t * pStrand)
   digitalLeds_stateData * pState = static_cast<digitalLeds_stateData*>(pStrand->_stateVars);
   ledParams_t ledParams = ledParamsAll[pStrand->ledType];
 
-  // Pack pixels into transmission buffer
-  if (ledParams.bytesPerPixel == 3 || ledParams.bytesPerPixel == 4) {
-    for (uint16_t i = 0; i < pStrand->numPixels; i++) {
-      // Color order is translated from RGB to GRB
-      
-      if (ledParams.ledOrder = S_BGR)
-      {
-        pState->buf_data[0 + i * ledParams.bytesPerPixel] = gamma8(pStrand->pixels[i].b);
-        pState->buf_data[1 + i * ledParams.bytesPerPixel] = gamma8(pStrand->pixels[i].g);
-        pState->buf_data[2 + i * ledParams.bytesPerPixel] = gamma8(pStrand->pixels[i].r);
-      }
-      else if (ledParams.ledOrder = S_RGB)
-      {
-        pState->buf_data[0 + i * ledParams.bytesPerPixel] = gamma8(pStrand->pixels[i].r);
-        pState->buf_data[1 + i * ledParams.bytesPerPixel] = gamma8(pStrand->pixels[i].g);
-        pState->buf_data[2 + i * ledParams.bytesPerPixel] = gamma8(pStrand->pixels[i].b);
-      }
-      else if (ledParams.ledOrder = S_BRG)
-      {
-        pState->buf_data[0 + i * ledParams.bytesPerPixel] = gamma8(pStrand->pixels[i].b);
-        pState->buf_data[1 + i * ledParams.bytesPerPixel] = gamma8(pStrand->pixels[i].r);
-        pState->buf_data[2 + i * ledParams.bytesPerPixel] = gamma8(pStrand->pixels[i].g);
-      }
-      else if (ledParams.ledOrder = S_GBR)
-      {
-        pState->buf_data[0 + i * ledParams.bytesPerPixel] = gamma8(pStrand->pixels[i].g);
-        pState->buf_data[1 + i * ledParams.bytesPerPixel] = gamma8(pStrand->pixels[i].b);
-        pState->buf_data[2 + i * ledParams.bytesPerPixel] = gamma8(pStrand->pixels[i].r);
-      }
-      else if (ledParams.ledOrder = S_GRB)
-      {
-        pState->buf_data[0 + i * ledParams.bytesPerPixel] = gamma8(pStrand->pixels[i].g);
-        pState->buf_data[1 + i * ledParams.bytesPerPixel] = gamma8(pStrand->pixels[i].r);
-        pState->buf_data[2 + i * ledParams.bytesPerPixel] = gamma8(pStrand->pixels[i].b);
-      }
-      else if (ledParams.ledOrder = S_RBG)
-      {
-        pState->buf_data[0 + i * ledParams.bytesPerPixel] = gamma8(pStrand->pixels[i].r);
-        pState->buf_data[1 + i * ledParams.bytesPerPixel] = gamma8(pStrand->pixels[i].b);
-        pState->buf_data[2 + i * ledParams.bytesPerPixel] = gamma8(pStrand->pixels[i].g);
-      }
-      else
-      {
-        return -1;
-      }
-      
+  int size = ledParams.bytesPerPixel;
 
-      if (ledParams.bytesPerPixel == 4) 
-        pState->buf_data[3 + i * ledParams.bytesPerPixel] = gamma8(pStrand->pixels[i].w);
+  if (size == 3 || size == 4) {
+    for (uint16_t i = 0; i < pStrand->numPixels; i++) {
+
+      uint8_t a, b, c = 0;
+
+      if (ledParams.ledOrder == S_GRB) 
+      {
+        a = pStrand->pixels[i].g;
+        b = pStrand->pixels[i].r;
+        c = pStrand->pixels[i].b;
+      }
+      else if (ledParams.ledOrder == S_GBR) 
+      {
+        a = pStrand->pixels[i].g;
+        b = pStrand->pixels[i].b;
+        c = pStrand->pixels[i].r;
+      }
+      else if (ledParams.ledOrder == S_RGB) 
+      {
+        a = pStrand->pixels[i].r;
+        b = pStrand->pixels[i].g;
+        c = pStrand->pixels[i].b;
+      }
+      else if (ledParams.ledOrder == S_RBG) 
+      {
+        a = pStrand->pixels[i].r;
+        b = pStrand->pixels[i].b;
+        c = pStrand->pixels[i].g;
+      }
+      else if (ledParams.ledOrder == S_BRG) 
+      {
+        a = pStrand->pixels[i].b;
+        b = pStrand->pixels[i].r;
+        c = pStrand->pixels[i].g;
+      }
+      else if (ledParams.ledOrder == S_BGR) 
+      {
+        a = pStrand->pixels[i].b;
+        b = pStrand->pixels[i].g;
+        c = pStrand->pixels[i].r;
+      }
+
+      pState->buf_data[0 + i * size] = gamma8(a);
+      pState->buf_data[1 + i * size] = gamma8(b);
+      pState->buf_data[2 + i * size] = gamma8(c);
+
+      if (size == 4) 
+        pState->buf_data[3 + i * size] = gamma8(pStrand->pixels[i].w);
+      
     }
   }
   else {
