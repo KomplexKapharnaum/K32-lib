@@ -268,21 +268,54 @@ int IRAM_ATTR digitalLeds_updatePixels(strand_t * pStrand)
   ledParams_t ledParams = ledParamsAll[pStrand->ledType];
 
   // Pack pixels into transmission buffer
-  if (ledParams.bytesPerPixel == 3) {
+  if (ledParams.bytesPerPixel == 3 || ledParams.bytesPerPixel == 4) {
     for (uint16_t i = 0; i < pStrand->numPixels; i++) {
       // Color order is translated from RGB to GRB
-      pState->buf_data[0 + i * 3] = gamma8(pStrand->pixels[i].g);
-      pState->buf_data[1 + i * 3] = gamma8(pStrand->pixels[i].r);
-      pState->buf_data[2 + i * 3] = gamma8(pStrand->pixels[i].b);
-    }
-  }
-  else if (ledParams.bytesPerPixel == 4) {
-    for (uint16_t i = 0; i < pStrand->numPixels; i++) {
-      // Color order is translated from RGBW to GRBW
-      pState->buf_data[0 + i * 4] = gamma8(pStrand->pixels[i].g);
-      pState->buf_data[1 + i * 4] = gamma8(pStrand->pixels[i].r);
-      pState->buf_data[2 + i * 4] = gamma8(pStrand->pixels[i].b);
-      pState->buf_data[3 + i * 4] = gamma8(pStrand->pixels[i].w);
+      
+      if (ledParams.ledOrder = S_BGR)
+      {
+        pState->buf_data[0 + i * ledParams.bytesPerPixel] = gamma8(pStrand->pixels[i].b);
+        pState->buf_data[1 + i * ledParams.bytesPerPixel] = gamma8(pStrand->pixels[i].g);
+        pState->buf_data[2 + i * ledParams.bytesPerPixel] = gamma8(pStrand->pixels[i].r);
+      }
+      else if (ledParams.ledOrder = S_RGB)
+      {
+        pState->buf_data[0 + i * ledParams.bytesPerPixel] = gamma8(pStrand->pixels[i].r);
+        pState->buf_data[1 + i * ledParams.bytesPerPixel] = gamma8(pStrand->pixels[i].g);
+        pState->buf_data[2 + i * ledParams.bytesPerPixel] = gamma8(pStrand->pixels[i].b);
+      }
+      else if (ledParams.ledOrder = S_BRG)
+      {
+        pState->buf_data[0 + i * ledParams.bytesPerPixel] = gamma8(pStrand->pixels[i].b);
+        pState->buf_data[1 + i * ledParams.bytesPerPixel] = gamma8(pStrand->pixels[i].r);
+        pState->buf_data[2 + i * ledParams.bytesPerPixel] = gamma8(pStrand->pixels[i].g);
+      }
+      else if (ledParams.ledOrder = S_GBR)
+      {
+        pState->buf_data[0 + i * ledParams.bytesPerPixel] = gamma8(pStrand->pixels[i].g);
+        pState->buf_data[1 + i * ledParams.bytesPerPixel] = gamma8(pStrand->pixels[i].b);
+        pState->buf_data[2 + i * ledParams.bytesPerPixel] = gamma8(pStrand->pixels[i].r);
+      }
+      else if (ledParams.ledOrder = S_GRB)
+      {
+        pState->buf_data[0 + i * ledParams.bytesPerPixel] = gamma8(pStrand->pixels[i].g);
+        pState->buf_data[1 + i * ledParams.bytesPerPixel] = gamma8(pStrand->pixels[i].r);
+        pState->buf_data[2 + i * ledParams.bytesPerPixel] = gamma8(pStrand->pixels[i].b);
+      }
+      else if (ledParams.ledOrder = S_RBG)
+      {
+        pState->buf_data[0 + i * ledParams.bytesPerPixel] = gamma8(pStrand->pixels[i].r);
+        pState->buf_data[1 + i * ledParams.bytesPerPixel] = gamma8(pStrand->pixels[i].b);
+        pState->buf_data[2 + i * ledParams.bytesPerPixel] = gamma8(pStrand->pixels[i].g);
+      }
+      else
+      {
+        return -1;
+      }
+      
+
+      if (ledParams.bytesPerPixel == 4) 
+        pState->buf_data[3 + i * ledParams.bytesPerPixel] = gamma8(pStrand->pixels[i].w);
     }
   }
   else {

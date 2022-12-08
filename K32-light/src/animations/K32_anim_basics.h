@@ -101,6 +101,39 @@ class Anim_test_pwm : public K32_anim {
     };
 };
 
+//
+// TEST
+//
+class Anim_flash : public K32_anim {
+  public:
+    
+    // Setup
+    void init() {
+      this->loop(false);
+    }
+
+    // Loop
+    void draw (int data[ANIM_DATA_SLOTS])
+    {
+      // int stepMS = data[1];
+      int count = data[0];
+      int onTime = data[1];
+      int stepMS = 300;
+
+      this->clear();
+      
+      // WHITE FLASH
+      //
+      int counter = 0;
+      while(counter < count) {
+        this->all( CRGBW{255,255,255} );
+        this->pause(onTime);
+        this->clear();
+        this->pause(stepMS);
+        counter++;
+      }
+    };
+};
 
 
 #endif
