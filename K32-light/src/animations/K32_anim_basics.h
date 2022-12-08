@@ -118,7 +118,8 @@ class Anim_flash : public K32_anim {
       // int stepMS = data[1];
       int count = data[0];
       int onTime = data[1];
-      int stepMS = 300;
+      int stepMS = data[2];
+      if (stepMS == 0) stepMS = onTime;
 
       this->clear();
       
