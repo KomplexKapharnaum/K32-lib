@@ -107,7 +107,7 @@ extern "C"
       [LED_WS2813_V2] = {.bytesPerPixel = 3, .ledOrder = S_GRB, .T0H = 270, .T1H = 800, .T0L = 800, .T1L = 270, .TRS = 300000}, // 2016 datasheet
       [LED_WS2813_V3] = {.bytesPerPixel = 3, .ledOrder = S_GRB, .T0H = 270, .T1H = 630, .T0L = 630, .T1L = 270, .TRS = 300000}, // 2017-05 WS datasheet
       [LED_WS2813_V4] = {.bytesPerPixel = 3, .ledOrder = S_GRB, .T0H = 220, .T1H = 580, .T0L = 580, .T1L = 220, .TRS = 300000}, // 2018-12 WS datasheet
-      [LED_WS2815_V1] = {.bytesPerPixel = 3, .ledOrder = S_BGR, .T0H = 240, .T1H = 750, .T0L = 750, .T1L = 240, .TRS = 300100}, // 
+      [LED_WS2815_V1] = {.bytesPerPixel = 3, .ledOrder = S_RGB, .T0H = 240, .T1H = 750, .T0L = 750, .T1L = 240, .TRS = 300100}, // 
       [LED_SK6812_V1] = {.bytesPerPixel = 3, .ledOrder = S_GRB, .T0H = 300, .T1H = 600, .T0L = 900, .T1L = 600, .TRS = 80000},  // R V B
       [LED_SK6812W_V1] = {.bytesPerPixel = 4, .ledOrder = S_GRB, .T0H = 300, .T1H = 600, .T0L = 900, .T1L = 600, .TRS = 80000}, // R V B W
       [LED_SK6812W_V3] = {.bytesPerPixel = 4, .ledOrder = S_GRB, .T0H = 350, .T1H = 700, .T0L = 800, .T1L = 600, .TRS = 50000}, // R V B W
