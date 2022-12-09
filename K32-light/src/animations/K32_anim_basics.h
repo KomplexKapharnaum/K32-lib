@@ -140,5 +140,27 @@ class Anim_flash : public K32_anim {
     };
 };
 
+// OFF
+//
+class Anim_off : public K32_anim {
+  public:
+    
+    void init() {
+      this->loop(false);
+    }
+
+    void draw (int data[ANIM_DATA_SLOTS])
+    {      
+      this->clear();
+      
+      this->pixel(0, CRGBW::Red);
+
+      // for (int i=this->size()-1; i>this->size()-6; i--)
+      //   this->pixel(i, CRGBW::Red);
+
+      this->pause(1000);
+      
+    }
+};
 
 #endif
