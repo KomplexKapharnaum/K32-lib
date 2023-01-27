@@ -78,12 +78,12 @@ int K32_stm32::firmware() {
   return this->get(K32_stm32_api::GET_FW_VERSION);
 };
 
-int K32_stm32::node_id() {
-  return this->get(K32_stm32_api::GET_BOARD_ID);
-};
-
 int K32_stm32::hw_id() {
   return this->get(K32_stm32_api::GET_HW_ID);
+};
+
+int K32_stm32::hw_rev() {
+  return this->get(K32_stm32_api::GET_HW_REVISION);
 };
 
 int K32_stm32::current() {
