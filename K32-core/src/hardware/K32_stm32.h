@@ -24,7 +24,11 @@ class K32_stm32 : K32_plugin {
     void gauge(int percent);          // Set led gauge %
     void blink(uint8_t *values, int duration_ms);  //Blink led value for a fixed duration
     void custom(int Ulow, int U1, int U2, int U3, int U4, int U5, int Umax); // set CUSTOM progile
-    int firmware();
+    
+    int firmware_rev();
+    int api_rev();
+    int hw_rev();
+    int hw_id();
 
     int current();      // Get Load current (mA)
     int battery();      // Get Battery %

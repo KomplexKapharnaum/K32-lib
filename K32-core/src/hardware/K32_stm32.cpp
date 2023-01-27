@@ -74,8 +74,12 @@ void K32_stm32::custom(int Ulow, int U1, int U2, int U3, int U4, int U5, int Uma
 };
 
 
-int K32_stm32::firmware() {
+int K32_stm32::firmware_rev() {
   return this->get(K32_stm32_api::GET_FW_VERSION);
+};
+
+int K32_stm32::api_rev() {
+  return this->get(K32_stm32_api::GET_API_VERSION);
 };
 
 int K32_stm32::hw_id() {
