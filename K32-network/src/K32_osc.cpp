@@ -245,10 +245,10 @@ void K32_osc::server( void * parameter ) {
    LOGF("OSC: listening on port %d\n", that->conf.port_in);
 
    char idpath[8];
-   sprintf(idpath, "/e%u", that->k32->system->id()); 
+   sprintf(idpath, "/k32/e%u", that->k32->system->id()); 
 
    char chpath[8];
-   sprintf(chpath, "/c%u", that->k32->system->channel());
+   sprintf(chpath, "/k32/c%u", that->k32->system->channel());
 
     that->emit("osc/started");
 
@@ -305,7 +305,7 @@ void K32_osc::server( void * parameter ) {
           auto router = [](K32_osc* that, K32_oscmsg &msg, int offset){
 
             char path[32];
-            msg.getAddress(path, 1);
+            msg.getAddress(path, 5);  // 5 = /k32/
 
             Orderz* newOrder = new Orderz( strchr(path, '/')+1 );
             for(int k=0; k<msg.size(); k++) {
@@ -318,9 +318,9 @@ void K32_osc::server( void * parameter ) {
           };
 
           // ROUTE ALL / DEVICE ID / CHANNEL GROUP
-          msg.route("/all", router);
-          msg.route(idpath, router);
-          msg.route(chpath, router);
+          msg.route("/k32/all", router);
+          msg.route( idpath, router);
+          msg.route( chpath, router);
 
         } else {
           LOGINL("OSC: error ");
