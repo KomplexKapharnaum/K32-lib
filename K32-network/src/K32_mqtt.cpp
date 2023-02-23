@@ -177,7 +177,9 @@ void K32_mqtt::stop()
 }
 
 void K32_mqtt::publish(const char *topic, const char *payload, uint8_t qos, bool retain) {
-  esp_mqtt_client_publish(mqttClient, topic, payload, strlen(payload), qos, retain);
+  int length = 0;
+  if (payload) length =  strlen(payload);
+  esp_mqtt_client_publish(mqttClient, topic, payload, length, qos, retain);
 }
 
 void K32_mqtt::subscribe(mqttsub sub) {
