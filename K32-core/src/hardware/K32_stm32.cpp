@@ -10,10 +10,23 @@
  *   PUBLIC
  */
 
-K32_stm32::K32_stm32(K32* k32, bool startListening) : K32_plugin("stm32", k32) 
+K32_stm32::K32_stm32(K32* k32) : K32_plugin("stm32", k32) 
 {
   this->lock = xSemaphoreCreateMutex();
-  if (startListening) this->listen(true, true);
+  this->listen(true, true);
+
+  this->_api = this->get(K32_stm32_api::GET_API_VERSION);
+  this->_fw  = this->get(K32_stm32_api::GET_FW_VERSION);
+  this->_hwid  = this->get(K32_stm32_api::GET_HW_ID);
+  this->_hwrev = this->get(K32_stm32_api::GET_HW_REVISION);
+
+  if (this->_hwrev == 0 || this->_fw == 2) this->_hwrev = 1;
+
+  // Set System HARDWARE REVISION
+  if (this->_hwrev > 0) k32->system->hw(this->_hwrev);
+
+  // Set System HARDWARE ID
+  if (this->_hwid > 0) k32->system->id(this->_hwid);
 };
 
 void K32_stm32::listen() {
@@ -75,19 +88,19 @@ void K32_stm32::custom(int Ulow, int U1, int U2, int U3, int U4, int U5, int Uma
 
 
 int K32_stm32::firmware_rev() {
-  return this->get(K32_stm32_api::GET_FW_VERSION);
+  return this->_fw;
 };
 
 int K32_stm32::api_rev() {
-  return this->get(K32_stm32_api::GET_API_VERSION);
+  return this->_api;
 };
 
 int K32_stm32::hw_id() {
-  return this->get(K32_stm32_api::GET_HW_ID);
+  return this->_hwid;
 };
 
 int K32_stm32::hw_rev() {
-  return this->get(K32_stm32_api::GET_HW_REVISION);
+  return this->_hwrev;
 };
 
 int K32_stm32::current() {

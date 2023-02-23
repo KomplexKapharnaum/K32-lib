@@ -18,31 +18,19 @@ class K32_system : K32_module {
     K32_system() : K32_module("system") 
     {
       prefs.begin("k32-app", false);
-      
-      #if HW_REVISION
-          this->hw(HW_REVISION);
-          _hw = HW_REVISION;
-      #else
-          _hw = prefs.getUInt("hw", 0);
-      #endif
-
-      #ifdef K32_SET_NODEID
-          this->id(K32_SET_NODEID);
-          _id = K32_SET_NODEID;
-      #else
-          _id = prefs.getUInt("id", 0);
-      #endif
-
-      #ifdef K32_SET_CHANNEL
-          this->channel(K32_SET_CHANNEL);
-          _chan = K32_SET_CHANNEL;
-      #else
-          _chan = prefs.getUInt("channel", 15);
-      #endif
-
     };
 
     int id() {
+      // Not yet set: load from HW_ID or EEPROM
+      if (_id == -1) 
+      {
+        #ifdef K32_SET_NODEID
+            this->id(K32_SET_NODEID);
+            _id = K32_SET_NODEID;
+        #else
+            _id = prefs.getUInt("id", 0);
+        #endif
+      }
       return _id;
     }
 
@@ -55,6 +43,16 @@ class K32_system : K32_module {
     }
 
     int channel() {
+      // Not yet set: load from HW_ID or EEPROM
+      if (_chan == -1) 
+      {
+        #ifdef K32_SET_CHANNEL
+            this->channel(K32_SET_CHANNEL);
+            _chan = K32_SET_CHANNEL;
+        #else
+            _chan = prefs.getUInt("channel", 15);
+        #endif
+      }
       return _chan;
     }
 
@@ -67,6 +65,16 @@ class K32_system : K32_module {
     }
 
     int hw() {
+      // Not yet set: load from K32_SET_HWREV or EEPROM
+      if (_hw == -1) 
+      {
+        #if K32_SET_HWREV
+            this->hw(K32_SET_HWREV);
+            _hw = K32_SET_HWREV;
+        #else
+            _hw = prefs.getUInt("hw", 0);
+        #endif
+      }      
       return _hw;
     }
 
@@ -134,9 +142,9 @@ class K32_system : K32_module {
     Preferences prefs;
     
   private:
-    int _id;
-    int _hw;
-    int _chan;
+    int _id = -1;
+    int _hw = -1;
+    int _chan = -1;
 
 };
 

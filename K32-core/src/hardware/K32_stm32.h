@@ -14,7 +14,7 @@
 
 class K32_stm32 : K32_plugin {
   public:
-    K32_stm32(K32* k32, bool startListening = true);
+    K32_stm32(K32* k32);
 
     void listen();      // Start monitoring thread
     void listen(bool btn, bool battery);      // Start monitoring thread (configurable)
@@ -66,7 +66,10 @@ class K32_stm32 : K32_plugin {
     long read();
     void flush();
 
-
+    int _api = 0;
+    int _fw  = 0;
+    int _hwid  = 0;
+    int _hwrev = 0;
 };
 
 #endif
