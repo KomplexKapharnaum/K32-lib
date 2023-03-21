@@ -45,19 +45,6 @@ class K32_light : K32_plugin {
   public:
     K32_light(K32* k32);
 
-    // Must be called after new K32_light
-    void loadprefs() {
-      #ifdef LIGHT_SET_ID
-          this->id(LIGHT_SET_ID);
-          _id = LIGHT_SET_ID;
-      #else
-          _id = k32->system->prefs.getUInt("LULU_id", 0);
-      #endif
-    }
-    
-    int id();
-    void id(int id);
-
     // FIXTURES
     //
     K32_light* addFixture(K32_fixture* fix);
@@ -92,8 +79,6 @@ class K32_light : K32_plugin {
 
   private:
     
-    int _id = 1;
-
     static int _nfixtures;
     K32_fixture* _fixtures[LIGHT_MAXFIXTURES];
 

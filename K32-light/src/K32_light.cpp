@@ -21,20 +21,6 @@ K32_light::K32_light(K32* k32) : K32_plugin("leds", k32)
 }
 
 
-int K32_light::id() {
-    return _id;
-}
-
-void K32_light::id(int id) {
-    int old = k32->system->prefs.getUInt("LULU_id", 0);
-    if (id != old) {
-      k32->system->prefs.putUInt("LULU_id", id);
-      _id = k32->system->prefs.getUInt("LULU_id", 0);
-    }
-}
-
-
-
 K32_light* K32_light::addFixture(K32_fixture* fix)
 {
   if (!fix) return this;

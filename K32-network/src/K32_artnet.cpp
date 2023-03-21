@@ -17,19 +17,6 @@ K32_artnet::K32_artnet(K32* k32, K32_wifi* wifi, String name) : K32_plugin("artn
   this->artnet->longname(name);
 }
 
-int K32_artnet::universe() {
-    return _universe;
-}
-
-void K32_artnet::universe(int uni) {
-    int old = k32->system->prefs.getUInt("LULU_uni", 0);
-    if (uni != old) {
-      k32->system->prefs.putUInt("LULU_uni", uni);
-      _universe = k32->system->prefs.getUInt("LULU_uni", 0);
-    }
-}
-
-
 void K32_artnet::start()
 {
   // LOOP client
@@ -84,9 +71,11 @@ void K32_artnet::check(void *parameter)
 
   while(!that->wifi->isConnected()) delay( 300 ); // TODO: use module events wifi/connected
 
-  that->artnet->begin(0, that->_universe/16);
-  that->artnet->subscribe(that->_universe-(that->_universe/16)*16, that->_onArtnet);
-  LOGF2("ARTNET: subscribing to subnet=%d universe=%d\n", that->_universe/16, that->_universe-(that->_universe/16)*16);
+  int uni = that->k32->system->universe();
+
+  that->artnet->begin(0, uni/16);
+  that->artnet->subscribe(uni-(uni/16)*16, that->_onArtnet);
+  LOGF2("ARTNET: subscribing to subnet=%d universe=%d\n", uni/16, uni-(uni/16)*16);
 
   that->emit("artnet/started");
   while (true)

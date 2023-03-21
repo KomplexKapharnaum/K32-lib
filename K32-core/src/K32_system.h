@@ -86,6 +86,50 @@ class K32_system : K32_module {
       }
     }
 
+    int lightid() {
+      // Not yet set: load from HW_ID or EEPROM
+      if (_lightid == -1) 
+      {
+        #ifdef LIGHT_SET_ID
+            this->lightid(LIGHT_SET_ID);
+            _lightid = LIGHT_SET_ID;
+        #else
+            _lightid = prefs.getUInt("LULU_id", 0);
+        #endif
+      }
+      return _lightid;
+    }
+
+    void lightid(int id) {
+      int old = prefs.getUInt("LULU_id", 0);
+      if (id != old) {
+        prefs.putUInt("LULU_id", id);
+        _lightid = prefs.getUInt("LULU_id", 0);
+      }
+    }
+
+    int universe() {
+      // Not yet set: load from HW_ID or EEPROM
+      if (_lightuni == -1) 
+      {
+        #ifdef LIGHT_SET_UNI
+            this->lightuni(LIGHT_SET_UNI);
+            _lightuni = LIGHT_SET_UNI;
+        #else
+            _lightuni = prefs.getUInt("LULU_uni", 0);
+        #endif
+      }
+      return _lightuni;
+    }
+
+    void universe(int uni) {
+      int old = prefs.getUInt("LULU_uni", 0);
+      if (uni != old) {
+        prefs.putUInt("LULU_uni", uni);
+        _lightuni = prefs.getUInt("LULU_uni", 0);
+      }
+    }
+
     String name() {
       String name = "esp-" + String(this->id());
       return name;
@@ -145,7 +189,8 @@ class K32_system : K32_module {
     int _id = -1;
     int _hw = -1;
     int _chan = -1;
-
+    int _lightid = -1;
+    int _lightuni = -1;
 };
 
 #endif

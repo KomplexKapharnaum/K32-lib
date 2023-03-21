@@ -34,7 +34,7 @@ esp_err_t K32_mqtt::mqtt_event(esp_mqtt_event_handle_t event)
           LOG("MQTT: subscribed to " + ("k32/e" + myID + "/#"));
 
           if (that->light) {
-            String luluID = String(that->light->id());
+            String luluID = String(that->k32->system->lightid());
             esp_mqtt_client_subscribe(client, ("k32/l" + luluID + "/#").c_str(), 1);
             LOG("MQTT: subscribed to " + ("k32/l" + luluID + "/#"));
           }
