@@ -25,8 +25,12 @@ public:
     K32_system *system;
     K32_timer* timer;
 
-    K32()
-    {
+    int version = 0;
+
+    K32(int _version = 0)
+    {   
+        version = _version;
+
         // LOG
         Serial.begin(115200, SERIAL_8N1);
         Serial.setTimeout(10);

@@ -53,6 +53,7 @@ String K32_web::getConf()
   JSONVar conf;
 
   conf["nodeid"] = k32->system->id();
+  conf["version"] = k32->version;
   conf["hwrev"] = k32->system->hw();
   conf["channel"] = k32->system->channel();
   conf["lightid"] = k32->system->lightid();
