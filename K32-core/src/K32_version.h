@@ -34,8 +34,8 @@ const int LEDS_PIN[MAX_HW+1][LED_N_STRIPS] = {
   {-1, -1},               // HW_REVISION 10
   {-1, -1},               // HW_REVISION 11
   {-1, -1},               // HW_REVISION 12
-  {27, 32},               // HW_REVISION 13: ATOM (26 & 32 pin out ph2.0 || 27 intern)
-  {26, 32}                // HW_REVISION 14: ATOM_LITE (26 & 32 pin out ph2.0 || 27 intern)
+  {27, 26},               // HW_REVISION 13: ATOM      (26 & 32 pin out ph2.0 || 27 intern)
+  {27, 26}                // HW_REVISION 14: ATOM_LITE (26 & 32 pin out ph2.0 || 27 intern)
 };
 
 // PWM PINS
@@ -56,8 +56,8 @@ const int PWM_PIN[MAX_HW+1][PWM_N_CHAN] = {
   {-1, -1, -1, -1 },               // HW_REVISION 
   {-1, -1, -1, -1 },               // HW_REVISION 
   {-1, -1, -1, -1 },               // HW_REVISION 
-  {-1, -1, -1, -1 },               // HW_REVISION 13: ATOM
-  {-1, -1, -1, -1 }                // HW_REVISION 14: ATOM_LITE 22,19,23,33
+  {32, -1, -1, -1 },               // HW_REVISION 13: ATOM        26 & 32 pin out ph2.0
+  {32, -1, -1, -1 }                // HW_REVISION 14: ATOM_LITE   26 & 32 pin out ph2.0
 };
 
 // DMX PINS
