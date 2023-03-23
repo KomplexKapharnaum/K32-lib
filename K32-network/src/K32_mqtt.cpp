@@ -86,7 +86,7 @@ esp_err_t K32_mqtt::mqtt_event(esp_mqtt_event_handle_t event)
               }
             if (didCustom) break;
 
-            // GENERIC SUBSCRIBES (as Command)
+            // GENERIC SUBSCRIBES (as Command or Event)
             //
             Orderz* newOrder = new Orderz(command);
             char* p = strtok(data, "|");
@@ -94,7 +94,8 @@ esp_err_t K32_mqtt::mqtt_event(esp_mqtt_event_handle_t event)
               newOrder->addData(p);
               p = strtok(NULL, "|");
             }
-            that->cmd( newOrder );
+            if (strncmp(command, "event/", 6) == 0) that->emit( newOrder );
+            else that->cmd( newOrder );
 
             // LOG("MQTT_EVENT_DATA");
             // printf("TOPIC=%.*s\r\n", event->topic_len, event->topic);
@@ -180,6 +181,20 @@ void K32_mqtt::publish(const char *topic, const char *payload, uint8_t qos, bool
   int length = 0;
   if (payload) length =  strlen(payload);
   esp_mqtt_client_publish(mqttClient, topic, payload, length, qos, retain);
+}
+
+void K32_mqtt::publishToChannel(const char *topic, const char *payload, uint8_t qos, bool retain) {
+  int length = 0;
+  if (payload) length =  strlen(payload);
+  String fullTopic = "k32/c" + String(this->k32->system->channel() ) + "/" + String(topic);
+  this->publish(fullTopic.c_str(), payload, qos, retain);
+}
+
+void K32_mqtt::publishToAll(const char *topic, const char *payload, uint8_t qos, bool retain) {
+  int length = 0;
+  if (payload) length =  strlen(payload);
+  String fullTopic = "k32/all/" + String(topic);
+  this->publish(fullTopic.c_str(), payload, qos, retain);
 }
 
 void K32_mqtt::subscribe(mqttsub sub) {

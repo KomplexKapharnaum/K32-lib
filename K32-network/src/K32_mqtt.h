@@ -40,6 +40,8 @@ class K32_mqtt : K32_plugin {
     void stop();
     void broker(const char *_broker);
     void publish(const char *topic, const char *payload = (const char *)nullptr, uint8_t qos=0, bool retain=false);
+    void publishToChannel(const char *topic, const char *payload = (const char *)nullptr, uint8_t qos=0, bool retain=false);
+    void publishToAll(const char *topic, const char *payload = (const char *)nullptr, uint8_t qos=0, bool retain=false);
     void subscribe(mqttsub sub);
 
     bool isConnected();
