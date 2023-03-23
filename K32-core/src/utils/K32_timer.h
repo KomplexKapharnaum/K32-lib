@@ -33,4 +33,44 @@ class K32_timer : public Timer {
         }
 };
 
+class K32_timeout {
+    public:
+        K32_timeout( int timeout, void (*callback)() ) 
+        {
+            this->timeout = timeout;
+            this->callback = callback;
+
+            // Update task
+            xTaskCreate(this->task,       // function
+              "ktimeout",                     // task name
+              2000,                         // stack memory
+              (void *)this,                 // args
+              0,                            // priority
+              &task_handle);                        // handler
+        }
+
+
+        void cancel() {
+            this->canceled = true;
+            if (task_handle) vTaskDelete(task_handle);
+            task_handle = NULL;
+        }
+
+        TaskHandle_t task_handle = NULL;
+
+    private:
+        int timeout;
+        void (*callback)();
+        bool canceled = false;
+
+        static void task(void *parameter)
+        {
+            K32_timeout *that = (K32_timeout *)parameter;
+            delay(that->timeout);
+            if (!that->canceled) that->callback();
+            that->task_handle = NULL;
+            vTaskDelete(NULL);
+        }
+};
+
 #endif
