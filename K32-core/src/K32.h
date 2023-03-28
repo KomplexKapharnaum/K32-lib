@@ -64,7 +64,7 @@ LOG("        _\\///________\\///____\\/////////_____\\///////////////__");
         // RUN Thread
         xTaskCreate( this->run,       // function
                   "run",              // name
-                  2500,              // stack memory
+                  10000,              // stack memory       // 2500 without audio seems ok
                   (void*)this,        // args
                   5,                  // priority
                   NULL);
