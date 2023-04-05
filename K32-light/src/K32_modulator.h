@@ -8,7 +8,7 @@
 
 #define MOD_PARAMS_SLOTS 8
 
-enum ModMode {RELATIVE, ABSOLUTE}; 
+enum ModMode {RELATIVE, ABSOLUTE, ADDITIVE}; 
 
 typedef void (*cbPtrMod )(int value);
 
@@ -71,6 +71,11 @@ public:
 
   K32_modulator* relative(){
     this->_mode = RELATIVE;
+    return this;
+  }
+
+  K32_modulator* additive(){
+    this->_mode = ADDITIVE;
     return this;
   }
 
@@ -147,6 +152,13 @@ public:
         // Apply absolute value to dataslots
         for (int s=0; s<ANIM_DATA_SLOTS; s++)
             if (this->dataslot[s]) animData[s] = val;
+      }
+      // ADDITIVE
+      else if (_mode == ADDITIVE) 
+      {
+        // Add mod value to animData
+        for (int s=0; s<ANIM_DATA_SLOTS; s++)
+            if (this->dataslot[s]) animData[s] += val;
       }
 
       // Did animator produced a different result than last call ?
