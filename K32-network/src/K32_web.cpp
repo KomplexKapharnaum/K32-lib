@@ -52,9 +52,11 @@ String K32_web::getConf()
 {
   JSONVar conf;
 
-  conf["nodeid"] = k32->system->id();
+  conf["nodeid"]  = k32->system->id();
+  conf["nodeip"]  = WiFi.localIP().toString();
   conf["version"] = k32->version;
-  conf["hwrev"] = k32->system->hw();
+  conf["hwrev"]   = k32->system->hw();
+
   conf["channel"] = k32->system->channel();
   conf["lightid"] = k32->system->lightid();
   conf["dmxuni"]  = k32->system->universe();
@@ -134,7 +136,9 @@ void K32_web::handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
         k32->system->universe(uni.toInt());
       }
 
-      this->notifyClients(conf);
+      this->notifyClients("reset");
+      delay(100);
+      k32->system->reset();
     }
 
   }

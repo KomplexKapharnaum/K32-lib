@@ -12,6 +12,9 @@
 #include <SPIFFS.h>
 #include "K32_audio.h"
 
+#include "AudioFileSourceSD.h"
+#include "AudioFileSourceSPIFFS.h"
+
 #include "AudioGeneratorWAV.h"
 #include "AudioGeneratorMP3.h"
 #include "AudioGeneratorFLAC.h"
@@ -27,18 +30,26 @@ K32_audio::K32_audio(K32* k32, const int AUDIO_PIN[5], const int SD_PIN[4]) : K3
   xSemaphoreGive(this->runflag);
 
   // Start SD
+  // LOGF3("AUDIO: attaching SD on pin %d %d %d", SD_PIN[2], SD_PIN[1], SD_PIN[0]);
   LOG("AUDIO: attaching SD");
   SPI.begin(SD_PIN[2], SD_PIN[1], SD_PIN[0]);
   this->sdOK = SD.begin(SD_PIN[3]);
-  if (this->sdOK) LOG("AUDIO: sd card OK");
-  else LOG("AUDIO: sd card ERROR");
-  
+  if (this->sdOK) {
+    LOG("AUDIO: sd card OK");
+    this->file = new AudioFileSourceSD();
+  }
+  else {
+    LOG("AUDIO: sd card ERROR => Using SPIFFS instead");
+    if (!SPIFFS.begin()) LOG("AUDIO: SPIFFS ERROR");
+    else LOG("AUDIO: SPIFFS OK");
+    this->file = new AudioFileSourceSPIFFS();
+  }
+
   this->initSoundcard(AUDIO_PIN);
 
   // Set Volume
   this->volume(100);
   this->gen = new AudioGeneratorWAV();
-  this->file = new AudioFileSourceSD();
 
   // Start task
   xTaskCreate( this->task,          // function
@@ -115,7 +126,10 @@ bool K32_audio::play(String filePath, int velocity) {
   else if (filePath.endsWith("mp3") || filePath.endsWith("MP3")) this->gen = new AudioGeneratorMP3();
   else if (filePath.endsWith("flac") || filePath.endsWith("FLAC")) this->gen = new AudioGeneratorFLAC();
   else if (filePath.endsWith("aac") || filePath.endsWith("AAC")) this->gen = new AudioGeneratorAAC();
-  this->file = new AudioFileSourceSD(filePath.c_str());
+
+  if (this->sdOK) this->file = new AudioFileSourceSD(filePath.c_str());
+  else this->file = new AudioFileSourceSPIFFS(filePath.c_str());
+  
   bool isStarted = this->gen->begin(this->file, this->out);
   this->_velocity = velocity;
   xSemaphoreGive(this->lock);
@@ -260,6 +274,7 @@ void K32_audio::initSoundcard(const int AUDIO_PIN[5]) {
   // Start I2S output
   this->out = new AudioOutputI2S();
   // this->out = new AudioOutputI2S(0, AudioOutputI2S::EXTERNAL_I2S, 8, AudioOutputI2S::APLL_ENABLE);
+  // LOGF3("AUDIO: init I2S on pins %i, %i, %i\n", AUDIO_PIN[2], AUDIO_PIN[3], AUDIO_PIN[4]);
   this->out->SetPinout(AUDIO_PIN[4], AUDIO_PIN[2], AUDIO_PIN[3]);
 
   this->out->SetBitsPerSample(16);
@@ -272,6 +287,7 @@ void K32_audio::initSoundcard(const int AUDIO_PIN[5]) {
   bool pcmOK = true;
 
   // I2C init
+  LOGF2("AUDIO: init I2C on pins %i, %i\n", AUDIO_PIN[0], AUDIO_PIN[1]);
   Wire.begin(AUDIO_PIN[0], AUDIO_PIN[1]);
 
   // ////////////////////  WIRE SCAN
@@ -354,7 +370,7 @@ void K32_audio::task( void * parameter ) {
   // LOG("AUDIO: task started");
 
   bool RUN;
-  while(true) {
+  while(that->engineOK) {
 
     if (that->isPlaying()) {
 

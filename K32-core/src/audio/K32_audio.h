@@ -57,7 +57,7 @@ class K32_audio : K32_plugin {
 
     AudioOutputI2S *out;
     AudioGenerator* gen;
-    AudioFileSourceSD *file;
+    AudioFileSource *file;
     // AudioFileSourceBuffer *buff;
 
     String currentFile = "";

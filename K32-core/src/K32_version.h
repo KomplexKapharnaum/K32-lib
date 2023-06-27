@@ -111,7 +111,7 @@ const int SD_PIN[MAX_HW+1][4] = {
   {-1, -1, -1, -1},        // HW_REVISION 0
   {23, 19, 18,  5},        // HW_REVISION 1
   {19,  5, 18, 21},        // HW_REVISION 2
-  {-1, -1, -1, -1},        // HW_REVISION 3
+  {19,  5, 18, 21},        // HW_REVISION 3
   {-1, -1, -1, -1},        // HW_REVISION 4
   {-1, -1, -1, -1},        // HW_REVISION 5
   {-1, -1, -1, -1},        // HW_REVISION 6
