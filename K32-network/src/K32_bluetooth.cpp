@@ -19,7 +19,7 @@ K32_bluetooth::K32_bluetooth(K32* k32, String nameDevice) : K32_plugin("bt", k32
   this->lock = xSemaphoreCreateMutex();
 
   this->serial = new BluetoothSerial();
-  this->serial->register_callback((esp_spp_cb_t*) this->event);
+  this->serial->register_callback(this->event);
   this->serial->begin(nameDevice);
 
 

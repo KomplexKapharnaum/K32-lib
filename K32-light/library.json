@@ -5,7 +5,7 @@
     "description": "ESP32 K-framework",
     "repository": {
         "type": "git",
-        "url": "https://github.com/KomplexKapharnaum/K32-light"
+        "url": "https://github.com/KomplexKapharnaum/K32-lib"
     },
     "authors": [{
             "name": "Thomas BOHL",
@@ -22,20 +22,12 @@
             "name": "Tom MAGNIER"
         }
     ],
-    "homepage": "https://github.com/KomplexKapharnaum/K32-light",
+    "homepage": "https://github.com/KomplexKapharnaum/K32-lib",
     "frameworks": "Arduino",
-    "examples": [
-        "examples/*/*.ino"
-    ],
+    "platforms": "espressif32",
     "dependencies": [{
-            "platforms": "espressif32",
             "name": "LXESP32DMX",
             "version": "https://github.com/claudeheintz/LXESP32DMX"
-        },
-        {
-            "platforms": "espressif32",
-            "name": "K32-core",
-            "version": "https://github.com/KomplexKapharnaum/K32-core"
         }
     ]
 }

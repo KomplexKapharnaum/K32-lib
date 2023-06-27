@@ -5,7 +5,7 @@
     "description": "ESP32 K-framework",
     "repository": {
         "type": "git",
-        "url": "https://github.com/KomplexKapharnaum/K32-core"
+        "url": "https://github.com/KomplexKapharnaum/K32-lib"
     },
     "authors": [{
             "name": "Thomas BOHL",
@@ -22,23 +22,18 @@
             "name": "Tom MAGNIER"
         }
     ],
-    "homepage": "https://github.com/KomplexKapharnaum/K32-core",
+    "homepage": "https://github.com/KomplexKapharnaum/K32-lib",
     "frameworks": "Arduino",
-    "examples": [
-        "examples/*/*.ino"
-    ],
+    "platforms": "espressif32",
     "dependencies": [{
-            "platforms": "espressif32",
             "name": "Adafruit-MCP23017-Arduino-Library",
             "version": "https://github.com/adafruit/Adafruit-MCP23017-Arduino-Library"
         },
         {
-            "platforms": "espressif32",
             "name": "Timer",
             "version": "https://github.com/JChristensen/Timer"
         },
         {
-            "platforms": "espressif32",
             "name": "ArduinoEventEmitter",
             "version": "https://github.com/josephlarralde/ArduinoEventEmitter"
         }

@@ -5,7 +5,7 @@
     "description": "ESP32 K-framework",
     "repository": {
         "type": "git",
-        "url": "https://github.com/KomplexKapharnaum/K32-network"
+        "url": "https://github.com/KomplexKapharnaum/K32-lib"
     },
     "authors": [{
             "name": "Thomas BOHL",
@@ -22,30 +22,20 @@
             "name": "Tom MAGNIER"
         }
     ],
-    "homepage": "https://github.com/KomplexKapharnaum/K32-network",
+    "homepage": "https://github.com/KomplexKapharnaum/K32-lib",
     "frameworks": "Arduino",
-    "examples": [
-        "examples/*/*.ino"
-    ],
+    "platforms": "espressif32",
     "dependencies": [{
-            "platforms": "espressif32",
             "name": "OSC",
-            "version": "https://github.com/CNMAT/OSC.git"
+            "version": "https://github.com/CNMAT/OSC"
         },
         {
-            "platforms": "espressif32",
             "name": "ArtNet",
             "version": "https://github.com/hideakitai/ArtNet"
         },
         {
-            "platforms": "espressif32",
             "name": "ESP32Ping",
             "version": "https://github.com/marian-craciunescu/ESP32Ping"
-        },
-        {
-            "platforms": "espressif32",
-            "name": "K32-core",
-            "version": "https://github.com/KomplexKapharnaum/K32-core"
         }
     ]
 }
