@@ -19,6 +19,9 @@ K32_wifi::K32_wifi(K32* k32) : K32_plugin("wifi", k32)
 {
   this->lock = xSemaphoreCreateMutex();
 
+  WiFi.disconnect(true);
+  WiFi.mode(WIFI_OFF);
+
   ArduinoOTA.setHostname(this->nameDevice.c_str());
   ArduinoOTA.setTimeout(2000);
   ArduinoOTA

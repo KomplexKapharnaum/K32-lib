@@ -137,13 +137,14 @@ class K32_system : K32_module {
 
     void reset() {
       prefs.end();
-      cmd( "stm32/reset" );
+      // cmd( "stm32/reset" );
 
-      delay(10);
-      ESP.restart();
+      // delay(30);
+      // LOG("STM32 did not reset, going with soft reset");
+      // ESP.restart();
 
-      delay(10);
-      LOG("ESP did not reset, going with soft reset");
+      // delay(30);
+      LOG("ESP did not reset, going with hard reset");
       // Hard restart
       esp_task_wdt_init(1,true);
       esp_task_wdt_add(NULL);
