@@ -12,10 +12,11 @@
 #include "class/K32_plugin.h"
 #include "K32_sampler.h"
 
-//https://github.com/earlephilhower/ESP8266Audio
+//https://github.com/earl‹ephilhower/ESP8266Audio
 //https://github.com/Gianbacchio/ESP8266_Spiram
 #include "AudioGenerator.h"
 #include "AudioFileSourceSD.h"
+
 #include "AudioOutputI2S.h"
 
 //https://github.com/tommag/PCM51xx_Arduino
