@@ -3,9 +3,8 @@
   Created by Thomas BOHL, february 2023.
   Released under GPL v3.0
 */
-
 #include "K32_web.h"
-#include "SPIFFS.h"
+// #include "SPIFFS.h"
 
 AsyncWebServer* server  = nullptr;
 AsyncWebSocket* ws  = nullptr;

@@ -12,6 +12,7 @@
 #include <AsyncTCP.h>
 #include <ESPAsyncWebServer.h>
 #include <Arduino_JSON.h>
+#include <SPIFFS.h>
 
 
 class K32_web : K32_plugin {
