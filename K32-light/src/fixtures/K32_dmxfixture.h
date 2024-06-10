@@ -22,6 +22,7 @@ class K32_dmxfixture : public K32_fixture
       _dmxOut = dmx;
       _addressStart = addressStart;
       _skipWhite = skipWhite;
+      _channels = channels;
     }
 
     // COPY Buffers to STRAND
@@ -37,15 +38,14 @@ class K32_dmxfixture : public K32_fixture
         /////////////////////////////////////////////////////////////////////////////////
         int chanPix = (_skipWhite ? 3 : 4);
 
-        int buffDMX[size()*chanPix];
+        int buffDMX[_channels];
         for (int i = 0; i < size(); i++) {
-          buffDMX[i*chanPix]    = _buffer[i].r;
-          buffDMX[i*chanPix+1]  = _buffer[i].g;
-          buffDMX[i*chanPix+2]  = _buffer[i].b;
-          if (!_skipWhite)
-            buffDMX[i*chanPix+3]  = _buffer[i].w;
+          if (i*chanPix+0 < _channels) buffDMX[i*chanPix]    = _buffer[i].r;
+          if (i*chanPix+1 < _channels) buffDMX[i*chanPix+1]  = _buffer[i].g;
+          if (i*chanPix+2 < _channels) buffDMX[i*chanPix+2]  = _buffer[i].b;
+          if (i*chanPix+3 < _channels) if (!_skipWhite) buffDMX[i*chanPix+3]  = _buffer[i].w;
         }   
-        this->_dmxOut->setMultiple(buffDMX, size()*chanPix, _addressStart);
+        this->_dmxOut->setMultiple(buffDMX, _channels, _addressStart);
         /////////////////////////////////////////////////////////////////////////////////
 
         this->_dirty = false;
@@ -60,6 +60,7 @@ class K32_dmxfixture : public K32_fixture
     K32_dmx* _dmxOut = nullptr;
     int _addressStart;
     bool _skipWhite = false;
+    int _channels = 0;
 };
 
 #endif
