@@ -349,6 +349,12 @@ class K32_anim {
       return this->_master;
     }
 
+    // SPECIFY UNIQUE CHANNEL FOR MASTER (by default apply master to RGBW on all pixels) -> necessary for DMX animations !
+    K32_anim* masterChannel(int mc) {
+      this->_masterChannel = mc;
+      return this;
+    }
+
     // change one element in data
     K32_anim* set(int k, int value) { 
       xSemaphoreTake(this->bufferInUse, portMAX_DELAY);     // data can be modified only during anim waitData
@@ -462,8 +468,30 @@ class K32_anim {
         sel = sel || (route() == 9  && k%2 == 0 );                        // select impaires 
         sel = sel || (route() == 10 && k%2 == 1 );                        // select paires 
 
-        if (sel)
-          this->_fixtures[k]->pix( pixStart + this->_offset, count, color % this->_master);
+        if (sel) {
+          // _master applies to every pixels 
+          if (this->_masterChannel == -1) this->_fixtures[k]->pix( pixStart + this->_offset, count, color % this->_master);
+          
+          // _master applies to one channel only
+          else {
+            // apply un-dimmed color everywhere
+            this->_fixtures[k]->pix( pixStart + this->_offset, count, color);
+
+            // is this chunk concerned by the _masterChannel ?
+            int pixelMaster = this->_masterChannel/4;
+            if (pixelMaster >= pixStart && pixelMaster < pixStart+count) {
+              int cc = this->_masterChannel%4;
+              CRGBW colorMasterized = color;
+              switch(cc) {
+                case 0: colorMasterized.r = scale8(colorMasterized.r, this->_master); break;
+                case 1: colorMasterized.g = scale8(colorMasterized.g, this->_master); break;
+                case 2: colorMasterized.b = scale8(colorMasterized.b, this->_master); break;
+                case 3: colorMasterized.w = scale8(colorMasterized.w, this->_master); break;
+              }
+              this->_fixtures[k]->pix( pixelMaster + this->_offset, 1, colorMasterized);
+            }
+          }
+        }
       }
     }
 
@@ -471,8 +499,28 @@ class K32_anim {
     void all(CRGBW color) {
       for (int k=0; k<ANIM_FIXTURES_SLOTS; k++)
         if (this->_fixtures[k]) {
-          this->_fixtures[k]->pix( this->_offset, this->_size, color % this->_master);
-          // LOGF2("TEST:draw r=%d  on fixture %d\n", (color % this->_master).r, k);
+          // _master applies to every pixels 
+          if (this->_masterChannel == -1) this->_fixtures[k]->pix( this->_offset, this->_size, color % this->_master);
+
+          // _master applies to one channel only
+          else {
+            // apply un-dimmed color everywhere
+            this->_fixtures[k]->pix( this->_offset, this->_size, color);
+
+            // is this chunk concerned by the _masterChannel ?
+            int pixelMaster = this->_masterChannel/4;
+            if (pixelMaster >= 0 && pixelMaster < this->_size) {
+              int cc = this->_masterChannel%4;
+              CRGBW colorMasterized = color;
+              switch(cc) {
+                case 0: colorMasterized.r = scale8(colorMasterized.r, this->_master); break;
+                case 1: colorMasterized.g = scale8(colorMasterized.g, this->_master); break;
+                case 2: colorMasterized.b = scale8(colorMasterized.b, this->_master); break;
+                case 3: colorMasterized.w = scale8(colorMasterized.w, this->_master); break;
+              }
+              this->_fixtures[k]->pix( pixelMaster + this->_offset, 1, colorMasterized);
+            }
+          }
         }
     }
 
@@ -572,6 +620,7 @@ class K32_anim {
     // output
     K32_fixture* _fixtures[ANIM_FIXTURES_SLOTS] = {NULL};
     uint8_t _master = 255;
+    int _masterChannel = -1;
     int _size = 0;
     int _offset = 0; 
 
