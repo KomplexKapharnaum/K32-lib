@@ -355,6 +355,10 @@ class K32_anim {
       return this;
     }
 
+    int masterChannel() {
+      return this->_masterChannel;
+    }
+
     // change one element in data
     K32_anim* set(int k, int value) { 
       xSemaphoreTake(this->bufferInUse, portMAX_DELAY);     // data can be modified only during anim waitData
@@ -483,11 +487,12 @@ class K32_anim {
               int cc = this->_masterChannel%4;
               CRGBW colorMasterized = color;
               switch(cc) {
-                case 0: colorMasterized.r = scale8(colorMasterized.r, this->_master); break;
-                case 1: colorMasterized.g = scale8(colorMasterized.g, this->_master); break;
-                case 2: colorMasterized.b = scale8(colorMasterized.b, this->_master); break;
-                case 3: colorMasterized.w = scale8(colorMasterized.w, this->_master); break;
+                case 0: colorMasterized.r = scale8(color.r, this->_master); break;
+                case 1: colorMasterized.g = scale8(color.g, this->_master); break;
+                case 2: colorMasterized.b = scale8(color.b, this->_master); break;
+                case 3: colorMasterized.w = scale8(color.w, this->_master); break;
               }
+              // LOGF3("masterChannel %d // pixMaster %d // cc %d \n", this->_masterChannel, pixelMaster, cc);
               this->_fixtures[k]->pix( pixelMaster + this->_offset, 1, colorMasterized);
             }
           }
@@ -510,13 +515,13 @@ class K32_anim {
             // is this chunk concerned by the _masterChannel ?
             int pixelMaster = this->_masterChannel/4;
             if (pixelMaster >= 0 && pixelMaster < this->_size) {
-              int cc = this->_masterChannel%4;
+              int cc = this->_masterChannel % 4;
               CRGBW colorMasterized = color;
               switch(cc) {
-                case 0: colorMasterized.r = scale8(colorMasterized.r, this->_master); break;
-                case 1: colorMasterized.g = scale8(colorMasterized.g, this->_master); break;
-                case 2: colorMasterized.b = scale8(colorMasterized.b, this->_master); break;
-                case 3: colorMasterized.w = scale8(colorMasterized.w, this->_master); break;
+                case 0: colorMasterized.r = scale8(color.r, this->_master); break;
+                case 1: colorMasterized.g = scale8(color.g, this->_master); break;
+                case 2: colorMasterized.b = scale8(color.b, this->_master); break;
+                case 3: colorMasterized.w = scale8(color.w, this->_master); break;
               }
               this->_fixtures[k]->pix( pixelMaster + this->_offset, 1, colorMasterized);
             }

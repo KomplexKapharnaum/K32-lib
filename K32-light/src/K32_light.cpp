@@ -221,6 +221,9 @@ void K32_light::command(Orderz* order)
       if (this->_anims[k]->isRemote())
       {      
         int masterValue = this->_anims[k]->master();
+        
+        int masterChannel = this->_anims[k]->masterChannel();
+        if (masterChannel == -1) masterChannel = 0; // strip led doesnt have specific masterChannel -> apply mod to data 0
 
         if (strcmp(order->subaction, "less") == 0)       masterValue -= 2;
         else if (strcmp(order->subaction, "more") == 0)  masterValue += 2;
@@ -230,14 +233,14 @@ void K32_light::command(Orderz* order)
         else if (strcmp(order->subaction, "fadeout") == 0) 
         {
           if (!this->_anims[k]->hasmod("fadeout"))
-              this->_anims[k]->mod(new K32_mod_fadeout)->name("fadeout")->at(0)->period(6000)->play();
+              this->_anims[k]->mod(new K32_mod_fadeout)->name("fadeout")->at(masterChannel)->period(6000)->play();
           else
               this->_anims[k]->mod("fadeout")->play();
         }
         else if (strcmp(order->subaction, "fadein") == 0) 
         {
           if (!this->_anims[k]->hasmod("fadein"))
-              this->_anims[k]->mod(new K32_mod_fadein)->name("fadein")->at(0)->period(6000)->play();
+              this->_anims[k]->mod(new K32_mod_fadein)->name("fadein")->at(masterChannel)->period(6000)->play();
           else
               this->_anims[k]->mod("fadein")->play();
         }
