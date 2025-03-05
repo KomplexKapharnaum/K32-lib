@@ -130,6 +130,28 @@ class K32_system : K32_module {
       }
     }
 
+    int pixsize() {
+      // Not yet set: load from HW_ID or EEPROM
+      if (_lightpix == -1) 
+      {
+        #ifdef LULU_STRIP_SIZE
+            this->pixsize(LULU_STRIP_SIZE);
+            _lightpix = LULU_STRIP_SIZE;
+        #else
+          _lightpix = prefs.getUInt("LULU_pixsize", 1);
+        #endif
+      }
+      return _lightpix;
+    }
+
+    void pixsize(int n) {
+      int old = prefs.getUInt("LULU_pixsize", 1);
+      if (n != old) {
+        prefs.putUInt("LULU_pixsize", n);
+        _lightpix = prefs.getUInt("LULU_pixsize", 1);
+      }
+    }
+
     String name() {
       String name = "esp-" + String(this->id());
       return name;
@@ -192,6 +214,7 @@ class K32_system : K32_module {
     int _chan = -1;
     int _lightid = -1;
     int _lightuni = -1;
+    int _lightpix = -1;
 };
 
 #endif

@@ -59,6 +59,7 @@ String K32_web::getConf()
   conf["channel"] = k32->system->channel();
   conf["lightid"] = k32->system->lightid();
   conf["dmxuni"]  = k32->system->universe();
+  conf["pixsize"] = k32->system->pixsize();
 
   return JSON.stringify(conf);
 }
@@ -133,6 +134,13 @@ void K32_web::handleWebSocketMessage(void *arg, uint8_t *data, size_t len)
       if (JSON.typeof(root["dmxuni"]) == "string") {
         String uni = root["dmxuni"];
         k32->system->universe(uni.toInt());
+      }
+
+      // LEDS STRIP SIZE
+      //
+      if (JSON.typeof(root["pixsize"]) == "string") {
+        String n = root["pixsize"];
+        k32->system->pixsize(n.toInt());
       }
 
       this->notifyClients("reset");
