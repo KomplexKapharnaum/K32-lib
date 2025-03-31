@@ -19,7 +19,7 @@ class K32_dmx {
       // DIR pin
       if (DMX_PIN[0] > 0) {
         pinMode(DMX_PIN[0], OUTPUT);
-        digitalWrite(DMX_PIN[0], (dir == DMX_OUT)?HIGH:LOW);
+        digitalWrite(DMX_PIN[0], dir?HIGH:LOW);
       }
       
       // DMX out
@@ -38,9 +38,10 @@ class K32_dmx {
       else 
       {
         if (DMX_PIN[2] > 0) {
-          // pinMode(DMX_PIN[2], INPUT);
-          // ESP32DMX.startInput(DMX_PIN[2]);
-          // inputOK = true;   
+          pinMode(DMX_PIN[2], INPUT);
+          ESP32DMX.startInput(DMX_PIN[2]);
+          inputOK = true;   
+          LOG("DMX: input STARTED");
         }
         else LOG("DMX: invalid INPUT pin, DMXin disabled !");
       }
@@ -84,6 +85,18 @@ class K32_dmx {
       }
       return this;
     }
+
+    // Get values
+    K32_dmx* get(int index)
+    {
+      if (inputOK) {
+        xSemaphoreTake(ESP32DMX.lxDataLock, portMAX_DELAY);
+        ESP32DMX.getSlot(index);
+        xSemaphoreGive(ESP32DMX.lxDataLock);
+      }
+      return this;
+    }
+
 
   private:
 
