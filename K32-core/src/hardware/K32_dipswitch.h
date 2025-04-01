@@ -10,7 +10,7 @@
 // #include "K32_wifi.h"
 #include <class/K32_plugin.h>
 
-#define DIP_SLOTS 8
+// #define DIP_SLOTS 8
 
 class K32_dipswitch : K32_plugin 
 {
@@ -20,15 +20,26 @@ class K32_dipswitch : K32_plugin
     void add(int pin, String name);
     void add(int pin);
 
-    void command(Orderz* order);
+    // void command(Orderz* order);
 
   private:
     SemaphoreHandle_t lock;
-    static void watch( void * parameter );
+    static void dipswatch( void * parameter );
 
-    int  watchPins[DIP_SLOTS];
-    String  watchNames[DIP_SLOTS];
-    bool watchValues[DIP_SLOTS];
+    // int  watchPins[DIP_SLOTS];
+    // String  watchNames[DIP_SLOTS];
+    // uint watchValues[DIP_SLOTS];
+    bool dip[3];
 };
 
 #endif
+
+// mesure de la pin
+// dip     = 0
+// dip 1   = 1770-1780
+// dip 2   = 2135-2142
+// dip 3   = 2380-2390
+// dip 12  = 2740-2750
+// dip 1 3 = 2950-2960
+// dip  23 = 2995-3005
+// dip 123 = 3369-3376
