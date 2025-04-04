@@ -57,6 +57,26 @@ void K32_dipswitch::dipswatch(void *parameter)
     vTaskDelete(NULL);
 }
 
+void K32_dipswitch::dipswitch_read(int pin, int value)
+{
+    xSemaphoreTake(this->lock, portMAX_DELAY);
+    this->emit("dips/ " + String(pin) + ": " + String(value));
+    xSemaphoreGive(this->lock);
+}
+    // this->emit("dips/ " + String(pin) + ": " + String(value));
+    // this->k32->timer->every(10000, []()
+    // {
+    //     int value = analogRead(34);
+    //     if ((1650 < value) && (value < 1900))     LOG ("dip 1  "); 
+    // else if ( (2000<value) && (value<2250) )  LOG ("dip  2 ");
+    // else if ( (2280<value) && (value<2500) )  LOG ("dip   3");
+    // else if ( (2600<value) && (value<2820) )  LOG ("dip 12 ");
+    // else if ( (2850<value) && (value<2970) )  LOG ("dip 1 3");
+    // else if ( (2980<value) && (value<3100) )  LOG ("dip  23");
+    // else if ( (3200<value) && (value<3500) )  LOG ("dip 123"); 
+    // });
+}
+
 // while (true)
 // {
 //     k32->timer->every(10000, []()
