@@ -14,15 +14,15 @@ class K32_dipswitch : K32_plugin
   public:
     K32_dipswitch(K32* k32);
 
-    void add(int pin, String name);
-    void add(int pin);
+    void add(uint8_t pin, String name);
+    void add(uint8_t pin);
+    void dipswitch_read();
+    bool dip[3];
 
 
   private:
     SemaphoreHandle_t lock;
     static void dipswatch( void * parameter );
-    void dipswitch_read(int pin, int value);
-    bool dip[3];
 };
 
 #endif
