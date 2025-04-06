@@ -13,12 +13,12 @@ class K32_dipswitch : K32_plugin
 {
   public:
     K32_dipswitch(K32* k32);
-
-    void add(uint8_t pin, String name);
-    void add(uint8_t pin);
     void dipswitch_read();
     bool dip[3];
-
+    bool old_dip[3];
+    bool dip1() { return this->dip[0]; }
+    bool dip2() { return this->dip[1]; }
+    bool dip3() { return this->dip[2]; }  
 
   private:
     SemaphoreHandle_t lock;
@@ -26,13 +26,3 @@ class K32_dipswitch : K32_plugin
 };
 
 #endif
-
-// mesure de la pin
-// dip     = 0
-// dip 1   = 1770-1780
-// dip 2   = 2135-2142
-// dip 3   = 2380-2390
-// dip 12  = 2740-2750
-// dip 1 3 = 2950-2960
-// dip  23 = 2995-3005
-// dip 123 = 3369-3376
