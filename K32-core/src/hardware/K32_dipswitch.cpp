@@ -80,7 +80,7 @@ void K32_dipswitch::dipswitch_read()
         this->dip[1] = true;
         this->dip[2] = false;
     } // dip _2_
-    elseif(1650 < value)
+    else if(1650 < value)
     {
         this->dip[0] = true;
         this->dip[1] = false;
