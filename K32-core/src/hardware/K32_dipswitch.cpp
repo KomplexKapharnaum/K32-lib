@@ -106,7 +106,7 @@ void K32_dipswitch::dipswitch_read()
         if (this->dip[2])
             v += 4;
 
-        LOGF4("DIP: %d %d %d / RAW = %d\n", this->dip[0], this->dip[1], this->dip[2], v);
+        LOGF4("DIP: %d %d %d / RAW = %d\n", this->dip[0], this->dip[1], this->dip[2], value);
 
         Orderz *order = new Orderz("dipswitch", false);
         order->addData(v);
