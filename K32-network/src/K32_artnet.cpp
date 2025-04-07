@@ -36,17 +36,17 @@ void K32_artnet::stop()
   xHandle = NULL;
 }
 
-void K32_artnet::onDmx( artnetsub subscription ) 
+void K32_artnet::onDmx( dmxsub subscription ) 
 {
   LOGF("ARTNET: address = %i\n", subscription.address);
-  for (int k=0; k< ARTNET_SUB_SLOTS; k++)
+  for (int k=0; k< DMX_SUB_SLOTS; k++)
     if (K32_artnet::subscriptions[k].address == 0) {
       K32_artnet::subscriptions[k] = subscription;
       break;
     }
 }
 
-void K32_artnet::onFullDmx( cbPtrArtnet callback ) 
+void K32_artnet::onFullDmx( cbPtrDmx callback ) 
 {
   K32_artnet::fullCallback = callback;
 }
@@ -55,8 +55,8 @@ void K32_artnet::command(Orderz* order) {
   // TODO: orderz ARTNET
 }
 
-artnetsub K32_artnet::subscriptions[ARTNET_SUB_SLOTS] = {0, 0, nullptr};
-cbPtrArtnet K32_artnet::fullCallback = nullptr;
+dmxsub K32_artnet::subscriptions[DMX_SUB_SLOTS] = {0, 0, nullptr};
+cbPtrDmx K32_artnet::fullCallback = nullptr;
 int K32_artnet::_lastSequence = 0;
 
 // /*
@@ -91,7 +91,7 @@ void K32_artnet::check(void *parameter)
 void K32_artnet::_onArtnet(const uint8_t* data, const uint16_t length)
 {
   // Callback Sub
-  for (int k=0; k<ARTNET_SUB_SLOTS; k++) {
+  for (int k=0; k<DMX_SUB_SLOTS; k++) {
     if (K32_artnet::subscriptions[k].address > 0 && length-K32_artnet::subscriptions[k].address > 0) {
       K32_artnet::subscriptions[k].callback( 
         &data[ K32_artnet::subscriptions[k].address - 1 ], 

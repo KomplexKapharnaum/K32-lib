@@ -17,7 +17,7 @@ K32_dipswitch::K32_dipswitch(K32 *k32) : K32_plugin("dips", k32)
     this->lock = xSemaphoreCreateMutex();
 
     this->dipswitch_read();
-    
+
     xTaskCreate(this->dipswatch, // function
                 "dips_watch",    // server name
                 1500,            // stack memory
@@ -110,8 +110,8 @@ void K32_dipswitch::dipswitch_read()
             if (this->dip[2]) v += 4;
 
             Orderz *order = new Orderz("dipswitch", false);
-            order->addData("value", v);
-            order->addData("rawvalue", value);
+            order->addData(v);
+            order->addData(value);
             this->emit(order);
         }
     xSemaphoreGive(this->lock);

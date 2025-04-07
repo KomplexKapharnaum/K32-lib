@@ -10,16 +10,17 @@
 #include <class/K32_plugin.h>
 #include <K32_wifi.h>
 
-#define ARTNET_SUB_SLOTS 16
+#ifndef DMX_SUB_SLOTS
+  #define DMX_SUB_SLOTS 16
+  typedef void (*cbPtrDmx )(const uint8_t *data, int length);
 
-typedef void (*cbPtrArtnet )(const uint8_t *data, int length);
-
-struct artnetsub
-{
-  int address;
-  int framesize;
-  cbPtrArtnet callback;
-};
+  struct dmxsub
+  {
+    int address;
+    int framesize;
+    cbPtrDmx callback;
+  };
+#endif
 
 class K32_artnet : K32_plugin {
   public:
@@ -30,11 +31,11 @@ class K32_artnet : K32_plugin {
     void stop();
 
 
-    static void onDmx( artnetsub subscription );
-    static void onFullDmx( cbPtrArtnet callback );
+    static void onDmx( dmxsub subscription );
+    static void onFullDmx( cbPtrDmx callback );
     
-    static cbPtrArtnet fullCallback;
-    static artnetsub subscriptions[ARTNET_SUB_SLOTS];
+    static cbPtrDmx fullCallback;
+    static dmxsub subscriptions[DMX_SUB_SLOTS];
     static int _lastSequence;
 
     void command(Orderz* order);
