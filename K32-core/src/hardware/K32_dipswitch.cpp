@@ -56,7 +56,7 @@ void K32_dipswitch::dipswitch_read()
         this->dip[1] = true;
         this->dip[2] = true;
     } // dip 123
-    else if (3050 < value)
+    else if (2900 < value)
     {
         this->dip[0] = true;
         this->dip[1] = false;
