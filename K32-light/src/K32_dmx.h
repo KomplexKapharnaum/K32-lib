@@ -144,7 +144,7 @@ class K32_dmx {
       for (int k=0; k<DMX_SUB_SLOTS; k++) {
         if (K32_dmx::subscriptions[k].address > 0 && length-K32_dmx::subscriptions[k].address > 0) {
           K32_dmx::subscriptions[k].callback( 
-            &data[ K32_dmx::subscriptions[k].address - 1 ], 
+            &data[ K32_dmx::subscriptions[k].address ], 
             min(K32_dmx::subscriptions[k].framesize, length-(K32_dmx::subscriptions[k].address-1)) 
           );
         }
