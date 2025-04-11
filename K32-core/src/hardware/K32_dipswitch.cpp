@@ -56,19 +56,19 @@ void K32_dipswitch::dipswitch_read()
         this->dip[1] = true;
         this->dip[2] = true;
     } // dip 123
-    else if (2900 < value)
+    else if (2900 < value) // def 2900 / 3200 -> esp : 196 , 210 
     {
         this->dip[0] = true;
         this->dip[1] = false;
         this->dip[2] = true;
     } // dip 1_3
-    else if (2750 < value)
+    else if (2750 < value) // def 2750 / 3000 -> esp : 196 , 210
     {
         this->dip[0] = true;
         this->dip[1] = true;
         this->dip[2] = false;
     } // dip 12_
-    else if (2450 < value)
+    else if (2450 < value) // def 2450 / 2440 -> esp: 223 / 2430 -> esp: 198 / 2400 -> esp:202
     {
         this->dip[0] = false;
         this->dip[1] = false;
