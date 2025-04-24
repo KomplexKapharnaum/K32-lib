@@ -207,6 +207,11 @@ public:
     return this;
   }
 
+  K32_modulator *setMaxValue(int v) {
+    this->_MaxValue = v;
+    return this;
+  }
+
   // TOOLS
   //
 
@@ -216,6 +221,7 @@ public:
   int amplitude() { return this->_maxi - this->_mini; }
   int period() { return max(1, this->_period); }
   int phase() { return this->_phase; }
+  int MaxValue() { return this->_MaxValue; }
 
   virtual int time() { return (this->freezeTime > 0) ? this->freezeTime : millis(); }
   float progress() { return 1.0 * (time() % period()) / period(); }
@@ -258,6 +264,7 @@ protected:
   int _phase = 0;
   int _mini = 0;
   int _maxi = 255;
+  int _MaxValue = 255; // max value to be used in modulator (default = 255)
 
   // time refs
   unsigned long freezeTime = 0;
