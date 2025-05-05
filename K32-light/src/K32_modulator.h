@@ -219,7 +219,7 @@ public:
 
   virtual int time() { return (this->freezeTime > 0) ? this->freezeTime : millis(); }
   float progress() { return 1.0 * (time() % period()) / period(); }
-  int periodCount() { return time() / period(); }
+  int periodCount() { return this->time() / this->period(); }
 
   bool fresh() {
     bool r = this->_fresh;
@@ -288,6 +288,7 @@ class K32_modulator_periodic : public K32_modulator {
     // Time is shifted with phase (0->360°) * period()
     virtual int time() 
     {
+      // LOGF3("MOD: %s time %d %d\n", this->name().c_str(), K32_modulator::time(), this->triggerTime);
       return K32_modulator::time()- this->triggerTime - ((this->_phase % 360) * this->_period) / 360;
     }
 
