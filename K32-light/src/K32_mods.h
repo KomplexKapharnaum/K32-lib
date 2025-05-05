@@ -114,8 +114,7 @@ class K32_mod_pulse : public K32_modulator_periodic {
     {  
       int width = widthMS;
       if (widthMS == 0) width = period()*widthPCT/100;
-      if ( time() % period() < width) return MaxValue();
-      // if ( time() % period() < width) return maxi();
+      if ( time() % period() < width) return maxi();
       else return mini();
     };
 
@@ -135,8 +134,7 @@ class K32_mod_multipulse : public K32_modulator_periodic {
     {  
       int width = widthMS;
       if (widthMS == 0) width = period()*widthPCT/100;
-      if ( time() % period() < width) return MaxValue();
-      // if ( time() % period() < width) return maxi();
+      if ( time() % period() < width) return maxi();
       else return mini();
     };
 
@@ -156,8 +154,7 @@ class K32_mod_tick : public K32_modulator_periodic {
       int newPeriod = periodCount();
       if (newPeriod != lastPeriod) {
         lastPeriod = newPeriod;
-        return MaxValue();
-        // return maxi();
+        return maxi();
       }
       return mini();
     };
@@ -207,8 +204,7 @@ class K32_mod_fadein : public K32_modulator_trigger {
       if (time() >= period()) 
       {
         stop();
-        return MaxValue();
-        // return maxi();
+        return maxi();
       }
       
       return progress() * amplitude() + mini();
